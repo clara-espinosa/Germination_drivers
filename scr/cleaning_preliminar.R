@@ -11,7 +11,7 @@ read.csv("data/species.csv", sep=";") %>%
   select(species, temperature_regime, family, community, habitat)  %>%
   convert_as_factor(species, temperature_regime, family, community, habitat)  -> species
 str(species)
-
+unique(species$family)
 # species with 0 germination across all experiment (remove from analysis)
   filter (!species == "Euphrasia salisburgensis")%>%
   filter (!species == "Gentiana verna")%>%
@@ -29,6 +29,17 @@ raw_df %>%
   mutate (viable = initial -(empty + fungus)) %>%
   mutate (viablePER = (viable/initial)*100) %>%
   select (species, treatment, petri, viable, viablePER) -> viables_petri
+
+  # list of accesion with less than 25% of viable seeds (remove from analysis) 
+viables_petri %>%
+  group_by(species, treatment) %>%
+  summarise(viable = sum(viable), viablePER = mean(viablePER))%>%
+  filter(viablePER>25)
+
+viables_petri%>%
+  group_by(species)%>%
+  summarise(viable=sum(viable))%>%
+  mutate(total_viable= sum(viable))
 
 # D0 germination check change to cold_stratification treatment ####
 raw_df %>%
