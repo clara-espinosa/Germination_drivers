@@ -19,7 +19,7 @@ library (ggpubr);library (vegan)
 
 ####load species data and select variables ####
 
-read.csv("data/species.csv", sep=",") %>%
+read.csv("data/species.csv", sep=";") %>%
   select(species, temperature_regime, family, community, habitat)  %>%
   convert_as_factor(temperature_regime, family, community, habitat) -> species
 
