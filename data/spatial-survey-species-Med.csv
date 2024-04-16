@@ -1,0 +1,566 @@
+plot,taxon,species,cover
+C00,Agrostis tileni,Agrostis tileni,3
+C06,Agrostis tileni,Agrostis tileni,5
+C07,Agrostis tileni,Agrostis tileni,3
+C08,Agrostis tileni,Agrostis tileni,0.1
+C16,Agrostis tileni,Agrostis tileni,3
+C17,Agrostis tileni,Agrostis tileni,3
+C18,Agrostis tileni,Agrostis tileni,3
+D16,Agrostis tileni,Agrostis tileni,5
+D17,Agrostis tileni,Agrostis tileni,1
+A06,Agrostis tileni,Agrostis tileni,3
+A16,Agrostis tileni,Agrostis tileni,1
+A18,Agrostis tileni,Agrostis tileni,1
+B10,Agrostis tileni,Agrostis tileni,5
+D08,Arabis cf. auriculata,Arabis cf. auriculata,0.1
+A04,Arabis cf. auriculata,Arabis cf. auriculata,1
+C00,Armeria duriaei,Armeria duriaei,5
+C01,Armeria duriaei,Armeria duriaei,3
+C06,Armeria duriaei,Armeria duriaei,5
+C07,Armeria duriaei,Armeria duriaei,3
+C08,Armeria duriaei,Armeria duriaei,0.1
+C16,Armeria duriaei,Armeria duriaei,3
+C17,Armeria duriaei,Armeria duriaei,3
+C18,Armeria duriaei,Armeria duriaei,3
+C19,Armeria duriaei,Armeria duriaei,10
+D00,Armeria duriaei,Armeria duriaei,5
+D01,Armeria duriaei,Armeria duriaei,3
+D02,Armeria duriaei,Armeria duriaei,1
+D05,Armeria duriaei,Armeria duriaei,0.1
+D11,Armeria duriaei,Armeria duriaei,5
+D14,Armeria duriaei,Armeria duriaei,3
+D18,Armeria duriaei,Armeria duriaei,3
+A00,Armeria duriaei,Armeria duriaei,1
+A01,Armeria duriaei,Armeria duriaei,5
+A07,Armeria duriaei,Armeria duriaei,1
+A09,Armeria duriaei,Armeria duriaei,5
+B00,Armeria duriaei,Armeria duriaei,0.1
+B07,Armeria duriaei,Armeria duriaei,3
+B11,Armeria duriaei,Armeria duriaei,3
+B19,Armeria duriaei,Armeria duriaei,1
+C10,Avenella flexuosa subsp. iberica,Avenella flexuosa,1
+C17,Avenella flexuosa subsp. iberica,Avenella flexuosa,3
+C19,Avenella flexuosa subsp. iberica,Avenella flexuosa,5
+D03,Avenella flexuosa subsp. iberica,Avenella flexuosa,60
+D04,Avenella flexuosa subsp. iberica,Avenella flexuosa,30
+D05,Avenella flexuosa subsp. iberica,Avenella flexuosa,25
+D08,Avenella flexuosa subsp. iberica,Avenella flexuosa,5
+D09,Avenella flexuosa subsp. iberica,Avenella flexuosa,10
+D10,Avenella flexuosa subsp. iberica,Avenella flexuosa,1
+D15,Avenella flexuosa subsp. iberica,Avenella flexuosa,80
+A01,Biscutella laevigata,Biscutella laevigata,1
+A11,Biscutella laevigata,Biscutella laevigata,0.1
+A14,Biscutella laevigata,Biscutella laevigata,0.1
+A15,Biscutella laevigata,Biscutella laevigata,0.1
+C09,Calluna vulgaris,Calluna vulgaris,10
+C19,Cerastium ramossissimum,Cerastium ramossissimum,1
+C20,Cerastium ramossissimum,Cerastium ramossissimum,1
+D20,Cerastium ramossissimum,Cerastium ramossissimum,0.1
+A00,Cerastium ramossissimum,Cerastium ramossissimum,0.1
+A11,Cerastium ramossissimum,Cerastium ramossissimum,0.1
+B00,Cerastium ramossissimum,Cerastium ramossissimum,0.1
+B01,Cerastium ramossissimum,Cerastium ramossissimum,0.1
+B09,Cerastium ramossissimum,Cerastium ramossissimum,0.1
+B12,Cerastium ramossissimum,Cerastium ramossissimum,1
+B19,Cerastium ramossissimum,Cerastium ramossissimum,0.1
+C04,Conopodium majus subsp. marizianum,Conopodium majus,3
+C15,Conopodium majus subsp. marizianum,Conopodium majus,1
+D00,Conopodium majus subsp. marizianum,Conopodium majus,0.1
+D02,Conopodium majus subsp. marizianum,Conopodium majus,0.1
+D03,Conopodium majus subsp. marizianum,Conopodium majus,5
+D04,Conopodium majus subsp. marizianum,Conopodium majus,0.1
+D05,Conopodium majus subsp. marizianum,Conopodium majus,1
+D15,Conopodium majus subsp. marizianum,Conopodium majus,1
+A00,Conopodium majus subsp. marizianum,Conopodium majus,0.1
+A01,Conopodium majus subsp. marizianum,Conopodium majus,0.1
+A05,Conopodium majus subsp. marizianum,Conopodium majus,5
+A11,Conopodium majus subsp. marizianum,Conopodium majus,0.1
+B00,Conopodium majus subsp. marizianum,Conopodium majus,0.1
+B01,Conopodium majus subsp. marizianum,Conopodium majus,5
+B02,Conopodium majus subsp. marizianum,Conopodium majus,3
+B16,Conopodium majus subsp. marizianum,Conopodium majus,0.1
+B17,Conopodium majus subsp. marizianum,Conopodium majus,0.1
+B18,Conopodium majus subsp. marizianum,Conopodium majus,0.1
+B19,Conopodium majus subsp. marizianum,Conopodium majus,0.1
+B20,Conopodium majus subsp. marizianum,Conopodium majus,3
+A19,Cryptogramma crispa,Cryptogramma crispa,0.1
+C04,Cytisus oromediterraneus,Cytisus oromediterraneus,60
+C05,Cytisus oromediterraneus,Cytisus oromediterraneus,25
+C14,Cytisus oromediterraneus,Cytisus oromediterraneus,3
+C15,Cytisus oromediterraneus,Cytisus oromediterraneus,5
+D02,Cytisus oromediterraneus,Cytisus oromediterraneus,1
+D03,Cytisus oromediterraneus,Cytisus oromediterraneus,70
+D04,Cytisus oromediterraneus,Cytisus oromediterraneus,5
+D05,Cytisus oromediterraneus,Cytisus oromediterraneus,50
+D15,Cytisus oromediterraneus,Cytisus oromediterraneus,50
+A05,Cytisus oromediterraneus,Cytisus oromediterraneus,20
+C00,Dianthus langeanus,Dianthus langeanus,3
+C01,Dianthus langeanus,Dianthus langeanus,2
+C02,Dianthus langeanus,Dianthus langeanus,5
+C03,Dianthus langeanus,Dianthus langeanus,3
+C05,Dianthus langeanus,Dianthus langeanus,3
+C06,Dianthus langeanus,Dianthus langeanus,15
+C07,Dianthus langeanus,Dianthus langeanus,5
+C08,Dianthus langeanus,Dianthus langeanus,5
+C09,Dianthus langeanus,Dianthus langeanus,3
+C11,Dianthus langeanus,Dianthus langeanus,1
+C12,Dianthus langeanus,Dianthus langeanus,1
+C14,Dianthus langeanus,Dianthus langeanus,1
+C16,Dianthus langeanus,Dianthus langeanus,5
+C17,Dianthus langeanus,Dianthus langeanus,5
+C18,Dianthus langeanus,Dianthus langeanus,5
+C19,Dianthus langeanus,Dianthus langeanus,15
+C20,Dianthus langeanus,Dianthus langeanus,15
+D00,Dianthus langeanus,Dianthus langeanus,25
+D01,Dianthus langeanus,Dianthus langeanus,10
+D02,Dianthus langeanus,Dianthus langeanus,5
+D04,Dianthus langeanus,Dianthus langeanus,5
+D05,Dianthus langeanus,Dianthus langeanus,5
+D11,Dianthus langeanus,Dianthus langeanus,20
+D12,Dianthus langeanus,Dianthus langeanus,20
+D13,Dianthus langeanus,Dianthus langeanus,10
+D14,Dianthus langeanus,Dianthus langeanus,10
+D15,Dianthus langeanus,Dianthus langeanus,5
+D16,Dianthus langeanus,Dianthus langeanus,5
+D17,Dianthus langeanus,Dianthus langeanus,3
+D18,Dianthus langeanus,Dianthus langeanus,5
+D19,Dianthus langeanus,Dianthus langeanus,15
+D20,Dianthus langeanus,Dianthus langeanus,5
+A00,Dianthus langeanus,Dianthus langeanus,10
+A01,Dianthus langeanus,Dianthus langeanus,3
+A02,Dianthus langeanus,Dianthus langeanus,3
+A11,Dianthus langeanus,Dianthus langeanus,10
+A14,Dianthus langeanus,Dianthus langeanus,1
+B00,Dianthus langeanus,Dianthus langeanus,5
+B03,Dianthus langeanus,Dianthus langeanus,5
+B04,Dianthus langeanus,Dianthus langeanus,1
+B05,Dianthus langeanus,Dianthus langeanus,3
+B06,Dianthus langeanus,Dianthus langeanus,3
+B07,Dianthus langeanus,Dianthus langeanus,3
+B08,Dianthus langeanus,Dianthus langeanus,0.1
+B11,Dianthus langeanus,Dianthus langeanus,1
+B13,Dianthus langeanus,Dianthus langeanus,1
+B16,Dianthus langeanus,Dianthus langeanus,10
+B17,Dianthus langeanus,Dianthus langeanus,10
+B18,Dianthus langeanus,Dianthus langeanus,5
+B19,Dianthus langeanus,Dianthus langeanus,1
+B20,Dianthus langeanus,Dianthus langeanus,3
+C04,Erythronium dens-canis,Erythronium dens-canis,0.1
+C03,Festuca rubra,Festuca rubra,3
+C05,Festuca rubra,Festuca rubra,3
+C13,Festuca rubra,Festuca rubra,0.1
+C14,Festuca rubra,Festuca rubra,10
+C15,Festuca rubra,Festuca rubra,1
+C18,Festuca rubra,Festuca rubra,3
+D02,Festuca rubra,Festuca rubra,3
+D16,Festuca rubra,Festuca rubra,1
+D17,Festuca rubra,Festuca rubra,1
+D19,Festuca rubra,Festuca rubra,1
+D20,Festuca rubra,Festuca rubra,40
+A03,Festuca rubra,Festuca rubra,1
+A04,Festuca rubra,Festuca rubra,1
+A05,Festuca rubra,Festuca rubra,5
+A06,Festuca rubra,Festuca rubra,5
+A07,Festuca rubra,Festuca rubra,5
+A08,Festuca rubra,Festuca rubra,1
+A09,Festuca rubra,Festuca rubra,5
+A12,Festuca rubra,Festuca rubra,5
+A15,Festuca rubra,Festuca rubra,0.1
+A16,Festuca rubra,Festuca rubra,3
+A18,Festuca rubra,Festuca rubra,1
+A19,Festuca rubra,Festuca rubra,10
+B03,Festuca rubra,Festuca rubra,1
+B05,Festuca rubra,Festuca rubra,10
+B09,Festuca rubra,Festuca rubra,5
+B10,Festuca rubra,Festuca rubra,3
+B14,Festuca rubra,Festuca rubra,0.1
+B20,Festuca rubra,Festuca rubra,1
+C00,Festuca summilusitana,Festuca summilusitana,20
+C01,Festuca summilusitana,Festuca summilusitana,25
+C02,Festuca summilusitana,Festuca summilusitana,30
+C03,Festuca summilusitana,Festuca summilusitana,5
+C04,Festuca summilusitana,Festuca summilusitana,20
+C05,Festuca summilusitana,Festuca summilusitana,20
+C06,Festuca summilusitana,Festuca summilusitana,30
+C07,Festuca summilusitana,Festuca summilusitana,10
+C08,Festuca summilusitana,Festuca summilusitana,15
+C09,Festuca summilusitana,Festuca summilusitana,3
+C10,Festuca summilusitana,Festuca summilusitana,5
+C11,Festuca summilusitana,Festuca summilusitana,1
+C12,Festuca summilusitana,Festuca summilusitana,15
+C13,Festuca summilusitana,Festuca summilusitana,20
+C14,Festuca summilusitana,Festuca summilusitana,15
+C15,Festuca summilusitana,Festuca summilusitana,90
+C16,Festuca summilusitana,Festuca summilusitana,70
+C17,Festuca summilusitana,Festuca summilusitana,25
+C18,Festuca summilusitana,Festuca summilusitana,40
+C19,Festuca summilusitana,Festuca summilusitana,45
+C20,Festuca summilusitana,Festuca summilusitana,25
+D00,Festuca summilusitana,Festuca summilusitana,30
+D01,Festuca summilusitana,Festuca summilusitana,30
+D02,Festuca summilusitana,Festuca summilusitana,25
+D03,Festuca summilusitana,Festuca summilusitana,10
+D04,Festuca summilusitana,Festuca summilusitana,10
+D05,Festuca summilusitana,Festuca summilusitana,30
+D08,Festuca summilusitana,Festuca summilusitana,15
+D09,Festuca summilusitana,Festuca summilusitana,5
+D11,Festuca summilusitana,Festuca summilusitana,15
+D12,Festuca summilusitana,Festuca summilusitana,35
+D13,Festuca summilusitana,Festuca summilusitana,10
+D14,Festuca summilusitana,Festuca summilusitana,15
+D16,Festuca summilusitana,Festuca summilusitana,3
+D17,Festuca summilusitana,Festuca summilusitana,5
+D18,Festuca summilusitana,Festuca summilusitana,5
+D19,Festuca summilusitana,Festuca summilusitana,5
+D20,Festuca summilusitana,Festuca summilusitana,10
+A00,Festuca summilusitana,Festuca summilusitana,25
+A01,Festuca summilusitana,Festuca summilusitana,35
+A02,Festuca summilusitana,Festuca summilusitana,25
+A05,Festuca summilusitana,Festuca summilusitana,10
+A06,Festuca summilusitana,Festuca summilusitana,5
+A08,Festuca summilusitana,Festuca summilusitana,20
+A09,Festuca summilusitana,Festuca summilusitana,10
+A11,Festuca summilusitana,Festuca summilusitana,20
+A12,Festuca summilusitana,Festuca summilusitana,10
+A13,Festuca summilusitana,Festuca summilusitana,5
+A14,Festuca summilusitana,Festuca summilusitana,15
+A15,Festuca summilusitana,Festuca summilusitana,0.1
+A17,Festuca summilusitana,Festuca summilusitana,15
+A19,Festuca summilusitana,Festuca summilusitana,5
+A20,Festuca summilusitana,Festuca summilusitana,5
+B00,Festuca summilusitana,Festuca summilusitana,40
+B01,Festuca summilusitana,Festuca summilusitana,70
+B02,Festuca summilusitana,Festuca summilusitana,45
+B03,Festuca summilusitana,Festuca summilusitana,5
+B04,Festuca summilusitana,Festuca summilusitana,3
+B05,Festuca summilusitana,Festuca summilusitana,3
+B06,Festuca summilusitana,Festuca summilusitana,15
+B07,Festuca summilusitana,Festuca summilusitana,20
+B08,Festuca summilusitana,Festuca summilusitana,70
+B09,Festuca summilusitana,Festuca summilusitana,80
+B10,Festuca summilusitana,Festuca summilusitana,60
+B11,Festuca summilusitana,Festuca summilusitana,85
+B12,Festuca summilusitana,Festuca summilusitana,50
+B13,Festuca summilusitana,Festuca summilusitana,40
+B14,Festuca summilusitana,Festuca summilusitana,1
+B16,Festuca summilusitana,Festuca summilusitana,60
+B17,Festuca summilusitana,Festuca summilusitana,20
+B18,Festuca summilusitana,Festuca summilusitana,3
+B19,Festuca summilusitana,Festuca summilusitana,20
+B20,Festuca summilusitana,Festuca summilusitana,20
+C10,Galium cf. pumilum subsp. pinetorum,Galium cf. Pumilum,1
+D18,Gentiana lutea subsp. lutea,Gentiana lutea ,1
+C18,Helictochloa marginata,Helictochloa marginata,3
+C20,Helictochloa marginata,Helictochloa marginata,1
+D04,Helictochloa marginata,Helictochloa marginata,25
+A00,Helictochloa marginata,Helictochloa marginata,0.1
+A01,Helictochloa marginata,Helictochloa marginata,0.1
+A05,Helictochloa marginata,Helictochloa marginata,5
+C09,Jasione laevis,Jasione laevis,1
+C16,Jasione laevis,Jasione laevis,0.1
+D04,Jasione laevis,Jasione laevis,1
+D09,Jasione laevis,Jasione laevis,3
+D10,Jasione laevis,Jasione laevis,0.1
+D15,Jasione laevis,Jasione laevis,5
+D17,Jasione laevis,Jasione laevis,10
+D18,Jasione laevis,Jasione laevis,5
+D19,Jasione laevis,Jasione laevis,1
+A02,Jasione laevis,Jasione laevis,3
+B11,Jasione laevis,Jasione laevis,0.1
+C10,Juniperus communis subsp. nana,Juniperus communis,60
+D00,Juniperus communis subsp. nana,Juniperus communis,5
+D08,Juniperus communis subsp. nana,Juniperus communis,60
+D09,Juniperus communis subsp. nana,Juniperus communis,45
+D10,Juniperus communis subsp. nana,Juniperus communis,50
+D19,Juniperus communis subsp. nana,Juniperus communis,1
+A05,Juniperus communis subsp. nana,Juniperus communis,40
+A09,Juniperus communis subsp. nana,Juniperus communis,75
+A10,Juniperus communis subsp. nana,Juniperus communis,100
+A13,Juniperus communis subsp. nana,Juniperus communis,80
+A14,Juniperus communis subsp. nana,Juniperus communis,20
+A15,Juniperus communis subsp. nana,Juniperus communis,20
+A16,Juniperus communis subsp. nana,Juniperus communis,20
+B13,Juniperus communis subsp. nana,Juniperus communis,10
+C00,Jurinea humilis,Jurinea humilis,5
+C01,Jurinea humilis,Jurinea humilis,5
+C06,Jurinea humilis,Jurinea humilis,3
+C16,Jurinea humilis,Jurinea humilis,3
+D14,Jurinea humilis,Jurinea humilis,1
+A00,Jurinea humilis,Jurinea humilis,0.1
+A01,Jurinea humilis,Jurinea humilis,1
+A02,Jurinea humilis,Jurinea humilis,3
+B05,Jurinea humilis,Jurinea humilis,3
+B07,Jurinea humilis,Jurinea humilis,10
+A04,Koeleria crassipes,Koeleria crassipes,0.1
+A11,Koeleria crassipes,Koeleria crassipes,0.1
+A13,Koeleria crassipes,Koeleria crassipes,1
+A14,Koeleria crassipes,Koeleria crassipes,3
+A15,Koeleria crassipes,Koeleria crassipes,5
+D00,Linaria supina,Linaria supina,0.1
+D08,Linaria supina,Linaria supina,0.1
+C00,Luzula caespitosa,Luzula caespitosa,1
+C02,Luzula caespitosa,Luzula caespitosa,5
+C03,Luzula caespitosa,Luzula caespitosa,5
+C04,Luzula caespitosa,Luzula caespitosa,3
+C08,Luzula caespitosa,Luzula caespitosa,50
+C09,Luzula caespitosa,Luzula caespitosa,50
+C11,Luzula caespitosa,Luzula caespitosa,30
+C12,Luzula caespitosa,Luzula caespitosa,10
+C14,Luzula caespitosa,Luzula caespitosa,15
+C17,Luzula caespitosa,Luzula caespitosa,15
+C18,Luzula caespitosa,Luzula caespitosa,15
+C19,Luzula caespitosa,Luzula caespitosa,15
+C20,Luzula caespitosa,Luzula caespitosa,20
+D00,Luzula caespitosa,Luzula caespitosa,50
+D01,Luzula caespitosa,Luzula caespitosa,40
+D02,Luzula caespitosa,Luzula caespitosa,20
+D04,Luzula caespitosa,Luzula caespitosa,5
+D09,Luzula caespitosa,Luzula caespitosa,10
+D10,Luzula caespitosa,Luzula caespitosa,10
+D11,Luzula caespitosa,Luzula caespitosa,10
+D12,Luzula caespitosa,Luzula caespitosa,10
+D13,Luzula caespitosa,Luzula caespitosa,15
+D14,Luzula caespitosa,Luzula caespitosa,20
+D16,Luzula caespitosa,Luzula caespitosa,35
+D17,Luzula caespitosa,Luzula caespitosa,50
+D18,Luzula caespitosa,Luzula caespitosa,40
+D19,Luzula caespitosa,Luzula caespitosa,50
+D20,Luzula caespitosa,Luzula caespitosa,20
+A00,Luzula caespitosa,Luzula caespitosa,45
+A01,Luzula caespitosa,Luzula caespitosa,1
+A02,Luzula caespitosa,Luzula caespitosa,10
+A06,Luzula caespitosa,Luzula caespitosa,55
+A07,Luzula caespitosa,Luzula caespitosa,75
+A08,Luzula caespitosa,Luzula caespitosa,20
+A09,Luzula caespitosa,Luzula caespitosa,25
+A11,Luzula caespitosa,Luzula caespitosa,3
+A16,Luzula caespitosa,Luzula caespitosa,70
+A17,Luzula caespitosa,Luzula caespitosa,35
+A18,Luzula caespitosa,Luzula caespitosa,35
+A19,Luzula caespitosa,Luzula caespitosa,60
+A20,Luzula caespitosa,Luzula caespitosa,45
+B03,Luzula caespitosa,Luzula caespitosa,3
+B05,Luzula caespitosa,Luzula caespitosa,5
+B06,Luzula caespitosa,Luzula caespitosa,40
+B07,Luzula caespitosa,Luzula caespitosa,5
+B13,Luzula caespitosa,Luzula caespitosa,3
+B16,Luzula caespitosa,Luzula caespitosa,10
+B17,Luzula caespitosa,Luzula caespitosa,5
+B18,Luzula caespitosa,Luzula caespitosa,40
+B19,Luzula caespitosa,Luzula caespitosa,55
+B20,Luzula caespitosa,Luzula caespitosa,25
+B00,Minuartia recurva,Minuartia recurva,15
+B06,Minuartia recurva,Minuartia recurva,1
+B07,Minuartia recurva,Minuartia recurva,15
+B18,Minuartia recurva,Minuartia recurva,0.1
+C00,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,3
+C01,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,1
+C06,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,1
+C08,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,3
+C14,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,0.1
+C16,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,1
+C17,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,3
+C18,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,1
+C20,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,1
+D01,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,3
+D14,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,3
+D19,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,0.1
+A01,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,1
+A02,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,1
+A11,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,1
+A12,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,3
+B06,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,5
+B07,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,10
+B11,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,1
+B12,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,0.1
+B16,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,0.1
+B17,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,1
+B18,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,3
+B19,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,1
+B20,Neoschischkinia truncatula subsp. durieui,Neoschischkinia truncatula,1
+C00,Phalacrocarpum oppositifolium subsp. anomalum,Phalacrocarpum oppositifolium,0.1
+C04,Phalacrocarpum oppositifolium subsp. anomalum,Phalacrocarpum oppositifolium,1
+C08,Phalacrocarpum oppositifolium subsp. anomalum,Phalacrocarpum oppositifolium,1
+C10,Phalacrocarpum oppositifolium subsp. anomalum,Phalacrocarpum oppositifolium,25
+C11,Phalacrocarpum oppositifolium subsp. anomalum,Phalacrocarpum oppositifolium,0.1
+C18,Phalacrocarpum oppositifolium subsp. anomalum,Phalacrocarpum oppositifolium,3
+D12,Phalacrocarpum oppositifolium subsp. anomalum,Phalacrocarpum oppositifolium,0.1
+A05,Phalacrocarpum oppositifolium subsp. anomalum,Phalacrocarpum oppositifolium,3
+A09,Phalacrocarpum oppositifolium subsp. anomalum,Phalacrocarpum oppositifolium,3
+A11,Phalacrocarpum oppositifolium subsp. anomalum,Phalacrocarpum oppositifolium,0.1
+A14,Phalacrocarpum oppositifolium subsp. anomalum,Phalacrocarpum oppositifolium,0.1
+B04,Phalacrocarpum oppositifolium subsp. anomalum,Phalacrocarpum oppositifolium,3
+B18,Phalacrocarpum oppositifolium subsp. anomalum,Phalacrocarpum oppositifolium,10
+B19,Phalacrocarpum oppositifolium subsp. anomalum,Phalacrocarpum oppositifolium,5
+B20,Phalacrocarpum oppositifolium subsp. anomalum,Phalacrocarpum oppositifolium,5
+C00,Phyteuma hemisphaericum,Phyteuma hemisphaericum,0.1
+C07,Phyteuma hemisphaericum,Phyteuma hemisphaericum,0.1
+C09,Phyteuma hemisphaericum,Phyteuma hemisphaericum,1
+C17,Phyteuma hemisphaericum,Phyteuma hemisphaericum,5
+C19,Phyteuma hemisphaericum,Phyteuma hemisphaericum,1
+D08,Phyteuma hemisphaericum,Phyteuma hemisphaericum,0.1
+D10,Phyteuma hemisphaericum,Phyteuma hemisphaericum,1
+D16,Phyteuma hemisphaericum,Phyteuma hemisphaericum,1
+D17,Phyteuma hemisphaericum,Phyteuma hemisphaericum,5
+B00,Phyteuma hemisphaericum,Phyteuma hemisphaericum,1
+B04,Phyteuma hemisphaericum,Phyteuma hemisphaericum,1
+B06,Phyteuma hemisphaericum,Phyteuma hemisphaericum,1
+B14,Phyteuma hemisphaericum,Phyteuma hemisphaericum,0.1
+D14,Pilosella cf. hypeurya,Pilosella cf. hypeurya,0.1
+A11,Pilosella cf. hypeurya,Pilosella cf. hypeurya,3
+A00,Plantago holosteum,Plantago holosteum,10
+A01,Plantago holosteum,Plantago holosteum,5
+A11,Plantago holosteum,Plantago holosteum,10
+A17,Plantago holosteum,Plantago holosteum,0.1
+A20,Plantago holosteum,Plantago holosteum,5
+A02,Rumex acetosella subsp. angiocarpus,Rumex acetosella,1
+B11,Rumex acetosella subsp. angiocarpus,Rumex acetosella,0.1
+B19,Rumex acetosella subsp. angiocarpus,Rumex acetosella,5
+A14,Rumex suffruticosus,Rumex suffruticosus,5
+A15,Rumex suffruticosus,Rumex suffruticosus,3
+C05,Saxifraga cf. granulata,Saxifraga cf. granulata,0.1
+A13,Saxifraga fragosoi,Saxifraga fragosoi,5
+A14,Saxifraga fragosoi,Saxifraga fragosoi,3
+A15,Saxifraga fragosoi,Saxifraga fragosoi,1
+A18,Saxifraga spathularis,Saxifraga spathularis,1
+C19,Scilla verna,Scilla verna,0.1
+B01,Scilla verna,Scilla verna,0.1
+C07,Scorzoneroides cantabrica,Scorzoneroides cantabrica,0.1
+D09,Scorzoneroides cantabrica,Scorzoneroides cantabrica,3
+D10,Scorzoneroides cantabrica,Scorzoneroides cantabrica,1
+D16,Scorzoneroides cantabrica,Scorzoneroides cantabrica,3
+D17,Scorzoneroides cantabrica,Scorzoneroides cantabrica,3
+A07,Scorzoneroides cantabrica,Scorzoneroides cantabrica,3
+A16,Scorzoneroides cantabrica,Scorzoneroides cantabrica,5
+B05,Scorzoneroides cantabrica,Scorzoneroides cantabrica,0.1
+C18,Sedum anglicum subsp. pyrenaicum,Sedum anglicum,1
+A05,Sedum anglicum subsp. pyrenaicum,Sedum anglicum,0.1
+A08,Sedum anglicum subsp. pyrenaicum,Sedum anglicum,0.1
+A13,Sedum anglicum subsp. pyrenaicum,Sedum anglicum,0.1
+A14,Sedum anglicum subsp. pyrenaicum,Sedum anglicum,0.1
+A15,Sedum anglicum subsp. pyrenaicum,Sedum anglicum,0.1
+A18,Sedum anglicum subsp. pyrenaicum,Sedum anglicum,1
+A19,Sedum anglicum subsp. pyrenaicum,Sedum anglicum,0.1
+B00,Sedum anglicum subsp. pyrenaicum,Sedum anglicum,1
+B01,Sedum anglicum subsp. pyrenaicum,Sedum anglicum,1
+B02,Sedum anglicum subsp. pyrenaicum,Sedum anglicum,1
+B10,Sedum anglicum subsp. pyrenaicum,Sedum anglicum,0.1
+B11,Sedum anglicum subsp. pyrenaicum,Sedum anglicum,0.1
+B16,Sedum anglicum subsp. pyrenaicum,Sedum anglicum,0.1
+B17,Sedum anglicum subsp. pyrenaicum,Sedum anglicum,0.1
+B18,Sedum anglicum subsp. pyrenaicum,Sedum anglicum,0.1
+B19,Sedum anglicum subsp. pyrenaicum,Sedum anglicum,1
+C00,Sedum brevifolium,Sedum brevifolium,5
+C01,Sedum brevifolium,Sedum brevifolium,5
+C02,Sedum brevifolium,Sedum brevifolium,1
+C03,Sedum brevifolium,Sedum brevifolium,3
+C04,Sedum brevifolium,Sedum brevifolium,0.1
+C05,Sedum brevifolium,Sedum brevifolium,0.1
+C06,Sedum brevifolium,Sedum brevifolium,3
+C07,Sedum brevifolium,Sedum brevifolium,3
+C08,Sedum brevifolium,Sedum brevifolium,0.1
+C09,Sedum brevifolium,Sedum brevifolium,1
+C11,Sedum brevifolium,Sedum brevifolium,0.1
+C12,Sedum brevifolium,Sedum brevifolium,0.1
+C14,Sedum brevifolium,Sedum brevifolium,0.1
+C15,Sedum brevifolium,Sedum brevifolium,0.1
+C16,Sedum brevifolium,Sedum brevifolium,0.1
+C17,Sedum brevifolium,Sedum brevifolium,0.1
+C18,Sedum brevifolium,Sedum brevifolium,3
+C19,Sedum brevifolium,Sedum brevifolium,3
+C20,Sedum brevifolium,Sedum brevifolium,3
+D00,Sedum brevifolium,Sedum brevifolium,15
+D01,Sedum brevifolium,Sedum brevifolium,5
+D02,Sedum brevifolium,Sedum brevifolium,3
+D11,Sedum brevifolium,Sedum brevifolium,3
+D12,Sedum brevifolium,Sedum brevifolium,10
+D13,Sedum brevifolium,Sedum brevifolium,5
+D14,Sedum brevifolium,Sedum brevifolium,3
+D16,Sedum brevifolium,Sedum brevifolium,0.1
+D17,Sedum brevifolium,Sedum brevifolium,0.1
+D18,Sedum brevifolium,Sedum brevifolium,1
+D19,Sedum brevifolium,Sedum brevifolium,0.1
+A00,Sedum brevifolium,Sedum brevifolium,5
+A01,Sedum brevifolium,Sedum brevifolium,0.1
+A02,Sedum brevifolium,Sedum brevifolium,3
+A03,Sedum brevifolium,Sedum brevifolium,0.1
+A04,Sedum brevifolium,Sedum brevifolium,0.1
+A05,Sedum brevifolium,Sedum brevifolium,0.1
+A06,Sedum brevifolium,Sedum brevifolium,0.1
+A08,Sedum brevifolium,Sedum brevifolium,0.1
+A11,Sedum brevifolium,Sedum brevifolium,5
+A12,Sedum brevifolium,Sedum brevifolium,1
+A14,Sedum brevifolium,Sedum brevifolium,1
+A15,Sedum brevifolium,Sedum brevifolium,0.1
+A18,Sedum brevifolium,Sedum brevifolium,1
+A19,Sedum brevifolium,Sedum brevifolium,0.1
+A20,Sedum brevifolium,Sedum brevifolium,0.1
+B00,Sedum brevifolium,Sedum brevifolium,15
+B01,Sedum brevifolium,Sedum brevifolium,1
+B02,Sedum brevifolium,Sedum brevifolium,5
+B03,Sedum brevifolium,Sedum brevifolium,3
+B04,Sedum brevifolium,Sedum brevifolium,3
+B05,Sedum brevifolium,Sedum brevifolium,1
+B06,Sedum brevifolium,Sedum brevifolium,1
+B07,Sedum brevifolium,Sedum brevifolium,5
+B08,Sedum brevifolium,Sedum brevifolium,5
+B09,Sedum brevifolium,Sedum brevifolium,0.1
+B10,Sedum brevifolium,Sedum brevifolium,1
+B12,Sedum brevifolium,Sedum brevifolium,10
+B13,Sedum brevifolium,Sedum brevifolium,3
+B14,Sedum brevifolium,Sedum brevifolium,1
+B15,Sedum brevifolium,Sedum brevifolium,1
+B16,Sedum brevifolium,Sedum brevifolium,1
+B17,Sedum brevifolium,Sedum brevifolium,1
+B18,Sedum brevifolium,Sedum brevifolium,1
+B19,Sedum brevifolium,Sedum brevifolium,0.1
+B20,Sedum brevifolium,Sedum brevifolium,0.1
+B06,Sedum candolleanum,Sedum candolleanum,1
+C10,Sempervivum arachnoideum,Sempervivum arachnoideum,5
+A00,Sempervivum arachnoideum,Sempervivum arachnoideum,1
+A04,Sempervivum arachnoideum,Sempervivum arachnoideum,1
+A08,Sempervivum arachnoideum,Sempervivum arachnoideum,3
+A09,Sempervivum arachnoideum,Sempervivum arachnoideum,1
+A10,Sempervivum arachnoideum,Sempervivum arachnoideum,0.1
+A11,Sempervivum arachnoideum,Sempervivum arachnoideum,1
+A13,Sempervivum arachnoideum,Sempervivum arachnoideum,5
+A14,Sempervivum arachnoideum,Sempervivum arachnoideum,0.1
+A15,Sempervivum arachnoideum,Sempervivum arachnoideum,0.1
+B00,Sempervivum arachnoideum,Sempervivum arachnoideum,0.1
+B05,Sempervivum arachnoideum,Sempervivum arachnoideum,0.1
+B13,Sempervivum arachnoideum,Sempervivum arachnoideum,5
+B18,Sempervivum arachnoideum,Sempervivum arachnoideum,0.1
+A02,Silene cf. nutans,Silene cf. nutans,1
+C07,Silene ciliata,Silene ciliata,3
+C09,Silene ciliata,Silene ciliata,1
+D00,Silene ciliata,Silene ciliata,5
+D10,Silene ciliata,Silene ciliata,5
+D16,Silene ciliata,Silene ciliata,10
+D17,Silene ciliata,Silene ciliata,1
+D18,Silene ciliata,Silene ciliata,5
+D19,Silene ciliata,Silene ciliata,3
+A00,Silene ciliata,Silene ciliata,3
+A20,Silene ciliata,Silene ciliata,0.1
+B06,Silene ciliata,Silene ciliata,3
+A14,Silene foetida subsp. gayana,Silene foetida,1
+D00,Solidago virgaurea subsp. virgaurea,Solidago virgaurea,1
+B04,Solidago virgaurea subsp. virgaurea,Solidago virgaurea,1
+A00,Spergula morisonii,Spergula morisonii,0.1
+B00,Spergula morisonii,Spergula morisonii,0.1
+B01,Spergula morisonii,Spergula morisonii,0.1
+B02,Spergula morisonii,Spergula morisonii,1
+B20,Spergula morisonii,Spergula morisonii,0.1
+D05,Teesdalia conferta,Teesdalia conferta,5
+D15,Teesdalia conferta,Teesdalia conferta,1
+A02,Teesdalia conferta,Teesdalia conferta,1
+C00,Thymus praecox subsp. ligusticus,Thymus praecox,10
+C01,Thymus praecox subsp. ligusticus,Thymus praecox,3
+C06,Thymus praecox subsp. ligusticus,Thymus praecox,15
+C16,Thymus praecox subsp. ligusticus,Thymus praecox,10
+C17,Thymus praecox subsp. ligusticus,Thymus praecox,5
+C18,Thymus praecox subsp. ligusticus,Thymus praecox,5
+A01,Thymus praecox subsp. ligusticus,Thymus praecox,1
+A04,Thymus praecox subsp. ligusticus,Thymus praecox,1
+A11,Thymus praecox subsp. ligusticus,Thymus praecox,15
+A15,Thymus praecox subsp. ligusticus,Thymus praecox,3
+A17,Vaccinium myrtillus,Vaccinium myrtillus,35
