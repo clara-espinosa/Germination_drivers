@@ -1,166 +1,234 @@
 ---
-title: "Germination drivers"
+title: "Germination drivers preliminary analysis"
 author: "Clara Espinosa"
 date: "2024-01-29"
 output: html_document
 ---
+# Large header
+## Not so large header
+### Even smaller header
+**This is bold**, *This is italic*, ***Both bold and italic***
+[text that will appear](add link)  
+Showing images  
+<center> where to put the image  
+![description of an image](link of the image)  
+</center> stop taking this into account  
+{height=300px} to format images  
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE) 
 library(tidyverse);library(readxl);library(ggplot2);library(dplyr)
-library(viridis);library(rstatix)
+library(viridis);library(rstatix);library(binom)
+# echo=FALSE, code is evaluated but not run
 ```
 
-## Load raw data
+# Cleaning and preliminary exploration of the data   
 
-Germination raw data
+## Load raw data  
+
+### Germination raw data  
 ```{r, echo= FALSE}
-read.csv("data/raw_data.csv", sep = ";") %>%
+read.csv("data/raw_data.csv", sep = ",") %>%
   convert_as_factor(species, code, treatment, temp) -> raw_df
 str(raw_df)
+library(kableExtra) # fuuthr and detailed formatting of tables! explore options
+unique(raw_df$species)
+knitr::kable(head(raw_df), caption ="Raw germination data")%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive", position = "center"))
+
 ```
 
-Species information data
+### Species information data
 ```{r}
-read.csv("data/species.csv", sep=";") %>%
-  select(species, temperature_regime, family, community, habitat)  %>%
-  convert_as_factor(species, temperature_regime, family, community, habitat)  -> species
+read.csv("data/species.csv", sep=",") %>%
+  dplyr::select(species, code, temperature_regime, family, community, habitat)  %>%
+  convert_as_factor(species, code, temperature_regime, family, community, habitat)  -> species
 str(species)
+head(species)
+unique(species$species)
 ```
 
-List of species with 0 germination, consider removing from further analysis:
-```{r}
+### List of species with 0 germination, consider removing from further analysis: 
+
+
+  
+```{r eval=FALSE}
   filter (!species == "Euphrasia salisburgensis")%>%
   filter (!species == "Gentiana verna")%>%
-  filter (!species == "Gentianela campestris")%>%
+  filter (!species == "Gentianella campestris")%>%
   filter (!species == "Kobresia myosuroides")%>%
-  filter (!species == "Salix fontqueri")%>%
-  filter (!species == "Sedum album CF")%>%
+  filter (!species == "Salix breviserrata")%>% # also with less than 25% of seeds viables
+  filter (!species == "Sedum album")%>%
   filter (!species == "Sedum atratum")%>%
   filter (!species == "Solidago virgaurea")
 ```
 
-## Basic calculations
-
-Viables calculation per petri dish
+## Basic calculations  
+### Viable seed calculation per petri dish
 ```{r}
-raw_df %>%
-  select (species, treatment, petri, initial, empty, fungus) %>%
-  group_by (species, treatment, petri) %>%
+read.csv("data/raw_data.csv", sep = ",") %>%
+  convert_as_factor(species, code, treatment, temp) %>%
+  dplyr::select (species, code, treatment, petri, initial, empty, fungus) %>%
+  group_by (species, code, treatment, petri) %>%
   mutate (viable = initial -(empty + fungus)) %>%
-  mutate (viablePER = (viable/initial)*100) %>%
-  select (species, treatment, petri, viable, viablePER) -> viables_petri
+  dplyr::select (species, code, treatment, petri, viable) -> viables_petri
+unique(viables_petri$species)
 head(viables_petri)
 ```
 
-Viables calculation per community
+### Viables calculation per community
 ```{r}
-viables_petri %>%
-  merge(species)%>%
+read.csv("data/raw_data.csv", sep = ",") %>%
+    convert_as_factor(species, code, treatment, temp) %>%
+    dplyr::select (species, code, treatment, petri, initial, empty, fungus) %>%
+    group_by (species, code, treatment, petri) %>%
+    mutate (viable = initial -(empty + fungus)) %>%
+    dplyr::select (species, code, treatment, petri, viable)%>%
+    merge(species)%>%
   filter (!species == "Euphrasia salisburgensis")%>%
   filter (!species == "Gentiana verna")%>%
   filter (!species == "Gentianela campestris")%>%
   filter (!species == "Kobresia myosuroides")%>%
-  filter (!species == "Salix fontqueri")%>%
-  filter (!species == "Sedum album CF")%>%
+  filter (!species == "Salix breviserrata")%>%
+  filter (!species == "Sedum album")%>%
   filter (!species == "Sedum atratum")%>%
   filter (!species == "Solidago virgaurea")%>%
-  group_by (community, treatment)%>%
-  summarise(viable= sum(viable))-> viables_community
+    group_by (community, treatment)%>%
+    summarise(viable= sum(viable))-> viables_community
+viables_community
 ```
 
-
-Germination during cold stratification period
+### Viables calculation per species and treatment
 ```{r}
-raw_df %>%
-  merge(viables_petri) %>%
-  select (species, petri, viable, initial, cold_strat) %>% ## empty, fungus to subtract to initial
-  na.omit() %>% #remove alternate dark treatment rows
-  group_by (species) %>%
-  summarize(germ_under_snow = mean(cold_strat/viable)) %>% 
-  mutate (germ_under_snow= replace_na(germ_under_snow, 0)) %>% # salix and solidago have some petridish with all fungus
-  arrange (germ_under_snow) %>%
-  mutate (germpro = germ_under_snow, 
-        treatment = "cold_stratification") %>%
-  mutate(treatment = as.factor(treatment)) %>%
-  select (species,  treatment, germpro)-> cold_strat
-```
-
-Visualization of germination under snow (during cold stratification pre-treatment)
-```{r, echo = FALSE}
-cold_strat %>%
-  group_by (species)%>%
-  summarize(germpro = mean(germpro)) %>% 
-  ggplot(aes(x= species, y= germpro, fill = species)) +
-  geom_bar (stat = "identity") +
-  coord_flip() + 
-  labs (title = "Germination during cold stratification")+
-  xlab ("Species") +
-  ylab("Germination proportion") +
-  theme_minimal (base_size = 16) +
-  theme (plot.title = element_text ( size = 32), #hjust = 0.5,
-    legend.position = "none")
-```
-
-Final germination percentage per treatment discounting cold stratification germ 
-```{r}
-raw_df %>%
-  select (species, treatment, petri, initial, D7, D14, D21, D28, D35, D42) %>%
-  gather ("scores", "germ", D7:D42) %>%
-  mutate (germ = replace_na(germ, 0)) %>%
-  group_by (species,  treatment, petri)%>%
-  summarize (final_cum_germ = sum(germ), 
-             initial = first(initial)) %>% # 
-  merge(viables_petri) %>%
-  mutate(germpro = (final_cum_germ/viable), # 
-         germpro = round (germpro, digit =2)) %>%
-  select (species, treatment, petri, final_cum_germ, viable, germpro)-> finalgerm # final germ per petri dish 
-
+read.csv("data/raw_data.csv", sep = ",") %>%
+    convert_as_factor(species, code, treatment, temp) %>%
+    dplyr::select (species, code, treatment, petri, initial, empty, fungus) %>%
+    group_by (species, code, treatment, petri) %>%
+    mutate (viable = initial -(empty + fungus)) %>%
+    dplyr::select (species, code, treatment, petri, viable)%>%
+    group_by (species,code, treatment)%>%
+    summarise(viable= sum(viable))-> viables_sp
+unique(viables_sp$species)
+head(viables_sp)
 ```
  
-Graph comparing final germiantion between treatment at community level
+### Germination during cold stratification period
 ```{r}
-finalgerm %>%
-  group_by (species, treatment) %>%
-  summarize(germpro = mean (germpro)) %>% # mean to match dataset and substract cold stratification germ
-  rbind(cold_strat) %>%
-  spread(treatment, germpro)%>%
-  mutate( alternate_dark = alternate_dark - cold_stratification)  %>% # substract cold stratification
-  mutate (alternate_dark = ifelse(alternate_dark < 0, 0, alternate_dark)) %>% # convert negative values to 0 germination
-  gather ("treatment", "germpro", alternate_dark:cold_stratification) %>%
-  merge (species, by = "species") %>%
-  filter (!species == "Euphrasia salisburgensis")%>%
-  filter (!species == "Gentiana verna")%>%
-  filter (!species == "Gentianela campestris")%>%
-  filter (!species == "Kobresia myosuroides")%>%
-  filter (!species == "Salix fontqueri")%>%
-  filter (!species == "Sedum album CF")%>%
-  filter (!species == "Sedum atratum")%>%
-  filter (!species == "Solidago virgaurea") %>%
-  na.omit() %>%
-  group_by (treatment, community) %>% #, temperature_regime 
-  summarize (germpro = mean(germpro)) %>%
-  mutate (treatment = factor(treatment, 
-                             levels = c("cold_stratification", "alternate_dark", "alternate_light", 
-                                        "constant_light", "alternate_WP" ))) %>%
-  ggplot()+
-  geom_bar(aes(x= treatment, y= germpro, fill= treatment), stat = "identity") +
-  facet_grid(~community) +
-  ylim (0,1)+
-  scale_fill_viridis_d() +
-  labs (title = "Mean Germination per Treatment")+
-  xlab ("Treatment") +
-  ylab("Germination proportion") +
-  theme_classic (base_size = 16) + #theme_minimal for all species for mean treatment
-  theme (plot.title = element_text ( size = 32), #hjust = 0.5,
-         legend.position = "none")
+read.csv("data/raw_data.csv", sep = ",") %>%
+  convert_as_factor(species, code, treatment, temp) %>%
+  merge(viables_petri) %>%
+  dplyr::select (species, code, petri, viable, initial, cold_strat) %>% ## 
+  na.omit() %>% #remove alternate dark treatment rows
+  group_by (species, code,petri) %>%
+  dplyr::summarize(finalgerm = sum(cold_strat),
+            viable = sum(viable)) %>% 
+  mutate (finalgerm = replace_na(finalgerm , 0)) %>% # salix and solidago have some petridish with all fungus
+  mutate (treatment = "E_cold_stratification") %>%
+  mutate(treatment = as.factor(treatment))-> cold_strat 
+unique(cold_strat$species)
+head(cold_strat)
 ```
 
-Cumulative germination graph for each treatment at community level
+#### Visualization of germination during cold stratification pre-treatment with binomial errors
+```{r, echo = F, fig.height=8, fig.width=10, fig.cap="Germination during cold stratification", fig.align="center", dpi=300}
+cold_strat %>%
+  mutate (binom.confint(finalgerm, viable, methods = "wilson"))%>%
+  dplyr::select (species, code,  treatment, finalgerm, viable, mean, upper, lower)%>%
+  group_by (species)%>%
+  dplyr::summarize(germpro = mean(mean), 
+            upper = mean(upper),
+            lower = mean (lower)) %>% 
+  ggplot(aes(x= species, y= germpro, fill = species)) +
+  geom_bar (stat = "identity") +
+  geom_errorbar( aes(species, germpro, ymin = lower, ymax = upper), width = 0.5, linewidth = 0.5) +
+  coord_flip() + 
+  labs (title = "Germination during cold stratification", x = "Species", y = "Germination proportion")+
+  theme_minimal (base_size = 16) +
+  theme (plot.title = element_text ( size =20), #hjust = 0.5,
+    legend.position = "none")
+
+```
+
+### Separate datsets per community with germination during cold stratification period
 ```{r}
+cold_strat %>%
+  group_by(species, code, treatment)%>%
+  dplyr::summarize(finalgerm = sum(finalgerm),
+                   viable = sum(viable))%>%
+  merge(species)%>%
+  filter(community=="Mediterranean")%>%
+  dplyr::select(code, species, treatment, viable, finalgerm)->cold_strat_M; cold_strat_M
+
+cold_strat %>%
+  group_by(species, code, treatment)%>%
+  dplyr::summarize(finalgerm = sum(finalgerm),
+                   viable = sum(viable))%>%
+  merge(species)%>%
+  filter(community=="Temperate")%>%
+  dplyr::select(code, species, treatment, viable, finalgerm)->cold_strat_T;cold_strat_T
+```
+
+### Final germination percentage per treatment discounting cold stratification germ in darkness treatment 
+```{r}
+read.csv("data/raw_data.csv", sep = ",") %>%
+  convert_as_factor(species, code, treatment, temp) %>%
+  dplyr::select (species, code, treatment, petri, initial, D7, D14, D21, D28, D35, D42) %>%
+  gather ("scores", "germ", D7:D42) %>%
+  mutate (germ = replace_na(germ, 0)) %>%
+  group_by (species, code, treatment, petri)%>%
+  dplyr::summarize (finalgerm = sum(germ)) %>% # 
+  dplyr::select(species, code, treatment, petri, finalgerm)%>% 
+  merge(viables_petri, by= c("species", "code", "treatment", "petri")) %>%
+  rbind(cold_strat)%>%
+  group_by (species, code, treatment) %>%
+  dplyr::summarize(finalgerm = sum (finalgerm)) %>% 
+  spread(treatment, finalgerm)%>%
+  mutate (B_alternate_dark = B_alternate_dark - E_cold_stratification)  %>% # substract cold stratification
+  mutate (B_alternate_dark = ifelse(B_alternate_dark < 0, 0, B_alternate_dark)) %>% # convert negative values to 0 germination
+  gather ("treatment", "finalgerm", A_alternate_light:E_cold_stratification) %>%
+  filter(!treatment=="E_cold_stratification")%>%
+  merge(viables_sp, by= c("code", "species", "treatment"))-> finalgerm;finalgerm
+str(finalgerm)
+head(finalgerm)
+```
+### Graph comparing final germiantion between treatment at community level
+```{r echo=FALSE}
+#echo=FALSE code not showed
+finalgerm %>%
+  merge(species)%>%
+  filter (!species == "Euphrasia salisburgensis")%>% # species with 0 germination
+  filter (!species == "Gentiana verna")%>%
+  filter (!species == "Gentianella campestris")%>%
+  filter (!species == "Kobresia myosuroides")%>%
+  filter (!species == "Salix breviserrata")%>%
+  filter (!species == "Sedum album")%>%
+  filter (!species == "Sedum atratum")%>%
+  filter (!species == "Solidago virgaurea") %>%
+  group_by (community, species, treatment) %>%
+  na.omit() %>%
+  group_by (treatment, community) %>% #, temperature_regime 
+  summarise(finalgerm=sum(finalgerm),
+            viable = sum(viable))%>%
+  mutate (binom.confint(finalgerm, viable, methods = "wilson"))%>%
+  ggplot()+
+  geom_bar(aes(x= treatment, y= mean, fill= treatment), stat = "identity") +
+  geom_errorbar(aes(x= treatment, y=mean, ymin=lower, ymax=upper), color = "black", size=1, width = 0.4)+
+  facet_grid(~community) +
+  #ylim (0,1)+
+  scale_fill_viridis_d(name = "Treatments",labels = c("Control", "Darkness", "Water stress", "Constant Temperature", "Cold stratification")) +
+  labs (title = "Mean Germination per Treatment", x = "Treatments", y="Germination proportion")+
+  theme_classic (base_size = 16) + #theme_minimal for all species for mean treatment
+  theme (plot.title = element_text ( size = 24), #hjust = 0.5,
+         strip.text = element_text (size =20),
+         axis.text.x= element_blank(), 
+         legend.position = "right")
+```
+
+#### Cumulative germination graph for each treatment at community level
+```{r echo=FALSE}
 raw_df %>%
   mutate ( D0 = 0) %>%
-  select (species, treatment, initial, D0, D7, D14, D21, D28, D35, D42) %>%
+  dplyr::select (species, treatment, initial, D0, D7, D14, D21, D28, D35, D42) %>%
   gather ("scores", "germ", D0:D42) %>%
   filter (!(treatment == "alternate_dark")) %>%
   mutate (germ = replace_na(germ, 0)) %>%
@@ -171,7 +239,7 @@ raw_df %>%
   filter (!species == "Gentiana verna")%>%
   filter (!species == "Gentianela campestris")%>%
   filter (!species == "Kobresia myosuroides")%>%
-  filter (!species == "Salix fontqueri")%>%
+  filter (!species == "Salix breviserrata")%>%
   filter (!species == "Sedum album")%>%
   filter (!species == "Sedum atratum")%>%
   filter (!species == "Solidago virgaurea")%>%
@@ -181,11 +249,12 @@ raw_df %>%
   merge(viables_community) %>%
   mutate(germpro = (cum_germ/viable), # 
          germpro = round (germpro, digit =2)) %>%
+  filter(!treatment == "B_alternate_dark")%>%
   ggplot(aes(x= scores, y= germpro, color= treatment, group = treatment))+
-  geom_line(size = 1.5) +
+  geom_line(linewidth = 1.5) +
   facet_grid(~community) +
-  ylim (0,1)+
-  scale_color_manual (name= "Treatment", values = c ("alternate_WP"= "#fde725", "alternate_light" ="#21918c", "constant_light" = "#5ec962")) +
+  #ylim (0,1)+
+  scale_color_manual (name= "Treatment", values = c ("C_alternate_WP"= "#fde725", "A_alternate_light" ="#21918c", "D_constant_light" = "#5ec962")) +
   #scale_color_viridis_d() +
   labs (title = "Cumulative Germination")+
   xlab ("Germination scores") +
@@ -195,3 +264,20 @@ raw_df %>%
          legend.position = "right")
 ```
 
+# Species preferences 
+```{r echo=F}
+library (tidyverse); library (dplyr);library(rstatix); library(ggrepel)
+library (ggpubr);library (vegan)
+```
+Species preferences calculated from ibuttons data and inventories the original scripts and data in Omaña80 and Picos Github repository (respectively) script name: indices and glms 
+climatic indices used:   
+FROM ibuttons data: in picos from 02/10/2018 to 07/08/2019; in villabandin from 12/07/2021 to 29/05/2022  
+FDD: sum of degrees (daily mean) when daily Tmean is below 0 ºC (in absolute values)  
+GDD: sum of degrees (daily mean) when daily Tmean is above 5 ºC   
+Snowdays = sum of days with snow cover, calculated as days when Tmax <0.5 and Tmin > -0.5 ºC  
+These variables (altogether with bio1, bio2 and bio7) calculated mean x day, then month and finally year (whole datset)
+
+From inventory data: 80 plots per each community, at each plot species coverage estimated in %
+To calculate species preferences several filters applied:
+    # consider only plots where each species has at least 10% coverage
+    # climatic variables weighted per coverage 

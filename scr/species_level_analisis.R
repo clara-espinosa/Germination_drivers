@@ -1,346 +1,427 @@
-library(tidyverse);library(ggplot2);library(dplyr);library(rstatix)
-library(viridis);library(MCMCglmm); library(binom)
-library(glmmTMB); library(DHARMa);library(scales)
+library(ggplot2);library(dplyr);library(rstatix)
+library(lubridate);library(vegan); library(ade4); library(MASS)
+library(ecodist);library(maptools);library(rpart);library(splines)
+library(gam);library(pgirmess);library(utils);library(combinat)
+library(cluster);library(fpc);library(clusterSim);library(lmtest)
+library(Hmisc);library(gplots);library(NbClust);library(rpart)
+library(rpart.plot);library(dismo);library(multcomp);library(gbm)
+library(raster);library(tidyverse);
+library(glmmTMB); library (DHARMa)
 
-# dataframe with raw data ####
-read.csv("data/raw_data.csv", sep = ",") %>%
-  convert_as_factor(species, code, treatment, temp) -> raw_df
-str(raw_df)
-unique(raw_df$species)
+# following chapter 4 multivariate species level responses by Lars ###
+# Separate from the beggining between communities
+############################################# MEDITERRANEAN ###########################################################
+# 4.1 DATA MATRICES ####
+# header species data 
+read.csv("data/species.csv") %>%
+  dplyr::select(species,code, family, community, habitat, germ_drivers)%>%
+  filter(community == "Mediterranean") -> spe_med
 
-# species with 0 germination across all experiment (remove from analysis)
-  filter (!species == "Euphrasia salisburgensis")%>%
-  filter (!species == "Gentiana verna")%>%
-  filter (!species == "Gentianella campestris")%>%
-  filter (!species == "Kobresia myosuroides")%>%
-  filter (!species == "Salix breviserrata")%>%
-  filter (!species == "Sedum album")%>%
-  filter (!species == "Sedum atratum")%>%
-  filter (!species == "Solidago virgaurea")
+# USEFUL!!Shorten sp names with 4 letters from genus name and 4 letter from species name 
+spe_med$sp <- make.cepnames(spe_med$species, seconditem=FALSE) #works if Sp are in columns
 
-# dataframe with species data ####
-read.csv("data/species.csv", sep=",") %>%
-  select(species, code,  family, community, habitat)  %>%
-  convert_as_factor(species, code, family, community, habitat)-> species 
+# 1-  species x community matrix
+read.csv("data/spatial-survey-species-Med.csv") %>%
+  group_by(plot)%>%
+  mutate(total_cover= sum(cover),
+         rel_cover = round((cover/total_cover)*100,2), # relative cover according to max vegetation cover
+         N_sp = length(unique(species)))%>%
+  merge(spe_med, by="species")%>% # get species names shortened
+  dplyr::select(plot, sp, rel_cover)%>%
+  spread(sp, rel_cover)%>% # species in columns
+  replace(is.na(.), 0)%>% #-> med_plot
+  filter(!plot=="A00")%>% # filter plots without iButtons data
+  filter(!plot=="B00")%>%
+  filter(!plot=="C00")%>%
+  filter(!plot=="D00")%>%
+  filter(!plot=="B13")%>%
+  filter(!plot=="B14")%>%
+  filter(!plot=="B15")%>%
+  filter(!plot=="C04")%>%
+  filter(!plot=="C07")%>%
+  column_to_rownames(var="plot")-> sp_x_com_M # replace Na with 0
 
-# viables x petri x treatment ####
-read.csv("data/raw_data.csv", sep = ",") %>%
-  convert_as_factor(species, code, treatment, temp) %>%
-  select (species, code, treatment, petri, initial, empty, fungus) %>%
-  group_by (species, code, treatment, petri) %>%
-  mutate (viable = initial -(empty + fungus)) %>%
-  select (species, code, treatment, petri, viable)%>%
-  arrange(species, code, treatment, petri)-> viables_petri
-
-# viables x species x treatment
-read.csv("data/raw_data.csv", sep = ",") %>%
-  convert_as_factor(species, code, treatment, temp) %>%
-  select (species, code, treatment, petri, initial, empty, fungus) %>%
-  group_by (species, code, treatment, petri) %>%
-  mutate (viable = initial -(empty + fungus)) %>%
-  select (species, code, treatment, petri, viable)%>%
-  group_by (species, code, treatment)%>%
-  summarise(viable= sum(viable))%>%
-  arrange(species, treatment) -> viable_sp
-
-# D0 germination check change to cold_stratification treatment and mean values ####
+# 2-  species x traits matrix with germination proportion
 read.csv("data/raw_data.csv", sep = ",") %>%
   convert_as_factor(species, code, treatment, temp) %>%
-  select (species, code, petri, initial, cold_strat, empty, fungus) %>% ## 
-  na.omit() %>% #remove alternate dark treatment rows
-  mutate (viable = initial -(empty + fungus)) %>%
-  group_by (species, code, petri) %>%
-  summarise (viable = round(mean(viable),0),
-             finalgerm= round(mean(cold_strat),0)) %>%
-  mutate (finalgerm = replace_na(finalgerm , 0)) %>% # salix and solidago have some petridish with all fungus
-  mutate (treatment = "E_cold_stratification")%>%
-  group_by (species, code, treatment, petri) %>%
-  summarize(finalgerm = round(mean (finalgerm),0), 
-            viable = round(mean(viable),0))-> cold_strat
-
-#final germination percentage calculation ####
-read.csv("data/raw_data.csv", sep = ",") %>%
-  convert_as_factor(species, code, treatment, temp) %>%
-  select (species, code, treatment, petri, initial, D7, D14, D21, D28, D35, D42) %>%
+  dplyr::select (species, code, treatment, petri, initial, D7, D14, D21, D28, D35, D42) %>%
   gather ("scores", "germ", D7:D42) %>%
   mutate (germ = replace_na(germ, 0)) %>%
   group_by (species, code, treatment, petri)%>%
-  summarize (finalgerm = sum(germ)) %>% # 
-  select(species, code, treatment, petri, finalgerm)%>% 
-  merge(viables_petri) %>%
+  dplyr::summarize (finalgerm = sum(germ)) %>% # 
+  dplyr::select(species, code, treatment, petri, finalgerm)%>% 
+  merge(viables_petri, by= c("species", "code", "treatment", "petri")) %>%
   rbind(cold_strat)%>%
-  arrange(species, code, treatment, petri)%>%
-  mutate (binom.confint(finalgerm, viable, methods = "wilson"))%>%
-  select (species, code, treatment, petri, finalgerm, viable,  mean, upper, lower)-> finalgerm # final germ per petri dish 
-
-# species preferences (focus on GDD, FDD) ####
-# Mediterranean
-read.csv("data/sp_pref_villa.csv", sep = ",") %>%
-  dplyr::select(species, community, bio1, bio2, bio7, FDD, GDD, Snw) -> sp_pref_villa
-# Temperate 
-read.csv("data/sp_pref_picos.csv", sep = ";") %>%
-  select(species, community, bio1, bio2, bio7, FDD, GDD, Snw) -> sp_pref_picos
-
-sp_pref_villa%>%
-  rbind(sp_pref_picos)->sp_pref
-
-species%>%
-  merge(sp_pref, by =c("species", "community"))%>%
-  select(species, community, code, habitat, GDD, FDD)->species2
-
-
-# MCMC GLMM ####
-finalgerm %>%
   group_by (species, code, treatment) %>%
-  summarize(finalgerm = sum (finalgerm)) %>% # mean to match dataset and substract cold stratification germ
-  arrange(species, treatment) %>%
+  dplyr::summarize(finalgerm = sum (finalgerm)) %>% 
+  #filter (!species == "Solidago virgaurea")%>%  #filter species with 0 germination traits?
   spread(treatment, finalgerm)%>%
   mutate (B_alternate_dark = B_alternate_dark - E_cold_stratification)  %>% # substract cold stratification
   mutate (B_alternate_dark = ifelse(B_alternate_dark < 0, 0, B_alternate_dark)) %>% # convert negative values to 0 germination
   gather ("treatment", "finalgerm", A_alternate_light:E_cold_stratification) %>%
-  arrange(species, treatment) %>%
-  filter(!treatment=="E_cold_stratification")%>%
-  merge(viable_sp, by= c("code", "species", "treatment"))%>%
-  merge(species2)%>%
-  select(community, species, habitat, FDD, GDD, treatment, finalgerm, viable)%>%
-  mutate(species= str_replace(species, "Minuartia CF", "Minuartia arctica"))%>%
-  mutate(ID = gsub(" ", "_", species), animal = ID) %>% 
-  filter (!species == "Euphrasia salisburgensis")%>%
-  filter (!species == "Gentiana verna")%>%
-  filter (!species == "Gentianella campestris")%>%
-  filter (!species == "Kobresia myosuroides")%>%
-  filter (!species == "Salix breviserrata")%>%
-  filter (!species == "Sedum album")%>%
-  filter (!species == "Sedum atratum")%>%
-  filter (!species == "Solidago virgaurea") %>%
-  na.omit ()%>%
-  #filter(community =="Temperate")%>% #Temperate    Mediterranean
-  as.data.frame()-> mcmc_ibc
-str(mcmc_ibc)
-unique(mcmc_ibc$habitat)
-#### PHYLO TREE AND MODEL SPECIFICATION FOR MULTINOMIAL####
-### Read tree
-phangorn::nnls.tree(cophenetic(ape::read.tree("results/treegerm.tree")), 
-                    ape::read.tree("results/treegerm.tree"), method = "ultrametric") -> 
-  nnls_orig
+  #filter(!treatment=="E_cold_stratification")%>%
+  merge(viables_sp, by= c("code", "species", "treatment"))%>%
+  rbind(cold_strat_M)%>%
+  mutate(germpro = round(finalgerm/viable, 2))%>%
+  merge(spe_med, by =c("species", "code"))%>% 
+  dplyr::select(sp, treatment, germpro)%>%
+  spread(treatment, germpro)->germ_trait_M  
+setdiff(spe_med$species,test1$species)
+unique(viables_petri$species)
 
-nnls_orig$node.label <- NULL
-
-### Set number of iterations
-nite = 1000000
-nthi = 100
-nbur = 100000
-
-# shorter iterations
-# nite = 10000
-#nthi = 10
-#nbur = 100
-
-### Set priors for germination models (as many prior as random factors)
-# change nu = 2 and alpha.V = 1000 for germination rate (originally nu = 1 and alpha.v = 500)
-priors <- list(R = list(V = 1, nu = 50), 
-               G = list(G1 = list(V = 1, nu = 1, alpha.mu = 0, alpha.V = 500), 
-                        G2 = list(V = 1, nu = 1, alpha.mu = 0, alpha.V = 500)))
-#G3 = list(V = 1, nu = 1, alpha.mu = 0, alpha.V = 500)))   
-### TEST
-MCMCglmm::MCMCglmm(cbind(finalgerm, viable - finalgerm) ~ treatment*GDD + treatment*FDD, # *community, habitat, GDD, FDD
-                   random = ~ animal + ID,
-                   family = "multinomial2", pedigree = nnls_orig, prior = priors, data = mcmc_ibc,
-                   nitt = nite, thin = nthi, burnin = nbur, 
-                   verbose = FALSE, saveX = FALSE, saveZ = FALSE, saveXL = FALSE, pr = FALSE, pl = FALSE) -> m1
-
-#save(m1, file = "results/mcmc.Rdata")
-x11()
-plot(m1)
-
-
-# load("results/mcmc.Rdata")
-summary(m1)
-
-### Random and phylo
-# Calculate lambda http://www.mpcm-evolution.com/practice/online-practical-material-chapter-11/chapter-11-1-simple-model-mcmcglmm
-
-lambda <- m1$VCV[,"animal"]/(m1$VCV[,"animal"] + m1$VCV[,"units"]) 
-
-mean(m1$VCV[,"animal"]/(m1$VCV[,"animal"] + m1$VCV[,"units"])) %>% round(2)
-coda::HPDinterval(m1$VCV[,"animal"]/(m1$VCV[,"animal"] + m1$VCV[,"units"]))[, 1] %>% round(2)
-coda::HPDinterval(m1$VCV[,"animal"]/(m1$VCV[,"animal"] + m1$VCV[,"units"]))[, 2] %>% round(2)
-
-# Random effects animal
-summary(m1)$Gcovariances[1, 1] %>% round(2) 
-summary(m1)$Gcovariances[1, 2] %>% round(2) 
-summary(m1)$Gcovariances[1, 3] %>% round(2)
-
-# Random effects code:ID
-summary(m1)$Gcovariances[2, 1] %>% round(2)
-summary(m1)$Gcovariances[2, 2] %>% round(2) 
-summary(m1)$Gcovariances[2, 3] %>% round(2) 
-
-
-#### visualization significant differences MCMC-GLMM ####
-# treatment x community, only differnce in WP, lower in temperate
-finalgerm %>%
+#### species x traits matrix with germination  as odd ratios 
+read.csv("data/raw_data.csv", sep = ",") %>%
+  convert_as_factor(species, code, treatment, temp) %>%
+  dplyr::select (species, code, treatment, petri, initial, D7, D14, D21, D28, D35, D42) %>%
+  gather ("scores", "germ", D7:D42) %>%
+  mutate (germ = replace_na(germ, 0)) %>%
+  group_by (species, code, treatment, petri)%>%
+  dplyr::summarize (finalgerm = sum(germ)) %>% # 
+  dplyr::select(species, code, treatment, petri, finalgerm)%>% 
+  merge(viables_petri, by= c("species", "code", "treatment", "petri")) %>%
+  rbind(cold_strat)%>%
   group_by (species, code, treatment) %>%
-  summarize(finalgerm = sum (finalgerm)) %>% # mean to match dataset and substract cold stratification germ
-  arrange(species, treatment) %>%
+  dplyr::summarize(finalgerm = sum (finalgerm)) %>% 
+  #filter (!species == "Solidago virgaurea")%>%  #filter species with 0 germination traits?
   spread(treatment, finalgerm)%>%
   mutate (B_alternate_dark = B_alternate_dark - E_cold_stratification)  %>% # substract cold stratification
   mutate (B_alternate_dark = ifelse(B_alternate_dark < 0, 0, B_alternate_dark)) %>% # convert negative values to 0 germination
   gather ("treatment", "finalgerm", A_alternate_light:E_cold_stratification) %>%
-  arrange(species, treatment) %>%
-  filter(!treatment=="E_cold_stratification")%>%
-  merge(viable_sp, by= c("code", "species", "treatment"))%>% #-> mcmc_ibc
-  merge(species2)%>%
-  filter (!species == "Euphrasia salisburgensis")%>%
-  filter (!species == "Gentiana verna")%>%
-  filter (!species == "Gentianella campestris")%>%
-  filter (!species == "Kobresia myosuroides")%>%
-  filter (!species == "Salix breviserrata")%>%
-  filter (!species == "Sedum album")%>%
-  filter (!species == "Sedum atratum")%>%
-  filter (!species == "Solidago virgaurea") %>%
-  na.omit() %>%
-  group_by (treatment, community) %>% #, temperature_regime 
-  summarise(finalgerm=sum(finalgerm),
-            viable = sum(viable))%>%
-  mutate (binom.confint(finalgerm, viable, methods = "wilson"))%>%
-  #filter(!treatment =="B_alternate_dark")%>%
-  #filter(!treatment =="C_alternate_WP")%>%
-  #filter(!treatment =="D_constant_light")%>%
-  ggplot()+
-  geom_bar(aes(x= treatment, y= mean, fill= treatment), color = "black", stat = "identity") +
-  geom_errorbar(aes(x= treatment, y=mean, ymin=lower, ymax=upper), color = "black", size=1, width = 0.4)+
-  facet_grid(~community) +
-  ylim (0,0.5)+
-  scale_fill_manual(name = "Treatments",labels = c("Control", "Darkness", "Water stress", "Constant Temperature"), 
-                    values = c("#2A788EFF", "dimgrey", "chocolate1","#7AD151FF")) + 
-  #"Darkness" = "dimgrey", "Water stress"= "chocolate1", "Constant Temperature" = "#7AD151FF", "Cold stratification"
-  labs (x = "Treatments", y="Germination proportion")+
-  theme_classic (base_size = 18) + #theme_minimal for all species for mean treatment
-  theme (plot.title = element_text ( size = 24), #hjust = 0.5,
-         strip.text = element_text (size =20),
-         axis.title.x= element_blank(), 
-         axis.text.x= element_blank(), 
-         legend.position = "bottom")
-show_col(viridis(4))
+  #filter(!treatment=="E_cold_stratification")%>%
+  merge(viables_sp, by= c("code", "species", "treatment"))%>%
+  rbind(cold_strat_M)%>%
+  merge(spe_med)-> germ_to_odds_M
 
-# treatment x habitat
-finalgerm %>%
-  group_by (species, code, treatment) %>%
-  summarize(finalgerm = sum (finalgerm)) %>% # mean to match dataset and substract cold stratification germ
-  arrange(species, treatment) %>%
-  spread(treatment, finalgerm)%>%
-  mutate (B_alternate_dark = B_alternate_dark - E_cold_stratification)  %>% # substract cold stratification
-  mutate (B_alternate_dark = ifelse(B_alternate_dark < 0, 0, B_alternate_dark)) %>% # convert negative values to 0 germination
-  gather ("treatment", "finalgerm", A_alternate_light:E_cold_stratification) %>%
-  arrange(species, treatment) %>%
-  filter(!treatment=="E_cold_stratification")%>%
-  merge(viable_sp, by= c("code", "species", "treatment"))%>% #-> mcmc_ibc
-  merge(species2)%>%
-  filter (!species == "Euphrasia salisburgensis")%>%
-  filter (!species == "Gentiana verna")%>%
-  filter (!species == "Gentianella campestris")%>%
-  filter (!species == "Kobresia myosuroides")%>%
-  filter (!species == "Salix breviserrata")%>%
-  filter (!species == "Sedum album")%>%
-  filter (!species == "Sedum atratum")%>%
-  filter (!species == "Solidago virgaurea") %>%
-  na.omit() %>%
-  group_by (treatment, habitat) %>% #, temperature_regime 
-  summarise(finalgerm=sum(finalgerm),
-            viable = sum(viable))%>%
-  mutate (binom.confint(finalgerm, viable, methods = "wilson"))%>%
-  #filter(!treatment =="B_alternate_dark")%>%
-  #filter(!treatment =="C_alternate_WP")%>%
-  #filter(!treatment =="D_constant_light")%>%
-  ggplot()+
-  geom_bar(aes(x= treatment, y= mean, fill= treatment), color = "black", stat = "identity") +
-  geom_errorbar(aes(x= treatment, y=mean, ymin=lower, ymax=upper), color = "black", size=1, width = 0.4)+
-  facet_grid(~habitat) +
-  ylim (0,0.5)+
-  scale_fill_manual(name = "Treatments",labels = c("Control", "Darkness", "Water stress", "Constant Temperature"), 
-                    values = c("#2A788EFF", "dimgrey", "chocolate1","#7AD151FF")) + 
-  #"Darkness" = "dimgrey", "Water stress"= "chocolate1", "Constant Temperature" = "#7AD151FF", "Cold stratification"
-  labs (x = "Treatments", y="Germination proportion")+
-  theme_classic (base_size = 18) + #theme_minimal for all species for mean treatment
-  theme (plot.title = element_text ( size = 24), #hjust = 0.5,
-         strip.text = element_text (size =20),
-         axis.title.x= element_blank(), 
-         axis.text.x= element_blank(), 
-         legend.position = "bottom")
+### Get GLM coefficients since the coefficients(estimate) are returned in log odds, 
+#https://www.r-bloggers.com/2016/11/introducing-r-package-oddsratio/
 
-# GDD/FDD correlation with treatment germination responses
- ##GDD        
-finalgerm %>%
+glms <- function(x) {
+  glm(cbind(finalgerm, viable - finalgerm) ~ treatment,  family = "binomial", data= x) -> m1
+  broom::tidy(m1)
+}
+
+germ_to_odds_M %>%
+  group_by(code, species) %>%
+  do(glms(.)) %>%
+  dplyr:: select(code, species, term, estimate) %>%
+  rename(log_odds_ratio = estimate ) %>%
+  mutate(term = as.factor(term))%>%
+  mutate(term = fct_recode(term, odds_A_control = "(Intercept)", odds_B_dark = "treatmentB_alternate_dark",
+                           odds_C_WP = "treatmentC_alternate_WP", odds_D_constant = "treatmentD_constant_light",
+                           odds_E_cold = "treatmentE_cold_stratification"))%>%
+  dplyr::group_by(species)%>%
+  tidyr::spread(term, log_odds_ratio)%>%
+  merge(spe_med, by= c("species", "code"))-> germ_odds_M
+
+# seed production trait (all sp covered)
+read.csv("data/seed_production.csv", sep = ",") %>%
+  filter(community == "Mediterranean")%>%
+  group_by(species) %>%
+  dplyr::summarize(seed_production= round(mean(N.seeds),2))%>%
+  merge(spe_med, by= "species") -> seed_production_M
+
+# seed mass trait (all sp covered)
+read.csv("data/seed_mass.csv", sep = ",") %>%
+  filter(community == "Mediterranean")%>%
+  group_by(species) %>%
+  dplyr::summarize(seed_mass= round(mean(weight_50_mg),2))%>%
+  merge(spe_med, by= "species") -> seed_mass_M 
+
+setdiff(species$species, test1$species)
+# plant and floral height (only Teesdalia missing)
+read.csv("data/plant_height.csv", sep = ",") %>%
+  filter(community == "Mediterranean")%>%
+  group_by(species) %>%
+  dplyr::summarize(plant_height= round(mean(plant_height),2),
+                   floral_height = round(mean(floral_height),2))%>%
+  right_join(spe_med, by= "species")-> plant_height_M 
+setdiff(species$species, test1$species)
+# join traits subset
+seed_production_M%>%
+  merge(seed_mass_M)%>%
+  merge(plant_height_M)%>%
+  merge(germ_odds_M)%>%
+  dplyr::select(sp, seed_mass,seed_production,plant_height,floral_height, 
+                odds_A_control, odds_B_dark, odds_C_WP, odds_D_constant,odds_E_cold )%>%
+  replace(is.na(.), 10)%>%
+  merge(germ_trait_M, by = "sp")%>%
+  column_to_rownames(var="sp")->sp_x_trait_M
+  
+# 3- Community x Environmental data 
+read.csv("data/spatial-survey-temperatures-Med.csv") %>%
+  mutate(Time = as.POSIXct(Time, tz = "UTC", format = "%d/%m/%Y %H:%M")) %>%
+  group_by(plot, Day = lubridate::floor_date(Time, "day")) %>%
+  dplyr::summarize(T = mean(Temperature), X = max(Temperature), N = min(Temperature), n = length(Time)) %>% # Daily mean, max, min
+  mutate(Snow = ifelse(X < 0.5 & N > -0.5, 1, 0)) %>% # Day is snow day or not
+  mutate(FreezeThaw = ifelse(X > 0.5 & N < -0.5, 1, 0)) %>% # Day with freeze-thaw cycles
+  mutate(FDD = ifelse(T < 0, T, 0)) %>% # Freezing degrees per day
+  mutate(GDD = ifelse(T >= 5, T, 0)) %>% # Growing degrees day per month https://link.springer.com/article/10.1007/s00035-021-00250-1
+  group_by(plot, Month = lubridate::floor_date(Day, "month")) %>%
+  dplyr::summarize(T = mean(T), X = mean(X), N = mean(N), # Daily mean, max, min
+                   Snow = sum(Snow), # Snow days per month
+                   FreezeThaw = sum(FreezeThaw), # Freeze-thaw days per month
+                   FDD = sum(FDD), # FDD per month
+                   GDD = sum(GDD)) %>% # GDD per month
+  group_by(plot) %>%
+  dplyr::summarize(bio1 = round(mean(T),2), # Annual Mean Temperature
+                   bio2 = round(mean(X - N),2), # Mean Diurnal Range (Mean of monthly (max temp - min temp))
+                   bio7 = round(max(X) - min(N), 2), # Temperature Annual Range (BIO5-BIO6)
+                   Snw = sum(Snow),
+                   FDD = round(abs(sum(FDD)),2), # FDD per year
+                   GDD = round(sum(GDD)),2) %>%  # GDD per year
+  merge(read.csv("data/spatial-survey-header-Med.csv")) %>% 
+  #dplyr::select(plot, site, aspect, elevation, latitude, longitude, bio1:GDD)%>% 
+  dplyr::select(plot, elevation,bio1:GDD)%>% 
+  filter(!plot=="D06")%>% # filter plots without vegetation
+  filter(!plot=="D07")%>%
+  column_to_rownames(var="plot")-> com_x_env_M
+# 4.3 Trait free CCA ####
+cca1M <- cca(sp_x_com_M ~ elevation+GDD+FDD, data=com_x_env_M) # +bio1+bio2+bio7+Snw tried but highly correlated
+plot(cca1M, display = c("species", "bp"))
+anova(cca1M, by= "terms") # elevation and GDD significantly explain the ordination of the species
+RsquareAdj(cca1M) # roughly 6% of variation in the species data is explained by these variables
+head(vegan::scores(cca1M, display = "species"))
+# possibility to separate CCA for each env. variable and then use the first CCA axes to obtain 
+# the value (score) for the particular gradient
+
+# 4.4 Double canonical correspondance analysis (dbrda function not working!!) ####
+ca1M <- dudi.coa(sp_x_com_M, scannf = F)
+dCCA1M <- ade4::dbrda(ca1M, com_x_env_M, sp_x_trait_M, scannf = FALSE)
+# 4.5 Functional response groups ####
+dist_CCAM <- dist(vegan::scores(cca1M, display = "species"))
+clust_CCAM <- hclust(dist_CCAM, method = "ward.D2")
+plot(clust_CCAM, cex = 0.6)
+
+#The function NbClust from the package of the same name estimates the optimal number of groups on the basis of maximizing 
+#the dissimilarity between groups and minimizing the dissimilarity within groups.
+groups_CCAM <- NbClust(diss = dist_CCAM, distance = NULL, min.nc = 2, max.nc = 6,
+                       method = "ward.D2", index = "silhouette")
+groups_CCAM # optimal 3 clusters
+
+# we are asking whether there are traits that explain to which cluster the species belong, keeping in
+# mind that this clustering is based on our initial ordination that arranges species along the
+# considered environmental gradients. For this test we use here a simple regression analysis
+# test every trait against the cluster affiliation
+summary(lm(as.matrix(sp_x_trait_M) ~ groups_CCAM$Best.partition))
+# No trait significantly associated to each of the groups
+
+# 4.6 RDA and regression trees (more appropiate with short gradients and sp abundance-gradient linear relationship) ####
+rda1M <- rda(sp_x_com_M ~ ., data = com_x_env_M, scale = TRUE)
+plot(rda1M, display = c("bp", "sp"))
+RsquareAdj(rda1M)
+#how much of the variation the 3 constraining factors explain.
+cumsum(rda1M$CCA$eig) / sum(rda1M$CCA$eig)
+
+# Analyzing the relationship between the species responses (expressed as the species scores in
+#the RDA ordination space) and their traits
+lm_rda1M <- lm(vegan::scores(rda1M, choices = 1, display = "species") ~ ., data = sp_x_trait_M)
+summary(lm_rda1M)
+# significance of odds_D_constant
+# marginal significance seed mass, floral height, D_constant_proportion
+# the above traits of our species do no explain any significant proportion of the sp responses
+### STOPED FOLLOWING CHAPTER 4 HERE, NEXT WOULD BE REGRESSION TREES
+
+################################# TEMPERATE ########################################################################
+# 4.1 DATA MATRICES ####
+# header species data 
+read.csv("data/species.csv") %>%
+  dplyr::select(species, code, family, community, habitat, germ_drivers)%>%
+  filter(community == "Temperate")%>%
+  filter (!species == "Minuartia CF")-> spe_tem
+# USEFUL!!Shorten sp names with 4 letters from genus name and 4 letter from species name 
+spe_tem$sp <- make.cepnames(spe_tem$species, seconditem=FALSE) #works if Sp are in columns
+
+# 1-  species x community matrix
+read.csv("data/spatial-survey-species-Tem.csv") %>%
+  group_by(plot)%>%
+  mutate(total_cover= sum(cover),
+         rel_cover = round((cover/total_cover)*100,2), # relative cover according to max vegetation cover
+         N_sp = length(unique(species))) %>%
+  merge(spe_tem, by="species")%>% # get species names shortened
+  dplyr::select(plot, sp, rel_cover)%>%
+  spread(sp, rel_cover)%>% # species in columns
+  replace(is.na(.), 0)%>%
+  column_to_rownames(var="plot")-> sp_x_com_T # replace Na with 0
+setdiff(spe_tem$species, test1$species)
+# 2-  species x traits matrix
+read.csv("data/raw_data.csv", sep = ",") %>%
+  convert_as_factor(species, code, treatment, temp) %>%
+  dplyr::select (species, code, treatment, petri, initial, D7, D14, D21, D28, D35, D42) %>%
+  gather ("scores", "germ", D7:D42) %>%
+  mutate (germ = replace_na(germ, 0)) %>%
+  group_by (species, code, treatment, petri)%>%
+  dplyr::summarize (finalgerm = sum(germ)) %>% # 
+  dplyr::select(species, code, treatment, petri, finalgerm)%>% 
+  merge(viables_petri, by= c("species", "code", "treatment", "petri")) %>%
+  rbind(cold_strat)%>%
   group_by (species, code, treatment) %>%
-  summarize(finalgerm = sum (finalgerm)) %>% # mean to match dataset and substract cold stratification germ
-  arrange(species, treatment) %>%
+  dplyr::summarize(finalgerm = sum (finalgerm)) %>%  
+  #filter (!species == "Euphrasia salisburgensis")%>%  #filter species with 0 germination traits?
+  #filter (!species == "Gentiana verna")%>%
+  #filter (!species == "Gentianella campestris")%>%
+  #filter (!species == "Kobresia myosuroides")%>%
+  #filter (!species == "Salix breviserrata")%>%
+  #filter (!species == "Sedum album")%>%
+  #filter (!species == "Sedum atratum")%>%
   spread(treatment, finalgerm)%>%
   mutate (B_alternate_dark = B_alternate_dark - E_cold_stratification)  %>% # substract cold stratification
   mutate (B_alternate_dark = ifelse(B_alternate_dark < 0, 0, B_alternate_dark)) %>% # convert negative values to 0 germination
   gather ("treatment", "finalgerm", A_alternate_light:E_cold_stratification) %>%
-  arrange(species, treatment) %>%
-  filter(!treatment=="E_cold_stratification")%>%
-  merge(viable_sp, by= c("code", "species", "treatment"))%>% #-> mcmc_ibc
-  merge(species2)%>%
-  filter (!species == "Euphrasia salisburgensis")%>%
-  filter (!species == "Gentiana verna")%>%
-  filter (!species == "Gentianella campestris")%>%
-  filter (!species == "Kobresia myosuroides")%>%
-  filter (!species == "Salix breviserrata")%>%
-  filter (!species == "Sedum album")%>%
-  filter (!species == "Sedum atratum")%>%
-  filter (!species == "Solidago virgaurea") %>%
-  mutate (binom.confint(finalgerm, viable, methods = "wilson"))%>%
-  ggplot(aes(x= GDD, y= mean, fill= treatment), color = "black")+
-  geom_point(stat = "identity", shape=21, size=4) +
-  facet_grid(~treatment) + 
-  geom_smooth(method = "loess")+
-  ylim (-0.1,0.5)+
-  scale_fill_manual(name = "Treatments",labels = c("Control", "Darkness", "Water stress", "Constant Temperature"), 
-                    values = c("#2A788EFF", "dimgrey", "chocolate1","#7AD151FF")) + 
-  #"Darkness" = "dimgrey", "Water stress"= "chocolate1", "Constant Temperature" = "#7AD151FF", "Cold stratification"
-  labs (x = "GDD (Growing dregree days)", y="Germination proportion")+
-  theme_classic (base_size = 18) + #theme_minimal for all species for mean treatment
-  theme (plot.title = element_text ( size = 24), #hjust = 0.5,
-         strip.text = element_text (size =16),
-         axis.title.x= element_text (size =18), 
-         axis.text.x= element_blank(), 
-         legend.position = "bottom")
-##FDD
-finalgerm %>%
+  merge(viables_sp, by= c("code", "species", "treatment"))%>%
+  rbind(cold_strat_T)%>%
+  mutate(germpro = round(finalgerm/viable, 2))%>%
+  merge(spe_tem, by =c("species", "code"))%>% 
+  dplyr::select(sp, treatment, germpro)%>%
+  spread(treatment, germpro)->germ_trait_T
+  column_to_rownames(var="sp")%>%   #sp_x_trait_T   # sp_x_trait_M
+    
+#### species x traits matrix with germination  as odd ratios 
+read.csv("data/raw_data.csv", sep = ",") %>%
+  convert_as_factor(species, code, treatment, temp) %>%
+  dplyr::select (species, code, treatment, petri, initial, D7, D14, D21, D28, D35, D42) %>%
+  gather ("scores", "germ", D7:D42) %>%
+  mutate (germ = replace_na(germ, 0)) %>%
+  group_by (species, code, treatment, petri)%>%
+  dplyr::summarize (finalgerm = sum(germ)) %>% # 
+  dplyr::select(species, code, treatment, petri, finalgerm)%>% 
+  merge(viables_petri, by= c("species", "code", "treatment", "petri")) %>%
+  rbind(cold_strat)%>%
   group_by (species, code, treatment) %>%
-  summarize(finalgerm = sum (finalgerm)) %>% # mean to match dataset and substract cold stratification germ
-  arrange(species, treatment) %>%
+  dplyr::summarize(finalgerm = sum (finalgerm)) %>% 
+  #filter (!species == "Solidago virgaurea")%>%  #filter species with 0 germination traits?
   spread(treatment, finalgerm)%>%
   mutate (B_alternate_dark = B_alternate_dark - E_cold_stratification)  %>% # substract cold stratification
   mutate (B_alternate_dark = ifelse(B_alternate_dark < 0, 0, B_alternate_dark)) %>% # convert negative values to 0 germination
   gather ("treatment", "finalgerm", A_alternate_light:E_cold_stratification) %>%
-  arrange(species, treatment) %>%
-  filter(!treatment=="E_cold_stratification")%>%
-  merge(viable_sp, by= c("code", "species", "treatment"))%>% #-> mcmc_ibc
-  merge(species2)%>%
-  filter (!species == "Euphrasia salisburgensis")%>%
-  filter (!species == "Gentiana verna")%>%
-  filter (!species == "Gentianella campestris")%>%
-  filter (!species == "Kobresia myosuroides")%>%
-  filter (!species == "Salix breviserrata")%>%
-  filter (!species == "Sedum album")%>%
-  filter (!species == "Sedum atratum")%>%
-  filter (!species == "Solidago virgaurea") %>%
-  mutate (binom.confint(finalgerm, viable, methods = "wilson"))%>%
-  ggplot(aes(x= FDD, y= mean, fill= treatment), color = "black")+
-  geom_point(stat = "identity", shape=21, size=4) +
-  facet_grid(~treatment) +
-  geom_smooth(method = "lm")+
-  ylim (-0.1,0.5)+
-  scale_fill_manual(name = "Treatments",labels = c("Control", "Darkness", "Water stress", "Constant Temperature"), 
-                    values = c("#2A788EFF", "dimgrey", "chocolate1","#7AD151FF")) + 
-  #"Darkness" = "dimgrey", "Water stress"= "chocolate1", "Constant Temperature" = "#7AD151FF", "Cold stratification"
-  labs (x = "FDD (Freezing degree days)", y="Germination proportion")+
-  theme_classic (base_size = 18) + #theme_minimal for all species for mean treatment
-  theme (plot.title = element_text ( size = 24), #hjust = 0.5,
-         strip.text = element_text (size =16),
-         axis.title.x= element_text (size =18), 
-         axis.text.x= element_blank(), 
-         legend.position = "none")
+  #filter(!treatment=="E_cold_stratification")%>%
+  merge(viables_sp, by= c("code", "species", "treatment"))%>%
+  rbind(cold_strat_T)%>%
+  merge(spe_tem)-> germ_to_odds_T
+  
+ ### Get GLM coefficients since the coefficients(estimate) are returned in log odds,
+  #https://www.r-bloggers.com/2016/11/introducing-r-package-oddsratio/
+  glms <- function(x) {
+    glm(cbind(finalgerm, viable - finalgerm) ~ treatment,  family = "binomial", data= x) -> m1
+    broom::tidy(m1)
+  }
+  
+  germ_to_odds_T %>%
+    group_by(code, species) %>%
+    do(glms(.)) %>%
+    dplyr:: select(code, species, term, estimate) %>%
+    rename(log_odds_ratio = estimate ) %>%
+    mutate(term = as.factor(term))%>%
+    mutate(term = fct_recode(term, odds_A_control = "(Intercept)", odds_B_dark = "treatmentB_alternate_dark",
+                             odds_C_WP = "treatmentC_alternate_WP", odds_D_constant = "treatmentD_constant_light",
+                             odds_E_cold = "treatmentE_cold_stratification"))%>%
+    dplyr::group_by(species)%>%
+    tidyr::spread(term, log_odds_ratio)%>%
+    merge(spe_tem, by= c("species", "code"))-> germ_odds_T
+  
+
+# seed production trait (all sp covered except galium and salix)
+read.csv("data/seed_production.csv", sep = ",") %>%
+  filter(community == "Temperate")%>%
+  group_by(species) %>%
+  dplyr::summarize(seed_production= round(mean(N.seeds),2))%>%
+  right_join(spe_tem, by= "species") -> seed_production_T
+setdiff(spe_tem$species, test1$species)
+# seed mass trait (all sp covered)
+read.csv("data/seed_mass.csv", sep = ",") %>%
+  filter(community == "Temperate")%>%
+  group_by(species) %>%
+  dplyr::summarize(seed_mass= round(mean(weight_50_mg),2))%>%
+  merge(spe_tem, by= "species") -> seed_mass_T 
+  
+setdiff(spe_tem$species, test1$species)
+# plant and floral height (only Gentianella campestris missing)
+read.csv("data/plant_height.csv", sep = ",") %>%
+  filter(community == "Temperate")%>%
+  group_by(species) %>%
+  dplyr::summarize(plant_height= round(mean(plant_height),2),
+                     floral_height = round(mean(floral_height),2))%>%
+  right_join(spe_tem, by= "species")-> plant_height_T
+setdiff(spe_tem$species, test1$species)
+
+# join traits subset
+seed_production_T%>%
+  merge(seed_mass_T)%>%
+  merge(plant_height_T)%>%
+  merge(germ_odds_T)%>%
+  dplyr::select(sp, seed_mass,seed_production,plant_height,floral_height, 
+                odds_A_control, odds_B_dark, odds_C_WP, odds_D_constant,odds_E_cold )%>%
+  replace(is.na(.), 10)%>% # to fill Na until complete all traits
+  merge(germ_trait_T, by = "sp")%>%
+  column_to_rownames(var="sp")->sp_x_trait_T
+
+# 3- Community x Environmental data
+read.csv("data/spatial-survey-temperatures-Tem.csv") %>%
+  mutate(Time = as.POSIXct(Time, tz = "UTC", format = "%d/%m/%Y %H:%M")) %>%
+  group_by(plot, Day = lubridate::floor_date(Time, "day")) %>%
+  dplyr::summarize(T = mean(Temperature), X = max(Temperature), N = min(Temperature), n = length(Time)) %>% # Daily mean, max, min
+  mutate(Snow = ifelse(X < 0.5 & N > -0.5, 1, 0)) %>% # Day is snow day or not
+  mutate(FreezeThaw = ifelse(X > 0.5 & N < -0.5, 1, 0)) %>% # Day with freeze-thaw cycles
+  mutate(FDD = ifelse(T < 0, T, 0)) %>% # Freezing degrees per day
+  mutate(GDD = ifelse(T >= 5, T, 0)) %>% # Growing degrees day per month https://link.springer.com/article/10.1007/s00035-021-00250-1
+  group_by(plot, Month = lubridate::floor_date(Day, "month")) %>%
+  dplyr::summarize(T = mean(T), X = mean(X), N = mean(N), # Daily mean, max, min
+            Snow = sum(Snow), # Snow days per month
+            FreezeThaw = sum(FreezeThaw), # Freeze-thaw days per month
+            FDD = sum(FDD), # FDD per month
+            GDD = sum(GDD)) %>% # GDD per month
+  group_by(plot) %>%
+  dplyr::summarize(bio1 = round(mean(T),2), # Annual Mean Temperature
+            bio2 = round(mean(X - N),2), # Mean Diurnal Range (Mean of monthly (max temp - min temp))
+            bio7 = round(max(X) - min(N), 2), # Temperature Annual Range (BIO5-BIO6)
+            Snw = sum(Snow),
+            FDD = round(abs(sum(FDD)),2), # FDD per year
+            GDD = round(sum(GDD)),2) %>%  # GDD per year
+  merge(read.csv("data/spatial-survey-header-Tem.csv")) %>% 
+  dplyr::select(plot, elevation,bio1:GDD)%>%
+  #dplyr::select(plot, elevation, FDD, GDD)%>%
+  filter(plot%in%tem_plot$plot)%>% 
+  column_to_rownames(var="plot")-> com_x_env_T
+
+# 4.3 Trait free CCA ####
+cca1T <- cca(sp_x_com_T ~ elevation+GDD+FDD+bio1+bio2+bio7+Snw, data=com_x_env_T) #  tried but highly correlated
+plot(cca1T, display = c("species", "bp"))
+anova(cca1T, by= "terms") # elevation, GDD, FDD, bio7 and snow significantly explain the ordination of the species
+RsquareAdj(cca1T) # roughly 15% of variation in the species data is explained by these variables
+head(vegan::scores(cca1T, display = "species"))
+# separate CCA for each env. variable and then use the first CCA axes to obtain the value for the particular gradient
+# still needs to account for the effects of the other variables as conditional variables (covariates)
+
+# 4.4 Double canonical correspondance analysis (dbrda function not working!!) ####
+ca1T<- dudi.coa(sp_x_com_T, scannf = F)
+dCCA1T <- ade4::dbrda(ca1T, com_x_env_T, sp_x_trait_T, scannf = FALSE)
+
+# 4.5 Functional response groups ####
+dist_CCAT <- dist(vegan::scores(cca1T, display = "species"))
+clust_CCAT <- hclust(dist_CCAT, method = "ward.D2")
+plot(clust_CCAT, cex = 0.6)
+
+#The function NbClust from the package of the same name estimates the optimal number of groups on the basis of maximizing 
+#the dissimilarity between groups and minimizing the dissimilarity within groups.
+groups_CCAT <- NbClust(diss = dist_CCAT, distance = NULL, min.nc = 2, max.nc = 6,
+                       method = "ward.D2", index = "silhouette")
+groups_CCAT# optimal 2 clusters
+
+# we are asking whether there are traits that explain to which cluster the species belong, keeping in
+# mind that this clustering is based on our initial ordination that arranges species along the
+# considered environmental gradients. For this test we use here a simple regression analysis
+# test every trait against the cluster affiliation
+summary(lm(as.matrix(sp_x_trait_T) ~ groups_CCAT$Best.partition))
+# No seed trait significantly associated to each of the groups
+
+# 4.6 RDA and regression trees (more appropiate with short gradients and sp abundance-gradient linear relationship) ####
+rda1T <- rda(sp_x_com_T ~ ., data = com_x_env_T, scale = TRUE)
+plot(rda1T, display = c("bp", "sp"))
+RsquareAdj(rda1T)
+#how much of the variation the 3 constraining factors explain.
+cumsum(rda1T$CCA$eig) / sum(rda1T$CCA$eig)
+
+# Analyzing the relationship between the species responses (expressed as the species scores in
+#the RDA ordination space) and their traits
+lm_rda1T <- lm(vegan::scores(rda1T, choices = 1, display = "species") ~ ., data = sp_x_trait_T)
+summary(lm_rda1T)
+# significance of seed mass, plant height, odds_A_control

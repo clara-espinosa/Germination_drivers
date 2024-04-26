@@ -1,4 +1,4 @@
-Plot,Site,Aspect,Latitude,Longitude,Elevation,Start,End,Soil,Rock,Vasculars,NonVasculars
+plot,site,aspect,latitude,longitude,elevation ,start,end,soil,rock,vasculars,nonvasculars
 A00,Rabinalto,central,42.89682,-6.110191,2109.32,05/07/2021,30/05/2022,10,15,70,5
 A01,Rabinalto,S,42.896724,-6.110208,2107.8,05/07/2021,30/05/2022,5,40,55,0
 A02,Rabinalto,S,42.896643,-6.110207,2105.92,05/07/2021,30/05/2022,30,30,40,0
