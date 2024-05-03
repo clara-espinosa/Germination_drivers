@@ -92,6 +92,14 @@ read.csv("data/raw_data.csv", sep = ",") %>%
   rbind(cold_strat_M)%>%
   merge(spe_med)-> germ_to_odds_M
 
+library(questionr)
+germ_to_odds_M%>%
+  filter(species=="Dianthus langeanus")-> D_test
+fisher.test(D_test)
+
+glm(cbind(finalgerm, viable - finalgerm) ~ treatment,  family = "binomial", data= D_test)-> D_odds
+summary(D_odds)
+odds.ratio(D_odds)
 ### Get GLM coefficients since the coefficients(estimate) are returned in log odds, 
 #https://www.r-bloggers.com/2016/11/introducing-r-package-oddsratio/
 
