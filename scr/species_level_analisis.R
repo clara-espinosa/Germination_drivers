@@ -27,8 +27,8 @@ read.csv("data/spatial-survey-species-Med.csv") %>%
          rel_cover = round((cover/total_cover)*100,2), # relative cover according to max vegetation cover
          N_sp = length(unique(species)))%>%
   merge(spe_med, by="species")%>% # get species names shortened
-  dplyr::select(plot, sp, rel_cover)%>%
-  spread(sp, rel_cover)%>% # species in columns
+  dplyr::select(plot, species, rel_cover)%>%
+  spread(species, rel_cover)%>% # species in columns
   replace(is.na(.), 0)%>% #-> med_plot
   filter(!plot=="A00")%>% # filter plots without iButtons data
   filter(!plot=="B00")%>%
@@ -39,7 +39,7 @@ read.csv("data/spatial-survey-species-Med.csv") %>%
   filter(!plot=="B15")%>%
   filter(!plot=="C04")%>%
   filter(!plot=="C07")%>%
-  column_to_rownames(var="plot")-> sp_x_com_M # replace Na with 0
+  column_to_rownames(var="plot")-> sp_x_plot_M # replace Na with 0
 
 # 2-  species x traits matrix with germination proportion
 read.csv("data/raw_data.csv", sep = ",") %>%
@@ -64,7 +64,7 @@ read.csv("data/raw_data.csv", sep = ",") %>%
   rbind(cold_strat_M)%>%
   mutate(germpro = round(finalgerm/viable, 2))%>%
   merge(spe_med, by =c("species", "code"))%>% 
-  dplyr::select(sp, treatment, germpro)%>%
+  dplyr::select(species, treatment, germpro)%>%
   spread(treatment, germpro)->germ_trait_M  
 setdiff(spe_med$species,test1$species)
 unique(viables_petri$species)
@@ -92,14 +92,6 @@ read.csv("data/raw_data.csv", sep = ",") %>%
   rbind(cold_strat_M)%>%
   merge(spe_med)-> germ_to_odds_M
 
-library(questionr)
-germ_to_odds_M%>%
-  filter(species=="Dianthus langeanus")-> D_test
-fisher.test(D_test)
-
-glm(cbind(finalgerm, viable - finalgerm) ~ treatment,  family = "binomial", data= D_test)-> D_odds
-summary(D_odds)
-odds.ratio(D_odds)
 ### Get GLM coefficients since the coefficients(estimate) are returned in log odds, 
 #https://www.r-bloggers.com/2016/11/introducing-r-package-oddsratio/
 
@@ -149,11 +141,11 @@ seed_production_M%>%
   merge(seed_mass_M)%>%
   merge(plant_height_M)%>%
   merge(germ_odds_M)%>%
-  dplyr::select(sp, seed_mass,seed_production,plant_height,floral_height, 
+  dplyr::select(species, seed_mass,seed_production,plant_height,floral_height, 
                 odds_A_control, odds_B_dark, odds_C_WP, odds_D_constant,odds_E_cold )%>%
   replace(is.na(.), 10)%>%
-  merge(germ_trait_M, by = "sp")%>%
-  column_to_rownames(var="sp")->sp_x_trait_M
+  merge(germ_trait_M, by = "species")%>%
+  column_to_rownames(var="species")->sp_x_trait_M
   
 # 3- Community x Environmental data 
 read.csv("data/spatial-survey-temperatures-Med.csv") %>%
@@ -182,9 +174,9 @@ read.csv("data/spatial-survey-temperatures-Med.csv") %>%
   dplyr::select(plot, elevation,bio1:GDD)%>% 
   filter(!plot=="D06")%>% # filter plots without vegetation
   filter(!plot=="D07")%>%
-  column_to_rownames(var="plot")-> com_x_env_M
+  column_to_rownames(var="plot")-> plot_x_env_M
 # 4.3 Trait free CCA ####
-cca1M <- cca(sp_x_com_M ~ elevation+GDD+FDD, data=com_x_env_M) # +bio1+bio2+bio7+Snw tried but highly correlated
+cca1M <- cca(sp_x_plot_M ~ elevation+GDD+FDD, data=plot_x_env_M) # +bio1+bio2+bio7+Snw tried but highly correlated
 plot(cca1M, display = c("species", "bp"))
 anova(cca1M, by= "terms") # elevation and GDD significantly explain the ordination of the species
 RsquareAdj(cca1M) # roughly 6% of variation in the species data is explained by these variables
@@ -193,8 +185,8 @@ head(vegan::scores(cca1M, display = "species"))
 # the value (score) for the particular gradient
 
 # 4.4 Double canonical correspondance analysis (dbrda function not working!!) ####
-ca1M <- dudi.coa(sp_x_com_M, scannf = F)
-dCCA1M <- ade4::dbrda(ca1M, com_x_env_M, sp_x_trait_M, scannf = FALSE)
+ca1M <- dudi.coa(sp_x_plot_M, scannf = F)
+dCCA1M <- dbrda(ca1M, plot_x_env_M, sp_x_trait_M, scannf = FALSE)
 # 4.5 Functional response groups ####
 dist_CCAM <- dist(vegan::scores(cca1M, display = "species"))
 clust_CCAM <- hclust(dist_CCAM, method = "ward.D2")
@@ -214,7 +206,7 @@ summary(lm(as.matrix(sp_x_trait_M) ~ groups_CCAM$Best.partition))
 # No trait significantly associated to each of the groups
 
 # 4.6 RDA and regression trees (more appropiate with short gradients and sp abundance-gradient linear relationship) ####
-rda1M <- rda(sp_x_com_M ~ ., data = com_x_env_M, scale = TRUE)
+rda1M <- rda(sp_x_plot_M ~ ., data = plot_x_env_M, scale = TRUE)
 plot(rda1M, display = c("bp", "sp"))
 RsquareAdj(rda1M)
 #how much of the variation the 3 constraining factors explain.
@@ -246,10 +238,10 @@ read.csv("data/spatial-survey-species-Tem.csv") %>%
          rel_cover = round((cover/total_cover)*100,2), # relative cover according to max vegetation cover
          N_sp = length(unique(species))) %>%
   merge(spe_tem, by="species")%>% # get species names shortened
-  dplyr::select(plot, sp, rel_cover)%>%
-  spread(sp, rel_cover)%>% # species in columns
+  dplyr::select(plot, species, rel_cover)%>%
+  spread(species, rel_cover)%>% # species in columns
   replace(is.na(.), 0)%>%
-  column_to_rownames(var="plot")-> sp_x_com_T # replace Na with 0
+  column_to_rownames(var="plot")-> sp_x_plot_T # replace Na with 0
 setdiff(spe_tem$species, test1$species)
 # 2-  species x traits matrix
 read.csv("data/raw_data.csv", sep = ",") %>%
@@ -279,9 +271,9 @@ read.csv("data/raw_data.csv", sep = ",") %>%
   rbind(cold_strat_T)%>%
   mutate(germpro = round(finalgerm/viable, 2))%>%
   merge(spe_tem, by =c("species", "code"))%>% 
-  dplyr::select(sp, treatment, germpro)%>%
+  dplyr::select(species, treatment, germpro)%>%
   spread(treatment, germpro)->germ_trait_T
-  column_to_rownames(var="sp")%>%   #sp_x_trait_T   # sp_x_trait_M
+  #column_to_rownames(var="species")%>%   
     
 #### species x traits matrix with germination  as odd ratios 
 read.csv("data/raw_data.csv", sep = ",") %>%
@@ -356,11 +348,11 @@ seed_production_T%>%
   merge(seed_mass_T)%>%
   merge(plant_height_T)%>%
   merge(germ_odds_T)%>%
-  dplyr::select(sp, seed_mass,seed_production,plant_height,floral_height, 
+  dplyr::select(species, seed_mass,seed_production,plant_height,floral_height, 
                 odds_A_control, odds_B_dark, odds_C_WP, odds_D_constant,odds_E_cold )%>%
   replace(is.na(.), 10)%>% # to fill Na until complete all traits
-  merge(germ_trait_T, by = "sp")%>%
-  column_to_rownames(var="sp")->sp_x_trait_T
+  merge(germ_trait_T, by = "species")%>%
+  column_to_rownames(var="species")->sp_x_trait_T
 
 # 3- Community x Environmental data
 read.csv("data/spatial-survey-temperatures-Tem.csv") %>%
@@ -388,10 +380,10 @@ read.csv("data/spatial-survey-temperatures-Tem.csv") %>%
   dplyr::select(plot, elevation,bio1:GDD)%>%
   #dplyr::select(plot, elevation, FDD, GDD)%>%
   filter(plot%in%tem_plot$plot)%>% 
-  column_to_rownames(var="plot")-> com_x_env_T
+  column_to_rownames(var="plot")-> plot_x_env_T
 
 # 4.3 Trait free CCA ####
-cca1T <- cca(sp_x_com_T ~ elevation+GDD+FDD+bio1+bio2+bio7+Snw, data=com_x_env_T) #  tried but highly correlated
+cca1T <- cca(sp_x_plot_T ~ elevation+GDD+FDD+bio1+bio2+bio7+Snw, data=plot_x_env_T) #  tried but highly correlated
 plot(cca1T, display = c("species", "bp"))
 anova(cca1T, by= "terms") # elevation, GDD, FDD, bio7 and snow significantly explain the ordination of the species
 RsquareAdj(cca1T) # roughly 15% of variation in the species data is explained by these variables
@@ -400,8 +392,8 @@ head(vegan::scores(cca1T, display = "species"))
 # still needs to account for the effects of the other variables as conditional variables (covariates)
 
 # 4.4 Double canonical correspondance analysis (dbrda function not working!!) ####
-ca1T<- dudi.coa(sp_x_com_T, scannf = F)
-dCCA1T <- ade4::dbrda(ca1T, com_x_env_T, sp_x_trait_T, scannf = FALSE)
+ca1T<- dudi.coa(sp_x_plot_T, scannf = F)
+dCCA1T <- dbrda(ca1T, plot_x_env_T, sp_x_trait_T, scannf = FALSE)
 
 # 4.5 Functional response groups ####
 dist_CCAT <- dist(vegan::scores(cca1T, display = "species"))
@@ -422,7 +414,7 @@ summary(lm(as.matrix(sp_x_trait_T) ~ groups_CCAT$Best.partition))
 # No seed trait significantly associated to each of the groups
 
 # 4.6 RDA and regression trees (more appropiate with short gradients and sp abundance-gradient linear relationship) ####
-rda1T <- rda(sp_x_com_T ~ ., data = com_x_env_T, scale = TRUE)
+rda1T <- rda(sp_x_plot_T ~ ., data = plot_x_env_T, scale = TRUE)
 plot(rda1T, display = c("bp", "sp"))
 RsquareAdj(rda1T)
 #how much of the variation the 3 constraining factors explain.

@@ -17,7 +17,7 @@ read.csv("data/species.csv", sep =";") %>%
   select(species, genus, family)-> 
   ranks1
 unique(ranks1$species)
-#devtools::install_github("jinyizju/V.PhyloMaker")
+devtools::install_github("jinyizju/V.PhyloMaker2")
 phylo.maker(sp.list = ranks1,
             tree = GBOTB.extended, 
             nodes = nodes.info.1, 
