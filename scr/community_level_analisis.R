@@ -27,7 +27,7 @@ species %>%
   #summarise(cover = sum(cover))%>%
   #filter(cover>79)%>%
   summarise(rel_cover = sum(rel_cover))%>%
-  filter(rel_cover>79)->med_plot1
+  filter(rel_cover>80)->med_plot1
 # 15 plots with more than 80% coverage with sp traits (drivers) (considering raw cover, not to 100%)
 # 65 plots with more than 80% coverage with sp traits (drivers) (considering relative cover, up to 100%)
 # 64 plots with more than 80% coverage with sp traits (drivers + phenology)
@@ -95,15 +95,14 @@ spatial1 %>%
 # mediterranean #
 sp_x_plot_M # species in rows and plots in columns, abundance already as relative cover
 plot_x_sp_M  # plot in row and species in columns, abundance in relative cover
-sp_x_trait_M # species in rows and traits in columns
-# Consider remove species which had 0 germination across al treatments in germination experiment
-# Solidago virgaurea
+sp_x_trait_M # species in rows and traits in columns all traits already transformed
+# remove species which had 0 germination across al treatments in germination experiment Solidago virgaurea
 plot_x_env_M # plot in rows and env data in columns
 
 ## 5.2 Check normality of the quantitative traits ####
 ### all traits are right skewed, try a log transformation look better but still not normal
 sp_x_trait_M%>%
-  gather(trait, value, seed_mass:E_cold_stratification)%>%
+  gather(trait, value, seed_mass:E_cold)%>%
   #mutate(value = log(value))%>%
   ggplot()+
   geom_histogram(aes(x= value, fill = trait), color = "black") + 
@@ -111,27 +110,41 @@ sp_x_trait_M%>%
   theme_bw(base_size = 12)
 
 ## 5.3 Calculation of CWM ####
-# consider log transform abundances to reduce affects of very abundant species
+##dataframes in matrix format
+sp_x_trait_M <- as.matrix(sp_x_trait_M)
+plot_x_sp_M <- as.matrix(plot_x_sp_M)
 CWM_M<-functcomp(sp_x_trait_M, plot_x_sp_M, CWM.type = "all") # CWM.type to consider binary or categorical traits
-CWM_M<-functcomp(sp_x_trait_M, log(plot_x_sp_M+1), CWM.type = "all")
+
+# first let's check CWM normality 
+CWM_M%>%
+  gather(trait, value, seed_mass:E_cold)%>%
+  ggplot()+
+  geom_histogram(aes(x= value, fill = trait), color = "black") + 
+  facet_wrap(~trait, ncol = 3, scales = "free") +
+  theme_bw(base_size = 12)
+
+#PROBLEM?!?!? 
+#only A_control, C_WP, D_constant, odds_E_cold, plant height and seed_production look normally distributed
+
 # Let’s see if CWM changes along the climatic gradient
 # explore visually a bit the results before running any analysis,
 plot_x_env_M%>%
   rownames_to_column(var = "plot")->plot_x_env_M2 
-# germination proportion traits probably shouldn't be considered 
+
 CWM_M%>%
   rownames_to_column(var = "plot")%>%
-  gather(trait, value, seed_mass:E_cold_stratification)%>%
+  gather(trait, value, seed_mass:E_cold)%>%
   merge(plot_x_env_M2)%>%
   merge(read.csv("data/spatial-survey-header-Med.csv"), by = c("plot", "elevation"))%>%
   mutate(trait = factor(trait))%>%
-  mutate(trait = fct_relevel(trait, "A_alternate_light","B_alternate_dark","C_alternate_WP","D_constant_light", "E_cold_stratification",
-                             "odds_A_control", "odds_B_dark","odds_C_WP","odds_D_constant","odds_E_cold", 
-                             "plant_height", "floral_height", "seed_mass", "seed_production"))%>%
-  ggplot(aes(y=value, x= elevation, fill = site), color= "black")+
+  mutate(trait = fct_relevel(trait, "plant_height", "floral_height", "seed_mass", "seed_production",
+                             "B_dark","C_WP","D_constant", "E_cold",
+                             "odds_B_dark","odds_C_WP","odds_D_constant","odds_E_cold", 
+                             "A_control",))%>%
+  ggplot(aes(y=value, x= Snw, fill = site), color= "black")+
   geom_point(shape = 21, size =3)+
-  geom_smooth (aes(y=value, x= elevation),method = "lm", se=FALSE, color = "black", inherit.aes=F)+
-  facet_wrap(~trait, nrow = 3, scales = "free")+
+  geom_smooth (aes(y=value, x= Snw),method = "lm", se=FALSE, color = "black", inherit.aes=F)+
+  facet_wrap(~trait, ncol = 4, scales = "free")+
   labs(title="Community Weighted Means in Mediterranean system")+
   theme_classic(base_size = 12)+
   theme(strip.text = element_text(size =12),
@@ -139,7 +152,7 @@ CWM_M%>%
 # GDD, FDD, Snow, Elevation
 # To test te CWM for microclimatic gradients we could use simple linear model or 
 # REML, restricted maximum likelihood model
-summary(lm(CWM_M$E_cold_stratification~elevation+ FDD + GDD + Snw, data=plot_x_env_M))
+summary(lm(CWM_M$seed_production~elevation+ FDD + GDD + Snw, data=plot_x_env_M))
 # see summary in results
 # we can also use the multivariate analyses for the representation, for example RDA
 
@@ -152,8 +165,8 @@ rda_med_0<-rda(CWM_M~1, data= plot_x_env_M)
 rda_med_all<-rda(CWM_M~elevation+ FDD + GDD + Snw , data= plot_x_env_M)
 ordistep(rda_med_0, scope=formula(rda_med_all), direction = "forward")
 
-RsquareAdj (rda_med_all)$adj.r.squared # 0.06
-# final model only GDD is significant and thus included!!
+RsquareAdj (rda_med_all)$adj.r.squared # 0.2
+# final model with GDD, FDD and Snow significant and thus included!!
 
 ### 5.3.1 CAN we trust CWM ?? ####
 # Randomization comparison ###
@@ -186,7 +199,7 @@ pval
 
 ## 5.4 Calculation of FD ####
 # dbFD function
-medFD<-dbFD(sp_x_trait_M,log(plot_x_sp_M+1), CWM.type = "all")
+medFD<-dbFD(sp_x_trait_M,plot_x_sp_M, CWM.type = "all")
 # we could add variable weights by the argument w, w<-c(1,1,2,2,1,3,4) for example
 important.indices.M <- cbind(medFD$nbsp,medFD$FRic,medFD$FEve,medFD$FDiv,medFD$FDis,medFD$RaoQ)
 colnames(important.indices.M) <- c("NumbSpecies", "FRic", "FEve", "FDiv", "FDis", "Rao")
@@ -194,35 +207,48 @@ pairs(important.indices.M, pch=20)
 # FRis is positively correlated with number of species as expected
 # FDis and Rao very similar, actually same index with only a squating difference
 # PROBLEM? Number of species positively correlated with FRic, FDis and Rao
+
+# let's check  normality (quite normally distributed!!)
+important.indices.M%>%
+  as.data.frame()%>%
+  gather(index, value, NumbSpecies:Rao)%>%
+  ggplot()+
+  geom_histogram(aes(x= value, fill = index), color = "black") + 
+  facet_wrap(~index, ncol = 3, scales = "free") +
+  theme_bw(base_size = 12)
+
 data.frame(important.indices.M)%>%
   rownames_to_column(var = "plot")%>%
   gather(FDind, value, NumbSpecies:Rao)%>%
   merge(plot_x_env_M2)%>%
   merge(read.csv("data/spatial-survey-header-Med.csv"), by = c("plot", "elevation"))%>%
   mutate(FDind = factor(FDind))%>%
-  ggplot(aes(y=value, x= Snw, fill = site), color= "black")+ # GDD  FDD Snw  elevation
+  ggplot(aes(y=value, x= FDD, fill = site), color= "black")+ # GDD  FDD Snw  elevation
   geom_point(shape = 21, size =3)+
-  geom_smooth (aes(y=value, x= Snw),method = "lm", se=FALSE, color = "black", inherit.aes=F)+
+  geom_smooth (aes(y=value, x= FDD),method = "lm", se=FALSE, color = "black", inherit.aes=F)+
   facet_wrap(~FDind, nrow = 3, scales = "free")+
   labs(title="FD indices in Mediterranean system")+
   theme_classic(base_size = 12)+
   theme(strip.text = element_text(size =12),
         legend.position = "bottom")
 
-# To test te CWM for microclimatic gradients we could use simple linear model or 
+# To test the FDfor microclimatic gradients we could use simple linear model or 
 # REML, restricted maximum likelihood model
-summary(lm(medFD$RaoQ ~ elevation+ FDD + GDD + Snw, data=plot_x_env_M)) # nbsp   RaoQ
+summary(lm(medFD$FRic ~ elevation+ FDD + GDD + Snw, data=plot_x_env_M)) # nbsp   RaoQ
 
 # compute the dissimilarity for each trait separately and then average the dissimilarity across traits
 # not sure if necessaty with our type of data
 head(sp_x_trait_M)
+sp_x_trait_M <- as.data.frame(sp_x_trait_M)
 all.dist.M <- (gowdis(sp_x_trait_M["seed_mass"]) + gowdis(sp_x_trait_M["seed_production"]) + 
                  gowdis(sp_x_trait_M["plant_height"]) + gowdis(sp_x_trait_M["floral_height"]) +
-                 gowdis(sp_x_trait_M["odds_A_control"]) +gowdis(sp_x_trait_M["odds_B_dark"]) +
+                 gowdis(sp_x_trait_M["A_control"]) +gowdis(sp_x_trait_M["B_dark"]) +
+                 gowdis(sp_x_trait_M["C_WP"]) +gowdis(sp_x_trait_M["D_constant"]) +
+                 +gowdis(sp_x_trait_M["E_cold"]) ++gowdis(sp_x_trait_M["odds_B_dark"]) +
                  gowdis(sp_x_trait_M["odds_C_WP"]) +gowdis(sp_x_trait_M["odds_D_constant"]) +
-                 gowdis(sp_x_trait_M["odds_E_cold"])) / 9
-FD.alltraits.M <- dbFD(all.dist.M, log(plot_x_sp_M+1), message = F, calc.CWM =F, stand.FRic = T)
-summary(lm(FD.alltraits.M$RaoQ ~elevation+ FDD + GDD + Snw, data=plot_x_env_M))
+                 gowdis(sp_x_trait_M["odds_E_cold"])) / 13
+FD.alltraits.M <- dbFD(all.dist.M, plot_x_sp_M, message = F, calc.CWM =F, stand.FRic = T)
+summary(lm(FD.alltraits.M$FRic ~elevation+ FDD + GDD + Snw, data=plot_x_env_M))
 
 ### 5.4.1 cluster dendograma ####
 tree.traits.M <- hclust(all.dist.M, "average")
@@ -268,17 +294,20 @@ par(mfrow = c(1, 1))
 ## Species abundances can be considered with the argument abundance.weighted = TRUE
 # we could logtransforme abundance data to damp a bit the effect of overabundant species
 
-mpd.M.ab <- mpd(log(plot_x_sp_M+1), as.matrix(all.dist.M), abundance.weighted = T)
-mntd.M.ab <- mntd(log(plot_x_sp_M+1), as.matrix(all.dist.M), abundance.weighted = T)
+mpd.M.ab <- mpd(plot_x_sp_M, as.matrix(all.dist.M), abundance.weighted = T)
+mntd.M.ab <- mntd(plot_x_sp_M, as.matrix(all.dist.M), abundance.weighted = T)
 
 plot(FD.alltraits.M$RaoQ, mpd.M.ab, pch=20, ylab= "MPd abundance")
 
 # not working
+plot_x_sp_M <- data.frame(plot_x_sp_M)
 Rao.dvc.M <- divc(plot_x_sp_M, all.dist.M)
 
 # Use of melodic function to compute both weighted and unweighted forms of MPD and Rao
 # activate function from melodic.R script in src folder
-melodic.M <- melodic(log(plot_x_sp_M+1), as.matrix(all.dist.M))
+#Error in if (class(dis) != "matrix") { : the condition has length > 1????
+plot_x_sp_M <- as.matrix(plot_x_sp_M)
+melodic.M <- melodic(plot_x_sp_M, as.matrix(all.dist.M))
 str(melodic.M)
 # MPD = Rao/Simpson
 
@@ -287,7 +316,7 @@ plot(melodic.M$abundance$mpd, melodic.M$abundance$rao,
 abline(0, 1)
 
 # Use of Rao function in scr folder
-Rao.M <- Rao(log(sp_x_plot_M+1), all.dist.M, dphyl = NULL, weight = F, Jost=T, structure = NULL)
+Rao.M <- Rao(sp_x_plot_M, all.dist.M, dphyl = NULL, weight = F, Jost=T, structure = NULL)
 
 Rao.M$TD$Mean_Alpha  # alpha taxonomic diversity 
 Rao.M$TD$Beta_add  # beta taxonomic diversity (additive) 
@@ -427,14 +456,13 @@ spatial1 %>%
 
 sp_x_plot_T# species in rows and plots in columns, abundance already as relative cover
 plot_x_sp_T# plot in row and species in columns, abundance in relative cover
-sp_x_trait_T# species in rows and traits in columns
-# Consider remove species which had 0 germination across al treatments in germination experiment
+sp_x_trait_T# species in rows and traits in columns remove species which had 0 germination across al treatments in germination experiment
 plot_x_env_T# plot in rows and env data in columns
 
 ## 5.2 Check normality of the quantitative traits ####
 ### all traits are right skewed, ty a log transformation look better but still not normal
 sp_x_trait_T%>%
-  gather(trait, value, seed_mass:E_cold_stratification)%>%
+  gather(trait, value, seed_mass:E_cold)%>%
   #mutate(value = log(value))%>%
   ggplot()+
   geom_histogram(aes(x= value, fill = trait), color = "black") + 
@@ -442,9 +470,19 @@ sp_x_trait_T%>%
   theme_bw(base_size = 12)
 
 ## 5.3 Calculation of CWM ####
-# consider log transform abundance data 
-CWM_T<-functcomp(sp_x_trait_T, t(sp_x_plot_T), CWM.type = "all") # CWM.type to consider binary or categorical traits
-CWM_T<-functcomp(sp_x_trait_T, plot_x_sp_T, CWM.type = "all") 
+sp_x_trait_T<- as.matrix(sp_x_trait_T)
+plot_x_sp_T <- as.matrix(plot_x_sp_T)
+CWM_T<-functcomp(sp_x_trait_T, plot_x_sp_T, CWM.type = "all") # CWM.type to consider binary or categorical traits
+
+# first let's check CWM normality (all look normal distribution)
+CWM_T%>%
+  gather(trait, value, seed_mass:E_cold)%>%
+  ggplot()+
+  geom_histogram(aes(x= value, fill = trait), color = "black") + 
+  facet_wrap(~trait, ncol = 3, scales = "free") +
+  theme_bw(base_size = 12)
+
+#only A_control, C_WP, D_constant, odds_E_cold, plant height and seed_production look normally distributed
 # Let’s see if CWM changes along the climatic gradient
 # explore visually a bit the results before running any analysis,
 plot_x_env_T%>%
@@ -452,18 +490,19 @@ plot_x_env_T%>%
 
 CWM_T%>%
   rownames_to_column(var = "plot")%>%
-  gather(trait, value, seed_mass:E_cold_stratification)%>%
+  gather(trait, value, seed_mass:E_cold)%>%
   merge(plot_x_env_T2)%>%
   merge(read.csv("data/spatial-survey-header-Tem.csv"), by = c("plot", "elevation"))%>%
   mutate(trait = factor(trait))%>%
   #mutate(trait = recode (trait, "Immediate" = "Fresh", "After_ripening" = "After ripened"))%>%
-  mutate(trait = fct_relevel(trait, "A_alternate_light","B_alternate_dark","C_alternate_WP","D_constant_light", "E_cold_stratification",
-                             "odds_A_control", "odds_B_dark","odds_C_WP","odds_D_constant","odds_E_cold", 
-                             "plant_height", "floral_height", "seed_mass", "seed_production"))%>%
+  mutate(trait = fct_relevel(trait, "plant_height", "floral_height", "seed_mass", "seed_production",
+                             "B_dark","C_WP","D_constant", "E_cold",
+                             "odds_B_dark","odds_C_WP","odds_D_constant","odds_E_cold", 
+                             "A_control"))%>%
   ggplot(aes(y=value, x= Snw, fill = site), color= "black")+
   geom_point(shape = 21, size =3)+
   geom_smooth (aes(y=value, x= Snw),method = "lm", se=FALSE, color = "black", inherit.aes=F)+
-  facet_wrap(~trait, nrow = 3, scales = "free")+
+  facet_wrap(~trait, ncol= 4, scales = "free")+
   labs(title="Community Weighted Means in Temperate system")+
   theme_classic(base_size = 12)+
   theme(strip.text = element_text(size =12),
@@ -471,7 +510,7 @@ CWM_T%>%
 # GDD, FDD, Snow, Elevation
 # To test te CWM for microclimatic gradients we could use simple linear model or 
 # REML, restricted maximum likelihood model
-summary(lm(CWM_T$E_cold_stratification~elevation+ FDD + GDD + Snw, data=plot_x_env_T))
+summary(lm(CWM_T$seed_production~elevation+ FDD + GDD + Snw, data=plot_x_env_T))
 # see summary in results
 # we can also use the multivariate analyses for the representation, for example RDA
 
@@ -483,7 +522,10 @@ rda_tem_all<-rda(CWM_T~elevation+ FDD + GDD + Snw , data= plot_x_env_T)
 rda_tem_0<-rda(CWM_T~1, data= plot_x_env_T)
 rda_tem_all<-rda(CWM_T~elevation+ FDD + GDD + Snw , data= plot_x_env_T)
 ordistep(rda_tem_0, scope=formula(rda_tem_all), direction = "forward")
- # final model only elevation is significant and thus included!!
+
+RsquareAdj (rda_tem_all)$adj.r.squared # 0.06
+ # final model only GDD is significant and thus included!!
+
 ## 5.3.1 CAN we trust CWM ?? ####
 # Randomization comparison ###
 CWM_T<-functcomp(sp_x_trait_T, t(sp_x_plot_T), CWM.type = "all")
@@ -504,7 +546,7 @@ text(OBS.R2.CWM_T, 270, "observed R2")
 sum(OBS.R2.CWM_T > EXPECTED.R2.CWM_T) / 1000
 # This last value represents the proportion of cases in which the observed R2 was higher than
 # expected. In our case, after running the loop several times we generally found that the
-# proportion was around 0.9, i.e. 90% of the cases
+# proportion was around 0.8, i.e. 80% of the cases
 
 #With this we can finally compute a p-value providing the significance of the relationship between CWM_odds_WP 
 # and the GDD computed, after randomizations, as:
@@ -514,7 +556,7 @@ pval
 
 ## 5.4 Calculation of FD ####
 # dbFD function
-temFD<-dbFD(sp_x_trait_T,log(plot_x_sp_T+1), CWM.type = "all")
+temFD<-dbFD(sp_x_trait_T,plot_x_sp_T, CWM.type = "all")
 # we could add variable weights by the argument w, w<-c(1,1,2,2,1,3,4) for example
 important.indices.T <- cbind(temFD$nbsp,temFD$FRic,temFD$FEve,temFD$FDiv,temFD$FDis,temFD$RaoQ)
 colnames(important.indices.T) <- c("NumbSpecies", "FRic", "FEve", "FDiv", "FDis", "Rao")
@@ -522,15 +564,24 @@ pairs(important.indices.T, pch=20)
 # FRis is positively correlated with number of species as expected
 # FDis and Rao very similar, actually same index with only a squating difference
 
+# let's check  normality (quite normally distributed!!)
+important.indices.T%>%
+  as.data.frame()%>%
+  gather(index, value, NumbSpecies:Rao)%>%
+  ggplot()+
+  geom_histogram(aes(x= value, fill = index), color = "black") + 
+  facet_wrap(~index, ncol = 3, scales = "free") +
+  theme_bw(base_size = 12)
+
 data.frame(important.indices.T)%>%
   rownames_to_column(var = "plot")%>%
   gather(FDind, value, NumbSpecies:Rao)%>%
   merge(plot_x_env_T2)%>%
   merge(read.csv("data/spatial-survey-header-Tem.csv"), by = c("plot", "elevation"))%>%
   mutate(FDind = factor(FDind))%>%
-  ggplot(aes(y=value, x= elevation, fill = site), color= "black")+ # GDD  FDD Snw  elevation
+  ggplot(aes(y=value, x= Snw, fill = site), color= "black")+ # GDD  FDD Snw  elevation
   geom_point(shape = 21, size =3)+
-  geom_smooth (aes(y=value, x= elevation),method = "lm", se=FALSE, color = "black", inherit.aes=F)+
+  geom_smooth (aes(y=value, x= Snw),method = "lm", se=FALSE, color = "black", inherit.aes=F)+
   facet_wrap(~FDind, nrow = 3, scales = "free")+
   labs(title="FD indices in Temperate system")+
   theme_classic(base_size = 12)+
@@ -539,18 +590,21 @@ data.frame(important.indices.T)%>%
 
 # To test te CWM for microclimatic gradients we could use simple linear model or 
 # REML, restricted maximum likelihood model
-summary(lm(temFD$FRic~elevation+ FDD + GDD + Snw, data=plot_x_env_T)) # nbsp   RaoQ
+summary(lm(temFD$FDis~elevation+ FDD + GDD + Snw, data=plot_x_env_T)) # nbsp   RaoQ
 
 # compute the dissimilarity for each trait separately and then average the dissimilarity across traits
 # not sure if necessaty with our type of data
 head(sp_x_trait_T)
+sp_x_trait_T <- as.data.frame(sp_x_trait_T)
 all.dist.T <- (gowdis(sp_x_trait_T["seed_mass"]) + gowdis(sp_x_trait_T["seed_production"]) + 
                  gowdis(sp_x_trait_T["plant_height"]) + gowdis(sp_x_trait_T["floral_height"]) +
-                 gowdis(sp_x_trait_T["odds_A_control"]) +gowdis(sp_x_trait_T["odds_B_dark"]) +
+                 gowdis(sp_x_trait_T["A_control"]) +gowdis(sp_x_trait_T["B_dark"]) +
+                 gowdis(sp_x_trait_T["C_WP"]) +gowdis(sp_x_trait_T["D_constant"]) +
+                 gowdis(sp_x_trait_T["odds_B_dark"]) + gowdis(sp_x_trait_T["E_cold"])+
                  gowdis(sp_x_trait_T["odds_C_WP"]) +gowdis(sp_x_trait_T["odds_D_constant"]) +
                  gowdis(sp_x_trait_T["odds_E_cold"])) / 9
 FD.alltraits.T <- dbFD(all.dist.T, log(plot_x_sp_T+1), message = F, calc.CWM =F, stand.FRic = T)
-summary(lm(FD.alltraits.T$FDis ~elevation+ FDD + GDD + Snw, data=plot_x_env_T))
+summary(lm(FD.alltraits.T$RaoQ ~elevation+ FDD + GDD + Snw, data=plot_x_env_T))
 
 ## 5.4.1 cluster dendograma ####
 tree.traits.T <- hclust(all.dist.T, "average")
@@ -589,19 +643,21 @@ plot(number.species.T, mpd.T, pch = 20, ylab = "MPD",
      xlab = "Number of species")
 plot(number.species.T, mntd.T, pch = 20, ylab = "MNTD",
      xlab = "Number of species")
+par(mfrow = c(1, 1))
 # We observe a general lack of correlation between MPD and the number of species
 # as expected, we observe a negative correlation between MNTD and the number of species
 ## Species abundances can be considered with the argument abundance.weighted = TRUE
 # we could logtransforme abundance data to damp a bit the effect of overabundant species
 
-mpd.T.ab <- mpd(log(plot_x_sp_T+1), as.matrix(all.dist.T), abundance.weighted = T)
-mntd.T.ab <- mntd(log(plot_x_sp_T+1), as.matrix(all.dist.T), abundance.weighted = T)
+mpd.T.ab <- mpd(plot_x_sp_T, as.matrix(all.dist.T), abundance.weighted = T)
+mntd.T.ab <- mntd(plot_x_sp_T, as.matrix(all.dist.T), abundance.weighted = T)
 
 plot(FD.alltraits.T$RaoQ, mpd.T.ab, pch=20, ylab= "MPd abundance")
 
 # Use of melodic function to compute both weighted and unweighted forms of MPD and Rao
 # activate function from melodic.R script in src folder
-melodic.T <- melodic(log(plot_x_sp_T+1), as.matrix(all.dist.T))
+# Error in if (class(samp) != "matrix") { : the condition has length > 1
+melodic.T <- melodic(plot_x_sp_T, as.matrix(all.dist.T))
 str(melodic.T)
 
 # MPD = Rao/Simpson
@@ -610,10 +666,9 @@ par(mar = c(4, 4, 2, 1))
 plot(melodic.T$abundance$mpd, melodic.T$abundance$rao, 
      xlab="MPD", ylab="Rao", pch=20, main= "Temperate community (species rich)")
 abline(0, 1)
-par(mfrow = c(1, 1))
 
 # Use of Rao function in scr folder
-Rao.T <- Rao(log(sp_x_plot_T+1), all.dist.T, dphyl = NULL, weight = F, Jost=T, structure = NULL)
+Rao.T <- Rao(sp_x_plot_T, all.dist.T, dphyl = NULL, weight = F, Jost=T, structure = NULL)
 
 Rao.T$TD$Mean_Alpha  # alpha taxonomic diversity 
 Rao.T$TD$Beta_add  # beta taxonomic diversity (additive) 
