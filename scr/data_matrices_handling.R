@@ -11,7 +11,7 @@ read.csv("data/species.csv") %>%
 # USEFUL!!Shorten sp names with 4 letters from genus name and 4 letter from species name 
 spe_med$sp <- make.cepnames(spe_med$species, seconditem=FALSE) #works if Sp are in columns
 
-# 1-  species x community matrix #####
+# 1-  species x plot matrix #####
 read.csv("data/spatial-survey-species-Med.csv") %>%
   group_by(plot)%>%
   mutate(total_cover= sum(cover),
@@ -33,6 +33,31 @@ read.csv("data/spatial-survey-species-Med.csv") %>%
   filter(!plot=="C07")%>%
   column_to_rownames(var="plot")-> plot_x_sp_M # replace Na with 0
 sp_x_plot_M <- t(plot_x_sp_M)
+
+# presence_absence sp x plot matrix
+read.csv("data/spatial-survey-species-Med.csv") %>%
+  group_by(plot)%>%
+  mutate(total_cover= sum(cover),
+         rel_cover = round((cover/total_cover)*100,2), # relative cover according to max vegetation cover
+         N_sp = length(unique(species)))%>%
+  filter(!species=="Solidago virgaurea")%>%
+  merge(spe_med, by="species")%>% # get species names shortened
+  dplyr::select(plot, species, rel_cover)%>%
+  group_by(species, plot)%>%
+  mutate(presence= ifelse(rel_cover>0,1,0))%>%
+  dplyr::select(plot, species,presence)%>%
+  spread(species, presence)%>% # species in columns
+  replace(is.na(.), 0)%>% #-> med_plot
+  filter(!plot=="A00")%>% # filter plots without iButtons data or without any vegetation
+  filter(!plot=="B00")%>%
+  filter(!plot=="C00")%>%
+  filter(!plot=="D00")%>%
+  filter(!plot=="B13")%>%
+  filter(!plot=="B14")%>%
+  filter(!plot=="B15")%>%
+  filter(!plot=="C04")%>%
+  filter(!plot=="C07")%>%
+  column_to_rownames(var="plot")-> plot_x_sp_M_PA 
 
 # 2-  species x traits matrix ########
 #with germination proportion
@@ -154,7 +179,7 @@ germ_trait_M%>% # sqrt of germination percetanges
                 A_control,B_dark,C_WP,D_constant,E_cold)%>%
   column_to_rownames(var="species")->sp_x_trait_M
 
-# 3- Community x Environmental data ########
+# 3-  plot x Environmental data ########
 read.csv("data/spatial-survey-temperatures-Med.csv") %>%
   mutate(Time = as.POSIXct(Time, tz = "UTC", format = "%d/%m/%Y %H:%M")) %>%
   group_by(plot, Day = lubridate::floor_date(Time, "day")) %>%
@@ -200,7 +225,7 @@ read.csv("data/species.csv") %>%
 # USEFUL!!Shorten sp names with 4 letters from genus name and 4 letter from species name 
 spe_tem$sp <- make.cepnames(spe_tem$species, seconditem=FALSE) #works if Sp are in columns
 
-# 1-  species x community matrix #########
+# 1-  species x plot matrix #########
 read.csv("data/spatial-survey-species-Tem.csv") %>%
   group_by(plot)%>%
   mutate(total_cover= sum(cover),
@@ -221,6 +246,29 @@ read.csv("data/spatial-survey-species-Tem.csv") %>%
   column_to_rownames(var="plot")-> plot_x_sp_T # replace Na with 0
 sp_x_plot_T <- t(plot_x_sp_T)
 setdiff(spe_tem$species, test1$species)
+
+# presence_absence sp x plot matrix
+read.csv("data/spatial-survey-species-Tem.csv") %>%
+  group_by(plot)%>%
+  mutate(total_cover= sum(cover),
+         rel_cover = round((cover/total_cover)*100,2), # relative cover according to max vegetation cover
+         N_sp = length(unique(species)))%>%
+  filter (!species == "Euphrasia salisburgensis")%>%  #filter species with 0 germination traits
+  filter (!species == "Gentiana verna")%>%
+  filter (!species == "Gentianella campestris")%>%
+  filter (!species == "Kobresia myosuroides")%>%
+  filter (!species == "Salix breviserrata")%>%
+  filter (!species == "Sedum album")%>%
+  filter (!species == "Sedum atratum")%>%
+  filter (!species == "Minuartia CF")%>%
+  merge(spe_tem, by="species")%>%  # get species names shortened
+  dplyr::select(plot, species, rel_cover)%>%
+  group_by(species, plot)%>%
+  mutate(presence= ifelse(rel_cover>0,1,0))%>%
+  dplyr::select(plot, species,presence)%>%
+  spread(species, presence)%>% # species in columns
+  replace(is.na(.), 0)%>% #-> med_plot
+  column_to_rownames(var="plot")-> plot_x_sp_T_PA 
 # 2-  species x traits matrix ###########
 read.csv("data/raw_data.csv", sep = ",") %>%
   convert_as_factor(species, code, treatment, temp) %>%
@@ -351,7 +399,7 @@ germ_trait_T%>% # sqrt germination percentages
   replace(is.na(.), 10)%>% # IMPORTANT 2 Na's seed production galium and floral height festuca rubra invested 10 value
   column_to_rownames(var="species")->sp_x_trait_T
 
-# 3- Community x Environmental data ##########
+# 3-  plot x Environmental data ##########
 read.csv("data/spatial-survey-temperatures-Tem.csv") %>%
   mutate(Time = as.POSIXct(Time, tz = "UTC", format = "%d/%m/%Y %H:%M")) %>%
   group_by(plot, Day = lubridate::floor_date(Time, "day")) %>%

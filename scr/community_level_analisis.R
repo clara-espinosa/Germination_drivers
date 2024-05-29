@@ -1,6 +1,5 @@
 library(tidyverse);library(ggplot2);library(dplyr);library(rstatix)
 library(lubridate);library(FD); library(psych);library(picante);library(vegan)
-Sys.setlocale("LC_TIME", "English")
 
 # preliminary steps #
 ###################################  MEDITERRANEAN ###############################################################
@@ -351,6 +350,59 @@ par(mfrow = c(1, 1))
 # species is found within a plot and not across plots, even if there are such a marked 
 # environmental changes and even if species composition changes are very strong (high beta TD)
 
+# 6 Calculation of CM ####
+sp_x_trait_M<- as.matrix(sp_x_trait_M)
+plot_x_sp_M_PA<- as.matrix(plot_x_sp_M_PA)
+
+CM_M<-functcomp(sp_x_trait_M, plot_x_sp_M_PA, CWM.type = "all") # CWM.type to consider binary or categorical traits
+
+# first let's check CWM normality (all look normal distribution)
+CM_M%>%
+  gather(trait, value, seed_mass:E_cold)%>%
+  ggplot()+
+  geom_histogram(aes(x= value, fill = trait), color = "black") + 
+  facet_wrap(~trait, ncol = 3, scales = "free") +
+  theme_bw(base_size = 12)
+plot_x_env_M%>%
+  rownames_to_column(var = "plot")->plot_x_env_M2 
+# look pretty normal distribution all variables
+CM_M%>%
+  rownames_to_column(var = "plot")%>%
+  gather(trait, value, seed_mass:E_cold)%>%
+  merge(plot_x_env_M2)%>%
+  merge(read.csv("data/spatial-survey-header-Med.csv"), by = c("plot", "elevation"))%>%
+  mutate(trait = factor(trait))%>%
+  mutate(trait = fct_relevel(trait, "plant_height", "floral_height", "seed_mass", "seed_production",
+                             "B_dark","C_WP","D_constant", "E_cold",
+                             "odds_B_dark","odds_C_WP","odds_D_constant","odds_E_cold", 
+                             "A_control",))%>%
+  ggplot(aes(y=value, x= Snw, fill = site), color= "black")+
+  geom_point(shape = 21, size =3)+
+  geom_smooth (aes(y=value, x= Snw),method = "lm", se=FALSE, color = "black", inherit.aes=F)+
+  facet_wrap(~trait, ncol = 4, scales = "free")+
+  labs(title="Community Means in Mediterranean system")+
+  theme_classic(base_size = 12)+
+  theme(strip.text = element_text(size =12),
+        legend.position = "bottom")
+# GDD, FDD, Snow, Elevation
+# To test te CWM for microclimatic gradients we could use simple linear model or 
+# REML, restricted maximum likelihood model
+summary(lm(CM_M$seed_production~elevation+ Snw+ FDD + GDD , data=plot_x_env_M))
+# see summary in results
+# we can also use the multivariate analyses for the representation, for example RDA
+
+rda_med_all<-rda(CM_M~elevation+ FDD + GDD + Snw , data= plot_x_env_M)
+plot(rda_med_all, type = "n", scaling = "sites")
+text(rda_med_all, dis = "cn", scaling = "sites")
+text(rda_med_all, dis = "sp", scaling = "sites", col = "red")
+
+rda_med_0<-rda(CM_M~1, data= plot_x_env_M)
+rda_med_all<-rda(CM_M~elevation+ FDD + GDD + Snw , data= plot_x_env_M)
+ordistep(rda_med_0, scope=formula(rda_med_all), direction = "forward")
+
+RsquareAdj (rda_med_all)$adj.r.squared # 0.01
+# rda_med 0 best model
+
 ###################################  TEMPERATE  ##################################################################
 # 1-check species names to match####
 # dataframe with species data from germination experiments
@@ -699,3 +751,55 @@ text(0.7, 15, "alpha")
 # we have a real low functional turnover. In other words most of the trait dissimilarity between 
 # species is found within a plot and not across plots, even if there are such a marked 
 # environmental changes and even if species composition changes are very strong (high beta TD)
+# 6 Calculation of CM ####
+sp_x_trait_T<- as.matrix(sp_x_trait_T)
+plot_x_sp_T_PA<- as.matrix(plot_x_sp_T_PA)
+
+CM_T<-functcomp(sp_x_trait_T, plot_x_sp_T_PA, CWM.type = "all") # CWM.type to consider binary or categorical traits
+
+# first let's check CWM normality (all look normal distribution)
+CM_T%>%
+  gather(trait, value, seed_mass:E_cold)%>%
+  ggplot()+
+  geom_histogram(aes(x= value, fill = trait), color = "black") + 
+  facet_wrap(~trait, ncol = 3, scales = "free") +
+  theme_bw(base_size = 12)
+plot_x_env_M%>%
+  rownames_to_column(var = "plot")->plot_x_env_M2 
+# all look pretty normal distributed
+CM_T%>%
+  rownames_to_column(var = "plot")%>%
+  gather(trait, value, seed_mass:E_cold)%>%
+  merge(plot_x_env_T2)%>%
+  merge(read.csv("data/spatial-survey-header-Tem.csv"), by = c("plot", "elevation"))%>%
+  mutate(trait = factor(trait))%>%
+  mutate(trait = fct_relevel(trait, "plant_height", "floral_height", "seed_mass", "seed_production",
+                             "B_dark","C_WP","D_constant", "E_cold",
+                             "odds_B_dark","odds_C_WP","odds_D_constant","odds_E_cold", 
+                             "A_control",))%>%
+  ggplot(aes(y=value, x= GDD, fill = site), color= "black")+
+  geom_point(shape = 21, size =3)+
+  geom_smooth (aes(y=value, x= GDD),method = "lm", se=FALSE, color = "black", inherit.aes=F)+
+  facet_wrap(~trait, ncol = 4, scales = "free")+
+  labs(title="Community Means in Temperate system")+
+  theme_classic(base_size = 12)+
+  theme(strip.text = element_text(size =12),
+        legend.position = "bottom")
+# GDD, FDD, Snow, Elevation
+# To test te CWM for microclimatic gradients we could use simple linear model or 
+# REML, restricted maximum likelihood model
+summary(lm(CM_T$seed_production~elevation+ Snw+ FDD + GDD , data=plot_x_env_T))
+# see summary in results
+# we can also use the multivariate analyses for the representation, for example RDA
+
+rda_tem_all<-rda(CM_T~elevation+ FDD + GDD + Snw , data= plot_x_env_T)
+plot(rda_tem_all, type = "n", scaling = "sites")
+text(rda_tem_all, dis = "cn", scaling = "sites")
+text(rda_tem_all, dis = "sp", scaling = "sites", col = "red")
+
+rda_tem_0<-rda(CM_T~1, data= plot_x_env_T)
+rda_tem_all<-rda(CM_T~elevation+ FDD + GDD + Snw , data= plot_x_env_T)
+ordistep(rda_tem_0, scope=formula(rda_tem_all), direction = "forward")
+
+RsquareAdj (rda_tem_all)$adj.r.squared # 0.2
+# final model with GDD, FDD and Snow significant and thus included!!
