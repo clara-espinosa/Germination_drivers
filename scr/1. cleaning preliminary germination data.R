@@ -22,6 +22,7 @@ unique(species$species)
   filter (!species == "Salix breviserrata")%>%
   filter (!species == "Sedum album")%>%
   filter (!species == "Sedum atratum")%>%
+  filter (!species == "Teesdalia conferta") # all germinated in cold stratification
   filter (!species == "Solidago virgaurea")
   
 # viables calculation x petri dish ####
@@ -133,12 +134,9 @@ read.csv("data/raw_data.csv", sep = ",") %>%
   filter(!treatment=="E_cold_stratification")%>%
   merge(viables_sp, by= c("code", "species", "treatment"))-> finalgerm 
 
-  mutate (binom.confint(finalgerm, viable, methods = "wilson"))%>%
-  dplyr::select (species, code, treatment, petri, finalgerm, viable, viablePER, mean, upper, lower)-> finalgerm # final germ per petri dish 
-
 # graph comparing final germination between treatments !!!! ####
 ### substract cold_strat from dark treatment, and add binomial errors!!
-
+x11()
 finalgerm %>%
   merge(species)%>%
   filter (!species == "Euphrasia salisburgensis")%>% # species with 0 germination
@@ -151,7 +149,7 @@ finalgerm %>%
   filter (!species == "Solidago virgaurea") %>%
   group_by (community, species, treatment) %>%
   na.omit() %>%
-  #group_by (treatment, community) %>% #, temperature_regime 
+  group_by (treatment, community) %>% #, temperature_regime 
   summarise(finalgerm=sum(finalgerm),
             viable = sum(viable))%>%
   mutate (binom.confint(finalgerm, viable, methods = "wilson"))%>%

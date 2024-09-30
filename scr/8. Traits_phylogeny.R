@@ -3,68 +3,6 @@ library(lubridate);library(FD); library(psych);library(picante);library(vegan)
 library(ape);library(phytools);library(Rphylopars);library(V.PhyloMaker);library(doBy)
 
 ## TRAITS AND PHYLOGENY (Chapter 8 Lars book) ###
-par(mfrow = c(1, 1))
-## Phylogenetic trees ####
-# we already have the phylotree for both communities made in phylo_tree script
-# with all species and also without the species that had 0 germination
-# make phylo tree with phylomaker for each of our communitites
-# always check family names with http://www.mobot.org/MOBOT/research/APweb/
-#mediterranean
-read.csv("data/species.csv") %>%
-  filter(community == "Mediterranean")%>%
-  select (species, family) %>%
-  unique %>%
-  separate(species, into = c("genus", "species"), sep = " ") %>%
-  mutate(species = paste(genus, species),
-         genus = genus,
-         family = family) %>%
-  arrange(species) %>%
-  na.omit %>%
-  select(species, genus, family)-> 
-  ranks1
-unique(ranks1$species)
-#devtools::install_github("jinyizju/V.PhyloMaker")
-phylo.maker(sp.list = ranks1,
-            tree = GBOTB.extended, 
-            nodes = nodes.info.1, 
-            scenarios = "S3") ->
-  tree
-
-rm(ranks1)
-x11()
-plot(tree$scenario.3)
-
-write.tree(tree$scenario.3, file = "results/MED_tree.tree")
-
-#temperate
-read.csv("data/species.csv") %>%
-  filter(community == "Temperate")%>%
-  mutate(species= str_replace(species, "Minuartia CF", "Minuartia arctica"))%>%
-  select (species, family) %>%
-  unique %>%
-  separate(species, into = c("genus", "species"), sep = " ") %>%
-  mutate(species = paste(genus, species),
-         genus = genus,
-         family = family) %>%
-  arrange(species) %>%
-  na.omit %>%
-  select(species, genus, family)-> 
-  ranks1
-unique(ranks1$species)
-#devtools::install_github("jinyizju/V.PhyloMaker")
-phylo.maker(sp.list = ranks1,
-            tree = GBOTB.extended, 
-            nodes = nodes.info.1, 
-            scenarios = "S3") ->
-  tree
-
-rm(ranks1)
-x11()
-plot(tree$scenario.3)
-
-write.tree(tree$scenario.3, file = "results/TEM_tree.tree")
-
-
 ###########################################  MEDITERRANEAN  ##################################################
 ## 8.4. Trait phylogenetic signal ####
 # dataframe with trait x species #

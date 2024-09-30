@@ -1,8 +1,8 @@
 library(tidyverse);library(ggplot2);library(dplyr);library(rstatix)
-library(viridis);library(MCMCglmm); library(binom)
+library(viridis);library(MCMCglmm); library(binom);library (ggpubr)
 library(glmmTMB); library(DHARMa);library(scales)
 
-# ANALYSIS FROM GERMINATION ECOLOGY PERSPECTIVE ####
+# ANALYSIS FROM GERMINATION ECOLOGY PERSPECTIVE (as germination phenology) ####
 # dataframe with raw data ####
 read.csv("data/raw_data.csv", sep = ",") %>%
   convert_as_factor(species, code, treatment, temp) -> raw_df
@@ -17,7 +17,8 @@ unique(raw_df$species)
   filter (!species == "Salix breviserrata")%>%
   filter (!species == "Sedum album")%>%
   filter (!species == "Sedum atratum")%>%
-  filter (!species == "Solidago virgaurea")
+  filter (!species == "Solidago virgaurea")%>%
+  filter (!species == "Teesdalia conferta")%>%
 
 # dataframe with species data ####
 read.csv("data/species.csv", sep=",") %>%
@@ -87,9 +88,9 @@ sp_pref_villa%>%
 
 species%>%
   merge(sp_pref, by =c("species", "community"))%>%
-  select(species, community, code, habitat, GDD, FDD)->species2
-
-
+  select(species, community, habitat, GDD, FDD)->species2
+unique(species2$species)
+setdiff(species$species, species2$species)
 # MCMC GLMM ####
 finalgerm %>%
   group_by (species, code, treatment) %>%
@@ -114,19 +115,37 @@ finalgerm %>%
   filter (!species == "Sedum album")%>%
   filter (!species == "Sedum atratum")%>%
   filter (!species == "Solidago virgaurea") %>%
+  filter (!species == "Teesdalia conferta")%>%
   na.omit ()%>%
-  #filter(community =="Temperate")%>% #Temperate    Mediterranean
-  as.data.frame()-> mcmc_ibc
-str(mcmc_ibc)
-unique(mcmc_ibc$habitat)
+  filter(community =="Mediterranean")%>% #Temperate    Mediterranean
+  as.data.frame()-> mcmc_med
+
+
+str(mcmc)# all species
+str (mcmc_tem) # temperate species
+str(mcmc_med) # mediterranean species
+unique(mcmc_med$species)
 #### PHYLO TREE AND MODEL SPECIFICATION FOR MULTINOMIAL####
 ### Read tree
+#both communities
 phangorn::nnls.tree(cophenetic(ape::read.tree("results/treegerm.tree")), 
                     ape::read.tree("results/treegerm.tree"), method = "ultrametric") -> 
   nnls_orig
 
 nnls_orig$node.label <- NULL
+# ONly temperate community
+phangorn::nnls.tree(cophenetic(ape::read.tree("results/TEM_tree.tree")), 
+                    ape::read.tree("results/TEM_tree.tree"), method = "ultrametric") -> 
+  nnls_orig
 
+nnls_orig$node.label <- NULL
+#ONLY mediterranean community
+phangorn::nnls.tree(cophenetic(ape::read.tree("results/MED_tree.tree")), 
+                    ape::read.tree("results/MED_tree.tree"), method = "ultrametric") -> 
+  nnls_orig
+
+nnls_orig$node.label <- NULL
+ plot(ape::read.tree("results/MED_tree.tree"))
 ### Set number of iterations
 nite = 1000000
 nthi = 100
@@ -144,19 +163,22 @@ priors <- list(R = list(V = 1, nu = 50),
                         G2 = list(V = 1, nu = 1, alpha.mu = 0, alpha.V = 500)))
 #G3 = list(V = 1, nu = 1, alpha.mu = 0, alpha.V = 500)))   
 ### TEST
-MCMCglmm::MCMCglmm(cbind(finalgerm, viable - finalgerm) ~ treatment*GDD + treatment*FDD, # *community, habitat, GDD, FDD
+MCMCglmm::MCMCglmm(cbind(finalgerm, viable - finalgerm) ~ treatment, # *community, habitat, GDD, FDD
                    random = ~ animal + ID,
-                   family = "multinomial2", pedigree = nnls_orig, prior = priors, data = mcmc_ibc,
+                   family = "multinomial2", pedigree = nnls_orig, prior = priors, data = mcmc_med,
                    nitt = nite, thin = nthi, burnin = nbur, 
-                   verbose = FALSE, saveX = FALSE, saveZ = FALSE, saveXL = FALSE, pr = FALSE, pl = FALSE) -> m1
+                   verbose = FALSE, saveX = FALSE, saveZ = FALSE, saveXL = FALSE, pr = FALSE, pl = FALSE) -> m1_med
 
 #save(m1, file = "results/mcmc.Rdata")
 x11()
-plot(m1)
-
+plot(m1) # models with  both communities treatment * community
+plot(m1_tem) 
+plot(m1_med)
 
 # load("results/mcmc.Rdata")
 summary(m1)
+summary(m1_tem)
+summary(m1_med)
 
 ### Random and phylo
 # Calculate lambda http://www.mpcm-evolution.com/practice/online-practical-material-chapter-11/chapter-11-1-simple-model-mcmcglmm
@@ -172,7 +194,7 @@ summary(m1)$Gcovariances[1, 1] %>% round(2)
 summary(m1)$Gcovariances[1, 2] %>% round(2) 
 summary(m1)$Gcovariances[1, 3] %>% round(2)
 
-# Random effects code:ID
+# Random effects ID
 summary(m1)$Gcovariances[2, 1] %>% round(2)
 summary(m1)$Gcovariances[2, 2] %>% round(2) 
 summary(m1)$Gcovariances[2, 3] %>% round(2) 
@@ -180,6 +202,9 @@ summary(m1)$Gcovariances[2, 3] %>% round(2)
 
 #### visualization significant differences MCMC-GLMM ####
 # treatment x community, only differnce in WP, lower in temperate
+data.segm <- data.frame (x=1, xend =2.1, y= 0.4, yend=0.4, community = "Mediterranean")
+ann_text <- data.frame (x=1.6, y= 0.41, label = "*", community = "Mediterranean")
+x11()
 finalgerm %>%
   group_by (species, code, treatment) %>%
   summarize(finalgerm = sum (finalgerm)) %>% # mean to match dataset and substract cold stratification germ
@@ -200,6 +225,7 @@ finalgerm %>%
   filter (!species == "Sedum album")%>%
   filter (!species == "Sedum atratum")%>%
   filter (!species == "Solidago virgaurea") %>%
+  filter(!species == "Teesdalia conferta") %>%
   na.omit() %>%
   group_by (treatment, community) %>% #, temperature_regime 
   summarise(finalgerm=sum(finalgerm),
@@ -210,22 +236,30 @@ finalgerm %>%
   #filter(!treatment =="D_constant_light")%>%
   ggplot()+
   geom_bar(aes(x= treatment, y= mean, fill= treatment), color = "black", stat = "identity") +
-  geom_errorbar(aes(x= treatment, y=mean, ymin=lower, ymax=upper), color = "black", size=1, width = 0.4)+
+  geom_errorbar(aes(x= treatment, y=mean, ymin=lower, ymax=upper), color = "black", linewidth=1, width = 0.4)+
   facet_grid(~community) +
   ylim (0,0.5)+
   scale_fill_manual(name = "Treatments",labels = c("Control", "Darkness", "Water stress", "Constant Temperature"), 
-                    values = c("#2A788EFF", "dimgrey", "chocolate1","#7AD151FF")) + 
+                    values = c("#2A788EFF", "#440154FF", "#FDE725FF","#35B779FF")) + 
   #"Darkness" = "dimgrey", "Water stress"= "chocolate1", "Constant Temperature" = "#7AD151FF", "Cold stratification"
   labs (x = "Treatments", y="Germination proportion")+
+  # add significances
+  geom_segment (aes(x= 1,xend =3.1,  y = 0.45, yend= 0.45), color = "black", linewidth = 1.3, show.legend = F)+
+  annotate ("text", x= 2, y= 0.46, label = "***", size= 6)+
+  geom_segment(data=data.segm, aes( x=x,y=y,yend=yend,xend=xend), color = "black", linewidth = 1.3,inherit.aes=FALSE)+
+  geom_text(data=ann_text, label ="*", aes(x=x, y=y), size= 6)+
   theme_classic (base_size = 18) + #theme_minimal for all species for mean treatment
   theme (plot.title = element_text ( size = 24), #hjust = 0.5,
          strip.text = element_text (size =20),
          axis.title.x= element_blank(), 
          axis.text.x= element_blank(), 
-         legend.position = "bottom")
+         legend.position = "bottom")-> fig2;fig2
 show_col(viridis(4))
+ggsave(filename = "fig2.png", plot =fig2, path = "results/Figures/", 
+       device = "png", dpi = 600)
 
-# treatment x habitat
+###################### EXTRA PLOTS NOT USED ###########################################################3
+# treatment x habitat (NOT USED) ####
 finalgerm %>%
   group_by (species, code, treatment) %>%
   summarize(finalgerm = sum (finalgerm)) %>% # mean to match dataset and substract cold stratification germ
@@ -270,7 +304,7 @@ finalgerm %>%
          axis.text.x= element_blank(), 
          legend.position = "bottom")
 
-# GDD/FDD correlation with treatment germination responses
+# GDD/FDD correlation with treatment germination responses (NOT USED)
  ##GDD        
 finalgerm %>%
   group_by (species, code, treatment) %>%

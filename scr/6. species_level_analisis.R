@@ -4,12 +4,12 @@ library(ecodist);library(maptools);library(rpart);library(splines)
 library(gam);library(pgirmess);library(utils);library(combinat)
 library(cluster);library(fpc);library(clusterSim);library(lmtest)
 library(Hmisc);library(gplots);library(NbClust);library(rpart)
-library(rpart.plot);library(dismo);library(multcomp);library(gbm)
+library(rpart.plot);library(multcomp);library(gbm) #library(dismo);
 library(raster);library(tidyverse);
 library(glmmTMB); library (DHARMa)
 
 # following chapter 4 multivariate species level responses by Lars ###
-# Separate from the beggining between communities
+# Separate from the begining between communities
 ############################################# MEDITERRANEAN ###########################################################
 # 4.3 Trait free CCA ####
 cca1M <- cca(sp_x_plot_M ~ elevation+GDD+FDD, data=plot_x_env_M) # +bio1+bio2+bio7+Snw tried but highly correlated
