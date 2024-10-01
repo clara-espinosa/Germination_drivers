@@ -135,7 +135,6 @@ read.csv("data/raw_data.csv", sep = ",") %>%
   merge(viables_sp, by= c("code", "species", "treatment"))-> finalgerm 
 
 # graph comparing final germination between treatments !!!! ####
-### substract cold_strat from dark treatment, and add binomial errors!!
 x11()
 finalgerm %>%
   merge(species)%>%

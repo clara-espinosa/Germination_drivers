@@ -24,6 +24,7 @@ unique(raw_df$species)
 read.csv("data/species.csv", sep=",") %>%
   select(species, code,  family, community, habitat)  %>%
   convert_as_factor(species, code, family, community, habitat)-> species 
+ unique(species$species)  
 
 # viables x petri x treatment ####
 read.csv("data/raw_data.csv", sep = ",") %>%
@@ -59,6 +60,32 @@ read.csv("data/raw_data.csv", sep = ",") %>%
   group_by (species, code, treatment, petri) %>%
   summarize(finalgerm = round(mean (finalgerm),0), 
             viable = round(mean(viable),0))-> cold_strat
+x11()
+cold_strat%>%
+  group_by (species, code, treatment) %>%
+  summarize(finalgerm = sum (finalgerm), viable = sum(viable)) %>%
+  filter (!species == "Euphrasia salisburgensis")%>%
+  filter (!species == "Gentiana verna")%>%
+  filter (!species == "Gentianella campestris")%>%
+  filter (!species == "Kobresia myosuroides")%>%
+  filter (!species == "Salix breviserrata")%>%
+  filter (!species == "Sedum album")%>%
+  filter (!species == "Sedum atratum")%>%
+  filter (!species == "Solidago virgaurea") %>%
+  merge (species)%>%
+  group_by (community)%>%
+  summarize(finalgerm = sum (finalgerm), viable = sum(viable))%>%
+  mutate (binom.confint(finalgerm, viable, methods = "wilson"))%>%
+  ggplot()+
+  geom_bar(aes(x= community, y= mean), fill= "dimgrey", color = "black", stat = "identity") +
+  geom_errorbar(aes(x= community, y=mean, ymin=lower, ymax=upper), color = "black", linewidth=1, width = 0.4)+
+  ylim (0,0.5)+
+  labs (x = "Community", y="Germination proportion", title = "Cold stratification", 
+        subtitle = "Pretreatment", tag = "A")+ #
+  theme_classic (base_size = 16) + #theme_minimal for all species for mean treatment
+  theme (plot.title = element_text ( size = 20), #hjust = 0.5,
+         axis.text.x = element_text (color="black"),
+         legend.position = "bottom") -> fig2a;fig2a
 
 #final germination percentage calculation ####
 read.csv("data/raw_data.csv", sep = ",") %>%
@@ -75,7 +102,7 @@ read.csv("data/raw_data.csv", sep = ",") %>%
   mutate (binom.confint(finalgerm, viable, methods = "wilson"))%>%
   select (species, code, treatment, petri, finalgerm, viable,  mean, upper, lower)-> finalgerm # final germ per petri dish 
 
-# species preferences (focus on GDD, FDD) ####
+# species preferences (focus on GDD, FDD) NOT TO Be USED, remove?? ####
 # Mediterranean
 read.csv("data/sp_pref_villa.csv", sep = ",") %>%
   dplyr::select(species, community, bio1, bio2, bio7, FDD, GDD, Snw) -> sp_pref_villa
@@ -215,8 +242,8 @@ finalgerm %>%
   gather ("treatment", "finalgerm", A_alternate_light:E_cold_stratification) %>%
   arrange(species, treatment) %>%
   filter(!treatment=="E_cold_stratification")%>%
-  merge(viable_sp, by= c("code", "species", "treatment"))%>% #-> mcmc_ibc
-  merge(species2)%>%
+  merge(viable_sp, by= c("code", "species", "treatment"))%>% 
+  merge(species)%>%
   filter (!species == "Euphrasia salisburgensis")%>%
   filter (!species == "Gentiana verna")%>%
   filter (!species == "Gentianella campestris")%>%
@@ -240,23 +267,35 @@ finalgerm %>%
   facet_grid(~community) +
   ylim (0,0.5)+
   scale_fill_manual(name = "Treatments",labels = c("Control", "Darkness", "Water stress", "Constant Temperature"), 
-                    values = c("#2A788EFF", "#440154FF", "#FDE725FF","#35B779FF")) + 
+                    values = c("#2A788EFF", "#440154FF", "#FDE725FF","#35B779FF"),
+                    guide = guide_legend (title.position = "top",direction = "horizontal")) + 
   #"Darkness" = "dimgrey", "Water stress"= "chocolate1", "Constant Temperature" = "#7AD151FF", "Cold stratification"
-  labs (x = "Treatments", y="Germination proportion")+
+  labs (x = "Treatments", y="Germination proportion", title = "Response to germination drivers", tag = "B")+ #
   # add significances
   geom_segment (aes(x= 1,xend =3.1,  y = 0.45, yend= 0.45), color = "black", linewidth = 1.3, show.legend = F)+
   annotate ("text", x= 2, y= 0.46, label = "***", size= 6)+
   geom_segment(data=data.segm, aes( x=x,y=y,yend=yend,xend=xend), color = "black", linewidth = 1.3,inherit.aes=FALSE)+
   geom_text(data=ann_text, label ="*", aes(x=x, y=y), size= 6)+
-  theme_classic (base_size = 18) + #theme_minimal for all species for mean treatment
-  theme (plot.title = element_text ( size = 24), #hjust = 0.5,
-         strip.text = element_text (size =20),
+  theme_classic (base_size = 16) + #theme_minimal for all species for mean treatment
+  theme (plot.title = element_text ( size = 20), #hjust = 0.5,
+         strip.text = element_text (size =18),
+         strip.background = element_blank(), 
+         panel.background = element_blank(),
+         legend.title = element_text(hjust=0.5),
+         plot.margin =,
+         legend.margin = margin(0,0,0,0),
          axis.title.x= element_blank(), 
          axis.text.x= element_blank(), 
-         legend.position = "bottom")-> fig2;fig2
+         legend.position = c(0.5,-0.07))-> fig2b;fig2b
 show_col(viridis(4))
-ggsave(filename = "fig2.png", plot =fig2, path = "results/Figures/", 
+
+# Combine figure 2 
+library(patchwork)
+fig2a + fig2b + plot_layout(widths = c(1,2))->Fig2;Fig2 
+
+ggsave(filename = "Fig2.png", plot =Fig2 , path = "results/Figures/", 
        device = "png", dpi = 600)
+
 
 ###################### EXTRA PLOTS NOT USED ###########################################################3
 # treatment x habitat (NOT USED) ####

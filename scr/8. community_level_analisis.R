@@ -1,93 +1,8 @@
 library(tidyverse);library(ggplot2);library(dplyr);library(rstatix)
 library(lubridate);library(FD); library(psych);library(picante);library(vegan)
 
-# preliminary steps #
 ###################################  MEDITERRANEAN ###############################################################
-# 1-check species names to match####
-# dataframe with species data from germination experiments
-read.csv("data/species.csv", sep=",") %>%
-  select(species, code,  family, community, habitat, germ_drivers)  %>%
-  convert_as_factor(species, code, family, community, habitat, germ_drivers)-> species 
-
-# dataframe with species data from spatial survay
-read.csv("data/spatial-survey-species-Med.csv", sep=",")%>%
-  group_by(plot)%>%
-  mutate(total_cover= sum(cover),
-         rel_cover = (cover/total_cover)*100,
-         N_sp = length(unique(species)))-> spatial_sp_Med
-
-setdiff(spatial_sp_Med$species, species$species)
-# 2A- Cover/plot of species with germination traits ####
-species %>%
-  #filter(germ_drivers == "Yes")%>%
-  merge(spatial_sp_Med, by = "species")%>%
-  filter (!species == "Solidago virgaurea")%>% # species with 0 germ
-  group_by(plot) %>%
-  #summarise(cover = sum(cover))%>%
-  #filter(cover>79)%>%
-  summarise(rel_cover = sum(rel_cover))%>%
-  filter(rel_cover>80)->med_plot1
-# 15 plots with more than 80% coverage with sp traits (drivers) (considering raw cover, not to 100%)
-# 65 plots with more than 80% coverage with sp traits (drivers) (considering relative cover, up to 100%)
-# 64 plots with more than 80% coverage with sp traits (drivers + phenology)
-
-# 2B- Number of species with germination traits per plot ####
-species %>%
-  filter(germ_drivers == "Yes")%>%
-  merge(spatial_sp_Med, by = "species")%>%
-  filter (!species == "Solidago virgaurea")%>% # species with 0 germ
-  select(species, plot, N_sp)%>%
-  group_by(plot) %>%
-  summarise(N_sp = first(N_sp), 
-            sp_traits = length(unique(species)), 
-            sp_covered = sp_traits/N_sp)%>%
-  filter(sp_covered>0.75) %>%
-  print(n=84)
-# in 65 plots more than 75% sp covered with drivers traits (focused on presence)
-# in 57 plots more than 75% sp covered with drivers+phenology traits
-
-# 3- temperature graphs of plots with 80% coverage with trait data ####
-med_plot1%>%
-  merge(read.csv("data/spatial-survey-temperatures-Med.csv")) %>%
-  mutate(Time = as.POSIXct(Time, tz = "UTC", format = "%d/%m/%Y %H:%M" )) %>% 
-  merge(read.csv("data/spatial-survey-header-Med.csv"))-> spatial1 #%>%  #
-#filter(site== "Rabinalto")-> spatial1
-
-setdiff(med_plot1$plot, spatial1$plot)
-unique(med_plot1$plot)
-unique(spatial1$plot)
-
-spatial1 %>% 
-  group_by(Time = lubridate::floor_date(Time, "day"), site, plot) %>%
-  summarise(Temperature = mean(Temperature)) -> spatial2
-
-x11()
-spatial1 %>%
-  mutate(site = fct_relevel(site,"Rabinalto", "Cañada","Solana","Penouta")) %>%
-  ggplot(aes(x=Time, y=Temperature, color = site)) + 
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  geom_line(linewidth = .05, alpha = 0.5) +
-  geom_line(data = spatial2, linewidth = .75) +
-  facet_wrap(~ plot,nrow = 10 ) + #   ,  labeller = plot
-  labs(title = "Spatial survey (Jul 2021 - May 2022)", subtitle = "Plots with 80% cover with germination driver traits", 
-       x= "Time (4-h recording inverval)", y= "Temperature (ºC)") +
-  ggthemes::theme_tufte() +
-  coord_cartesian(ylim = c(-5, 45)) +
-  #scale_color_manual( values = c( "limegreen")) +
-  scale_color_manual( values = c("limegreen","deeppink4","darkorange1", "dodgerblue4")) +
-  theme(text = element_text(family = "sans"),
-        strip.background = element_blank(),
-        legend.position = c(0.75,0.025), # 
-        legend.direction = "vertical",
-        legend.title = element_blank(),
-        legend.text = element_text(size = 12), #, face = "italic"
-        panel.background = element_rect(color = "black", fill = NULL),
-        strip.text = element_text(size = 12),
-        axis.title = element_text(size = 12),
-        axis.text.x = element_text(size = 8, color = "black"),
-        axis.text.y = element_text(size = 11, color = "black")) 
-
-# CWM test  Following chapter 5 R TRait-Based ecology by Lars####
+# Following chapter 5 R TRait-Based ecology by Lars####
 # 5.1 Data matrices ####
 # in sp x plot 
 # in all files names of species and plots are not part of the matrix, used as row and columns names
@@ -95,28 +10,84 @@ spatial1 %>%
 sp_x_plot_M # species in rows and plots in columns, abundance already as relative cover
 plot_x_sp_M  # plot in row and species in columns, abundance in relative cover
 sp_x_trait_M # species in rows and traits in columns all traits already transformed
-# remove species which had 0 germination across al treatments in germination experiment Solidago virgaurea
+# remove species which had 0 germination across all treatments in germination experiment Solidago virgaurea
 plot_x_env_M # plot in rows and env data in columns
 
 ## 5.2 Check normality of the quantitative traits ####
 ### all traits are right skewed, try a log transformation look better but still not normal
 sp_x_trait_M%>%
-  gather(trait, value, seed_mass:E_cold)%>%
+  gather(trait, value, seed_mass:odds_E_cold)%>%
   #mutate(value = log(value))%>%
   ggplot()+
   geom_histogram(aes(x= value, fill = trait), color = "black") + 
   facet_wrap(~trait, ncol = 3, scales = "free") +
   theme_bw(base_size = 12)
+# 5.3 Calculation of CM ####
+sp_x_trait_M<- as.matrix(sp_x_trait_M)
+plot_x_sp_M_PA<- as.matrix(plot_x_sp_M_PA)
 
-## 5.3 Calculation of CWM ####
+CM_M<-functcomp(sp_x_trait_M, plot_x_sp_M_PA, CWM.type = "all") # CWM.type to consider binary or categorical traits
+
+# first let's check CM normality (all look normal distribution)
+CM_M%>%
+  gather(trait, value, seed_mass:odds_E_cold)%>%
+  ggplot()+
+  geom_histogram(aes(x= value, fill = trait), color = "black") + 
+  facet_wrap(~trait, ncol = 3, scales = "free") +
+  theme_bw(base_size = 12)
+# all traits look quite normally distributed!!
+plot_x_env_M%>%
+  rownames_to_column(var = "plot")->plot_x_env_M2 
+# look pretty normal distribution all variables
+CM_M%>%
+  rownames_to_column(var = "plot")%>%
+  gather(trait, value, seed_mass:odds_E_cold)%>%
+  merge(plot_x_env_M2)%>%
+  merge(read.csv("data/spatial-survey-header-Med.csv"), by = c("plot", "elevation"))%>%
+  mutate(site = as.factor(site))%>%
+  mutate(site = fct_relevel(site,"Rabinalto", "Cañada","Solana","Penouta")) %>%
+  mutate(trait = factor(trait))%>%
+  mutate(trait = fct_relevel(trait, "plant_height", "floral_height", "seed_mass", "seed_production",
+                             "leaf_area", "LDMC", "SLA",
+                             "odds_B_dark","odds_C_WP","odds_D_constant","odds_E_cold"))%>%
+  ggplot(aes(y=value, x= Snw, fill = site), color= "black")+
+  geom_point(shape = 21, size =3)+
+  scale_fill_manual( values = c("limegreen","deeppink4","darkorange1", "dodgerblue4"))+geom_smooth (aes(y=value, x= Snw),method = "lm", se=FALSE, color = "black", inherit.aes=F)+
+  facet_wrap(~trait, ncol = 4, scales = "free")+
+  labs(title="Community Means in Mediterranean system")+
+  theme_classic(base_size = 12)+
+  theme(strip.text = element_text(size =12),
+        legend.position = "bottom")
+# GDD, FDD, Snow, Elevation
+# To test te CWM for microclimatic gradients we could use simple linear model or 
+# REML, restricted maximum likelihood model
+summary(lm(CM_M$seed_production~elevation+ Snw+ FDD + GDD , data=plot_x_env_M))
+# see summary in results
+# we can also use the multivariate analyses for the representation, for example RDA
+
+rda_med_all<-rda(CM_M~elevation+ FDD + GDD + Snw , data= plot_x_env_M)
+plot(rda_med_all, type = "n", scaling = "sites")
+text(rda_med_all, dis = "cn", scaling = "sites")
+text(rda_med_all, dis = "sp", scaling = "sites", col = "red")
+
+rda_med_0<-rda(CM_M~1, data= plot_x_env_M)
+rda_med_all<-rda(CM_M~elevation+ FDD + GDD + Snw , data= plot_x_env_M)
+ordistep(rda_med_0, scope=formula(rda_med_all), direction = "forward")
+
+RsquareAdj (rda_med_all)$adj.r.squared # 0.02
+# rda_med 0 best model
+
+
+## 5.3b Calculation of CWM (theoretically DO NOT USE remove??) ####
 ##dataframes in matrix format
 sp_x_trait_M <- as.matrix(sp_x_trait_M)
 plot_x_sp_M <- as.matrix(plot_x_sp_M)
 CWM_M<-functcomp(sp_x_trait_M, plot_x_sp_M, CWM.type = "all") # CWM.type to consider binary or categorical traits
 
-# first let's check CWM normality 
+# first let's check CWM normality
+x11()
 CWM_M%>%
-  gather(trait, value, seed_mass:E_cold)%>%
+  gather(trait, value, seed_mass:odds_E_cold)%>%
   ggplot()+
   geom_histogram(aes(x= value, fill = trait), color = "black") + 
   facet_wrap(~trait, ncol = 3, scales = "free") +
@@ -132,7 +103,7 @@ plot_x_env_M%>%
 
 CWM_M%>%
   rownames_to_column(var = "plot")%>%
-  gather(trait, value, seed_mass:E_cold)%>%
+  gather(trait, value, seed_mass:odds_E_cold)%>%
   merge(plot_x_env_M2)%>%
   merge(read.csv("data/spatial-survey-header-Med.csv"), by = c("plot", "elevation"))%>%
   mutate(trait = factor(trait))%>%
@@ -167,7 +138,7 @@ ordistep(rda_med_0, scope=formula(rda_med_all), direction = "forward")
 RsquareAdj (rda_med_all)$adj.r.squared # 0.2
 # final model with GDD, FDD and Snow significant and thus included!!
 
-### 5.3.1 CAN we trust CWM ?? ####
+### 5.3.1 CAN we trust CWM ?(theoretically DO NOT USE remove??)? ####
 # Randomization comparison ###
 # consider log transform abundance data to diminish the effect of highly abundant sp
 CWM_M<-functcomp(sp_x_trait_M, plot_x_sp_M, CWM.type = "all")
@@ -350,157 +321,8 @@ par(mfrow = c(1, 1))
 # species is found within a plot and not across plots, even if there are such a marked 
 # environmental changes and even if species composition changes are very strong (high beta TD)
 
-# 6 Calculation of CM ####
-sp_x_trait_M<- as.matrix(sp_x_trait_M)
-plot_x_sp_M_PA<- as.matrix(plot_x_sp_M_PA)
-
-CM_M<-functcomp(sp_x_trait_M, plot_x_sp_M_PA, CWM.type = "all") # CWM.type to consider binary or categorical traits
-
-# first let's check CWM normality (all look normal distribution)
-CM_M%>%
-  gather(trait, value, seed_mass:E_cold)%>%
-  ggplot()+
-  geom_histogram(aes(x= value, fill = trait), color = "black") + 
-  facet_wrap(~trait, ncol = 3, scales = "free") +
-  theme_bw(base_size = 12)
-plot_x_env_M%>%
-  rownames_to_column(var = "plot")->plot_x_env_M2 
-# look pretty normal distribution all variables
-CM_M%>%
-  rownames_to_column(var = "plot")%>%
-  gather(trait, value, seed_mass:E_cold)%>%
-  merge(plot_x_env_M2)%>%
-  merge(read.csv("data/spatial-survey-header-Med.csv"), by = c("plot", "elevation"))%>%
-  mutate(trait = factor(trait))%>%
-  mutate(trait = fct_relevel(trait, "plant_height", "floral_height", "seed_mass", "seed_production",
-                             "B_dark","C_WP","D_constant", "E_cold",
-                             "odds_B_dark","odds_C_WP","odds_D_constant","odds_E_cold", 
-                             "A_control",))%>%
-  ggplot(aes(y=value, x= Snw, fill = site), color= "black")+
-  geom_point(shape = 21, size =3)+
-  geom_smooth (aes(y=value, x= Snw),method = "lm", se=FALSE, color = "black", inherit.aes=F)+
-  facet_wrap(~trait, ncol = 4, scales = "free")+
-  labs(title="Community Means in Mediterranean system")+
-  theme_classic(base_size = 12)+
-  theme(strip.text = element_text(size =12),
-        legend.position = "bottom")
-# GDD, FDD, Snow, Elevation
-# To test te CWM for microclimatic gradients we could use simple linear model or 
-# REML, restricted maximum likelihood model
-summary(lm(CM_M$seed_production~elevation+ Snw+ FDD + GDD , data=plot_x_env_M))
-# see summary in results
-# we can also use the multivariate analyses for the representation, for example RDA
-
-rda_med_all<-rda(CM_M~elevation+ FDD + GDD + Snw , data= plot_x_env_M)
-plot(rda_med_all, type = "n", scaling = "sites")
-text(rda_med_all, dis = "cn", scaling = "sites")
-text(rda_med_all, dis = "sp", scaling = "sites", col = "red")
-
-rda_med_0<-rda(CM_M~1, data= plot_x_env_M)
-rda_med_all<-rda(CM_M~elevation+ FDD + GDD + Snw , data= plot_x_env_M)
-ordistep(rda_med_0, scope=formula(rda_med_all), direction = "forward")
-
-RsquareAdj (rda_med_all)$adj.r.squared # 0.01
-# rda_med 0 best model
-
 ###################################  TEMPERATE  ##################################################################
-# 1-check species names to match####
-# dataframe with species data from germination experiments
-read.csv("data/species.csv", sep=",") %>%
-  select(species, code,  family, community, habitat, germ_drivers)  %>%
-  convert_as_factor(species, code, family, community, habitat, germ_drivers)-> species 
-
-# dataframe with species data from spatial survay
-read.csv("data/spatial-survey-species-Tem.csv", sep=",")%>%
-  group_by(plot)%>%
-  mutate(total_cover= sum(cover),
-         rel_cover = (cover/total_cover)*100,
-         N_sp = length(unique(species)))-> spatial_sp_Tem
-setdiff(spatial_sp_Tem$species, species$species)
-
-# 2A- Cover/plot of species with germination traits ####
-species %>%
-  #filter(germ_drivers == "Yes")%>%
-  merge(spatial_sp_Tem, by = "species")%>%
-  filter (!species == "Euphrasia salisburgensis")%>%
-  filter (!species == "Gentiana verna")%>%
-  filter (!species == "Gentianella campestris")%>%
-  filter (!species == "Kobresia myosuroides")%>%
-  filter (!species == "Salix breviserrata")%>%
-  filter (!species == "Sedum album")%>%
-  filter (!species == "Sedum atratum")%>%
-  group_by(plot) %>%
-  #summarise(cover = sum(cover))%>%
-  #filter(cover>79)%>%
-  summarise(rel_cover = sum(rel_cover))%>%
-  filter(rel_cover>79)->tem_plot1
-# 1 plot with more than 80% coverage with sp traits (drivers)(considering raw cover, not to 100%)
-# 48 plot with more than 80% coverage with sp traits (drivers)(considering raw cover, not to 100%)
-# 40 plot with more than 80% coverage with sp traits (drivers + phenology) (considering raw cover, not to 100%)
-
-# 2B- Number of species with germination traits per plot ####
-species %>%
-  #filter(germ_drivers == "Yes")%>%
-  merge(spatial_sp_Tem, by = "species")%>%
-  #filter (!species == "Euphrasia salisburgensis")%>% # species with 0 germ across all treatments
-  #filter (!species == "Gentiana verna")%>%
-  #filter (!species == "Gentianella campestris")%>%
-  #filter (!species == "Kobresia myosuroides")%>%
-  #filter (!species == "Salix breviserrata")%>%
-  #filter (!species == "Sedum album")%>%
-  #filter (!species == "Sedum atratum")%>%
-  select(species, plot, N_sp)%>%
-  group_by(plot) %>%
-  summarise(N_sp = first(N_sp), 
-            sp_traits = length(unique(species)), 
-            sp_covered = sp_traits/N_sp)%>%
-  filter(sp_covered>0.75) %>%
-  print(n=84)
-# only 9 plots more than 75% sp covered with drivers traits (focused on presence)
-# in 5 (2) plots more than 75% sp covered with drivers+phenology traits
-
-# 3- temperature graphs of plots with 80% coverage with trait data ####
-tem_plot1%>%
-  merge(read.csv("data/spatial-survey-temperatures-Tem.csv")) %>%
-  mutate(Time = as.POSIXct(Time, tz = "UTC", format = "%d/%m/%Y %H:%M" )) %>% 
-  merge(read.csv("data/spatial-survey-header-Tem.csv"))-> spatial1 
-
-setdiff(tem_plot1$plot, spatial1$plot)
-unique(tem_plot1$plot)
-unique(spatial1$plot)
-
-spatial1 %>% 
-  group_by(Time = lubridate::floor_date(Time, "day"), site, plot) %>%
-  summarise(Temperature = mean(Temperature)) -> spatial2
-
-x11()
-spatial1 %>%
-  mutate(site = fct_relevel(site,"Los Cazadores", "Hou Sin Tierri","Los Boches","Hoyo Sin Tierra")) %>%
-  ggplot(aes(x=Time, y=Temperature, color = site)) + 
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  geom_line(linewidth = .05, alpha = 0.5) +
-  geom_line(data = spatial2, linewidth = .75) +
-  facet_wrap(~ plot,nrow = 10 ) + #   ,  labeller = plot
-  labs(title = "Spatial survey (Oct 2018 - Aug 2019)", subtitle = "Plots with 80% cover with germination driver traits", 
-       x= "Time (4-h recording inverval)", y= "Temperature (ºC)") +
-  ggthemes::theme_tufte() +
-  coord_cartesian(ylim = c(-5, 45)) +
-  #scale_color_manual( values = c( "limegreen")) +
-  scale_color_manual( values = c("limegreen","deeppink4","darkorange1", "dodgerblue4")) +
-  theme(text = element_text(family = "sans"),
-        strip.background = element_blank(),
-        legend.position = c(0.75,0.025), # 
-        legend.direction = "vertical",
-        legend.title = element_blank(),
-        legend.text = element_text(size = 12), #, face = "italic"
-        panel.background = element_rect(color = "black", fill = NULL),
-        strip.text = element_text(size = 12),
-        axis.title = element_text(size = 12),
-        axis.text.x = element_text(size = 8, color = "black"),
-        axis.text.y = element_text(size = 11, color = "black")) 
-
-
-# CWM test  Following chapter 5 R TRait-Based ecology by Lars####
+# Following chapter 5 R TRait-Based ecology by Lars####
 # 5.1 Data matrices ####
 # base matrices from species level analysis but with reformatting
 # in sp x plot (species in rows and plots in columns)
