@@ -29,7 +29,7 @@ x11()
 plot(tree$scenario.3)
 
 write.tree(tree$scenario.3, file = "results/tree.tree")
-# tree without species wth 0 germ
+# both communities tree without species wth 0 germ ####
 read.csv("data/species.csv", sep =",") %>%
   mutate(species= str_replace(species, "Minuartia CF", "Minuartia arctica"))%>%
   select (species, family) %>%
@@ -63,9 +63,10 @@ plot(tree$scenario.3)
 write.tree(tree$scenario.3, file = "results/treegerm.tree")
 # we already have the phylotree for both communities made in phylo_tree script
 # with all species and also without the species that had 0 germination
-# make phylo tree with phylomaker for each of our communitites
+#mediterranean community phylo tree ####
+# make phylo tree with phylomaker for each of our communitites 
 # always check family names with http://www.mobot.org/MOBOT/research/APweb/
-#mediterranean
+
 read.csv("data/species.csv") %>%
   filter(community == "Mediterranean")%>%
   select (species, family) %>%
@@ -94,7 +95,7 @@ plot(tree$scenario.3)
 
 write.tree(tree$scenario.3, file = "results/MED_tree.tree")
 
-#temperate
+#temperate community phylo tree ####
 read.csv("data/species.csv") %>%
   filter(community == "Temperate")%>%
   mutate(species= str_replace(species, "Minuartia CF", "Minuartia arctica"))%>%

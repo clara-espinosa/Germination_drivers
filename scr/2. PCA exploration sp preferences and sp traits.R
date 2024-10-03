@@ -60,8 +60,8 @@ ggplot(pcaInds_villa, aes(x = Dim.1, y = Dim.2)) +
   #coord_fixed() +
   geom_hline(yintercept = 0, linetype = "dashed") +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_segment(data = pcaVars_villa, aes(x = 0, y = 0, xend = 3*Dim.1, yend = 3*Dim.2)) +
-  geom_point(aes(fill = family), color = "black", show.legend = T, size = 4, shape = 21) + # family
+  geom_segment(data = pcaVars_villa, aes(x = 0, y = 0, xend = 3*Dim.1, yend = 3*Dim.2), arrow = arrow(length = unit(0.3,"cm"))) +
+  geom_point(aes(),fill = "goldenrod1", color = "black", show.legend = F, size = 4, shape = 21) + # family
   #geom_label(data = pcaVars_villa, aes(x = 3*Dim.1, y = 3*Dim.2, label = Variable),  show.legend = F, size = 4) +
   geom_label_repel(data = pcaVars_villa, aes(x = 3*Dim.1, y = 3*Dim.2, label = Variable),  show.legend = FALSE, size = 5, segment.size= 1,
                    point.padding = 0.2, nudge_x = .15, nudge_y = .5,segment.curvature = -1e-20, segment.linetype = 1, segment.color = "red", arrow = arrow(length = unit(0.015, "npc")))+
@@ -77,11 +77,11 @@ ggplot(pcaInds_villa, aes(x = Dim.1, y = Dim.2)) +
         axis.title = element_text(size = 12),
         axis.text = element_text(size = 12, color = "black"),
         plot.tag.position = c(0.02,1),
-        plot.margin = unit(c(0, 0, 0, 0), "cm")) +
+        plot.margin = unit(c(1, 0, 0, 0), "cm")) +
   scale_x_continuous(name = paste("Axis 1 (", round(pca_villa$eig[1, 2], 0),
                                   "% variance explained)", sep = ""), limits = c(-5, 5)) + #
   scale_y_continuous(name = paste("Axis 2 (", round(pca_villa$eig[2, 2], 0), 
-                                  "% variance explained)", sep = ""), limits = c(-4, 4)) -> Med_sp_clim; Med_sp_clim
+                                  "% variance explained)", sep = ""), limits = c(-4.2, 4)) -> Med_sp_clim; Med_sp_clim
   
 # Temperate 
 #setdiff(sp_pref_picos$species, species$species)
@@ -119,8 +119,8 @@ ggplot(pcaInds_picos, aes(x = Dim.1, y = Dim.2)) +
   #coord_fixed() +
   geom_hline(yintercept = 0, linetype = "dashed") +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_segment(data = pcaVars_picos, aes(x = 0, y = 0, xend = 3*Dim.1, yend = 3*Dim.2)) +
-  geom_point(aes(fill = family), color = "black", show.legend = T, size = 4, shape = 21) + # family
+  geom_segment(data = pcaVars_picos, aes(x = 0, y = 0, xend = 3*Dim.1, yend = 3*Dim.2), arrow = arrow(length = unit(0.3,"cm"))) +
+  geom_point(aes(),fill = "forestgreen", color = "black", show.legend = F, size = 4, shape = 21) + # family
   #geom_label(data = pcaVars_picos, aes(x = 3*Dim.1, y = 3*Dim.2, label = Variable),  show.legend = F, size = 4) +
   geom_label_repel(data = pcaVars_picos, aes(x = 3*Dim.1, y = 3*Dim.2, label = Variable),  show.legend = FALSE, size = 5, segment.size= 1,
                    point.padding = 0.2, nudge_x = .15, nudge_y = .5,segment.curvature = -1e-20, segment.linetype = 1, segment.color = "red", arrow = arrow(length = unit(0.015, "npc")))+
@@ -136,14 +136,17 @@ ggplot(pcaInds_picos, aes(x = Dim.1, y = Dim.2)) +
         axis.title = element_text(size = 12),
         axis.text = element_text(size = 12, color = "black"),
         plot.tag.position = c(0.02,1),
-        plot.margin = unit(c(0, 0, 0, 0), "cm")) +
+        plot.margin = unit(c(1, 0, 0, 0), "cm")) +
   scale_x_continuous(name = paste("Axis 1 (", round(pca_picos$eig[1, 2], 0),
                                   "% variance explained)", sep = ""), limits = c(-5, 5)) + 
   scale_y_continuous(name = paste("Axis 2 (", round(pca_picos$eig[2, 2], 0), 
-                                  "% variance explained)", sep = ""), limits = c(-4, 4)) -> Tem_sp_clim; Tem_sp_clim
+                                  "% variance explained)", sep = ""), limits = c(-4.2, 4)) -> Tem_sp_clim; Tem_sp_clim
 
 # combine graph
 ggarrange(Med_sp_clim,Tem_sp_clim,  ncol= 2, common.legend = F)-> sp_clim;sp_clim
+
+ggsave(filename = "Species climatic preferences.png", plot =sp_clim , path = "results/Figures/", 
+       device = "png", dpi = 600)
 
 #### Species TRAITS PCA ###############
 # Mediterranean
