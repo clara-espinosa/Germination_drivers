@@ -71,15 +71,49 @@ CM_M%>%
     ggsave(micro_plot, file = paste0("CM Mediterranean x ", var,".png"),
            path = "results/preliminar graphs", scale = 1, width = 360, height = 250, units = "mm", dpi = 600)
   }
+## facet for trait
+x11()
+for (var in unique(CM_microclima_M$trait)){
+  micro_plot=ggplot(CM_microclima_M[CM_microclima_M$trait==var,])+
+    geom_point(aes(y=value, x= value_micro, fill = site), color= "black",shape = 21, size =4)+
+    scale_fill_manual( values = c("limegreen","deeppink4","darkorange1", "dodgerblue4"))+
+    geom_smooth (aes(y=value, x= value_micro),method = "lm", se=T, color = "black", inherit.aes=F)+
+    facet_wrap(~micro_variable, ncol = 4, scales = "free")+
+    labs(title="Community Means in Mediterranean system", subtitle = var, y= var )+
+    theme_classic(base_size = 16)+
+    theme(strip.text = element_text(size =12),
+          axis.title.x = element_blank(),
+          legend.position = "bottom")
+  ggsave(micro_plot, file = paste0("CM Mediterranean x ", var,".png"),
+         path = "results/preliminar graphs", scale = 1, width = 360, height = 125, units = "mm", dpi = 600)
+}
 
-  
+# double facetting with significances
+ann.sig.CM.M <- data.frame (read.csv("results/sig_CM_M.csv", sep = ";"))
+
+ggplot(CM_microclima_M)+
+  geom_point(aes(y=value, x= value_micro, fill = site), color= "black",shape = 21, size =3)+
+  scale_fill_manual( values = c("limegreen","deeppink4","darkorange1", "dodgerblue4"))+
+  geom_smooth (aes(y=value, x= value_micro),method = "lm", se=T, color = "black", inherit.aes=F)+
+  facet_grid(trait~micro_variable, scales = "free")+
+  geom_text(data=ann.sig.CM.M, label =ann.sig.CM.M$label, aes(x=x, y=y),size= 6, color = "red")+
+  labs(title="Community Means in Mediterranean system")+
+  theme_classic(base_size = 16)+
+  theme(strip.text = element_text(size =12),
+        panel.background = element_rect(color = "black", fill = NULL),
+        axis.title.x = element_blank(),
+        legend.position = "bottom")-> plot_CM_M;plot_CM_M
+ggsave(plot_CM_M, file = "CM Med trait vs micro.png", 
+       path = "results/preliminar graphs", scale = 1,dpi = 600) 
+       #width = 320, height = 260, units = "mm", 
+
 # To test te CWM for microclimatic gradients we could use simple linear model or 
 # REML, restricted maximum likelihood model 
-summary(lm(CM_M$leaf_area~elevation+ Snw+ FDD + GDD , data=plot_x_env_M))
+summary(lm(CM_M$leaf_area~elevation+ FDD + GDD+ Snw , data=plot_x_env_M))
 # (function written to repeat each lm x microclimatic variable)
 # formula adapted from PICOS github repository scr Fig5-GLMs
 lms.cm <- function(x) {
-  glm(CM ~ GDD + FDD + elevation + Snw, data = x) -> m1
+  glm(CM ~ elevation +FDD + GDD +  Snw, data = x) -> m1
   broom::tidy(m1)
 }
 
@@ -157,14 +191,31 @@ for (var in unique(CWM_microclima_M$micro_variable)){
   ggsave(micro_plot, file = paste0("CWM Mediterranean x ", var,".png"),
          path = "results/preliminar graphs", scale = 1, width = 360, height = 250, units = "mm", dpi = 600)
 }
+# double facetting with significances
+ann.sig.CWM.M <- data.frame (read.csv("results/sig_CWM_M.csv", sep = ";"))
 
+ggplot(CWM_microclima_M)+
+  geom_point(aes(y=value, x= value_micro, fill = site), color= "black",shape = 21, size =3)+
+  scale_fill_manual( values = c("limegreen","deeppink4","darkorange1", "dodgerblue4"))+
+  geom_smooth (aes(y=value, x= value_micro),method = "lm", se=T, color = "black", inherit.aes=F)+
+  facet_grid(trait~micro_variable, scales = "free")+
+  geom_text(data=ann.sig.CWM.M, label =ann.sig.CWM.M$label, aes(x=x, y=y),size= 6, color = "red")+
+  labs(title="Community Weighted Means in Mediterranean system")+
+  theme_classic(base_size = 16)+
+  theme(strip.text = element_text(size =12),
+        panel.background = element_rect(color = "black", fill = NULL),
+        axis.title.x = element_blank(),
+        legend.position = "bottom")-> plot_CWM_M;plot_CWM_M
+ggsave(plot_CWM_M, file = "CWM Med trait vs micro.png", 
+       path = "results/preliminar graphs", scale = 1,dpi = 600) 
+#width = 320, height = 260, units = "mm", 
 # To test te CWM for microclimatic gradients we could use simple linear model or 
 # REML, restricted maximum likelihood model
 summary(lm(CWM_M$seed_mass~elevation+ FDD + GDD + Snw, data=plot_x_env_M))
 # (function written to repeat each lm x microclimatic variable)
 # formula adapted from PICOS github repository scr Fig5-GLMs
 lms.cwm <- function(x) {
-  glm(CWM ~ GDD + FDD + elevation + Snw, data = x) -> m1
+  glm(CWM ~ elevation+ FDD + GDD + Snw, data = x) -> m1
   broom::tidy(m1)
 }
 
@@ -489,17 +540,34 @@ for (var in unique(CM_microclima_T$micro_variable)){
   ggsave(micro_plot, file = paste0("CM Temperate x ", var,".png"),
          path = "results/preliminar graphs", scale = 1, width = 360, height = 250, units = "mm", dpi = 600)
 }
+# double facetting with significances
+ann.sig.CM.T <- data.frame (read.csv("results/sig_CM_T.csv", sep = ";"))
 
+ggplot(CM_microclima_T)+
+  geom_point(aes(y=value, x= value_micro, fill = site), color= "black",shape = 21, size =3)+
+  scale_fill_manual( values = c("limegreen","deeppink4","darkorange1", "dodgerblue4"))+
+  geom_smooth (aes(y=value, x= value_micro),method = "lm", se=T, color = "black", inherit.aes=F)+
+  facet_grid(trait~micro_variable, scales = "free")+
+  geom_text(data=ann.sig.CM.T, label =ann.sig.CM.T$label, aes(x=x, y=y),size= 6, color = "red")+
+  labs(title="Community Means in Temperate system")+
+  theme_classic(base_size = 16)+
+  theme(strip.text = element_text(size =12),
+        panel.background = element_rect(color = "black", fill = NULL),
+        axis.title.x = element_blank(),
+        legend.position = "bottom")-> plot_CM_T;plot_CM_T
+ggsave(plot_CM_T, file = "CM Tem trait vs micro.png", 
+       path = "results/preliminar graphs", scale = 1,dpi = 600) 
+#width = 320, height = 260, units = "mm", 
 
 # GDD, FDD, Snow, Elevation
 # To test te CWM for microclimatic gradients we could use simple linear model or 
 # REML, restricted maximum likelihood model
-summary(lm(CM_T$seed_production~elevation+ Snw+ FDD + GDD , data=plot_x_env_T))
+summary(lm(CM_T$seed_production~elevation+ FDD + GDD+ Snw , data=plot_x_env_T))
 # see summary in results
 # (function written to repeat each lm x microclimatic variable)
 # formula adapted from PICOS github repository scr Fig5-GLMs
 lms.cm <- function(x) {
-  glm(CM ~ GDD + FDD + elevation + Snw, data = x) -> m1
+  glm(CM ~ elevation+ FDD + GDD+ Snw, data = x) -> m1
   broom::tidy(m1)
 }
 
@@ -570,13 +638,29 @@ for (var in unique(CWM_microclima_T$micro_variable)){
   ggsave(micro_plot, file = paste0("CWM Temperate x ", var,".png"),
          path = "results/preliminar graphs", scale = 1, width = 360, height = 250, units = "mm", dpi = 600)
 }
+# double facetting with significances
+ann.sig.CWM.T <- data.frame (read.csv("results/sig_CWM_T.csv", sep = ";"))
 
+ggplot(CWM_microclima_T)+
+  geom_point(aes(y=value, x= value_micro, fill = site), color= "black",shape = 21, size =3)+
+  scale_fill_manual( values = c("limegreen","deeppink4","darkorange1", "dodgerblue4"))+
+  geom_smooth (aes(y=value, x= value_micro),method = "lm", se=T, color = "black", inherit.aes=F)+
+  facet_grid(trait~micro_variable, scales = "free")+
+  geom_text(data=ann.sig.CWM.T, label =ann.sig.CWM.T$label, aes(x=x, y=y),size= 6, color = "red")+
+  labs(title="Community Weighted Means in Temperate system")+
+  theme_classic(base_size = 16)+
+  theme(strip.text = element_text(size =12),
+        panel.background = element_rect(color = "black", fill = NULL),
+        axis.title.x = element_blank(),
+        legend.position = "bottom")-> plot_CWM_T;plot_CWM_T
+ggsave(plot_CWM_T, file = "CWM Tem trait vs micro.png", 
+       path = "results/preliminar graphs", scale = 1,dpi = 600) 
 # To test te CWM for microclimatic gradients we could use simple linear model or 
 # REML, restricted maximum likelihood model
 summary(lm(CWM_T$seed_production~elevation+ FDD + GDD + Snw, data=plot_x_env_T))
 
 lms.cwm <- function(x) {
-  glm(CWM ~ GDD + FDD + elevation + Snw, data = x) -> m1
+  glm(CWM ~ elevation+ FDD + GDD + Snw, data = x) -> m1
   broom::tidy(m1)
 }
 
