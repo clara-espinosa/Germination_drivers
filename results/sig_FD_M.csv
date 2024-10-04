@@ -1,0 +1,17 @@
+Func.div;micro_variable;x;y;label
+Germ.Mpd.ab;elevation;2130;0.76;NS
+Germ.Mpd.ab;FDD;95;0.76;NS
+Germ.Mpd.ab;GDD;2400;0.76;NS
+Germ.Mpd.ab;Snow;130;0.76;·
+Germ.Rao.ab;elevation;2130;0.44;**
+Germ.Rao.ab;FDD;95;0.44;NS
+Germ.Rao.ab;GDD;2400;0.44;NS
+Germ.Rao.ab;Snow;130;0.44;NS
+W.plant.Mpd.ab;elevation;2130;0.5;*
+W.plant.Mpd.ab;FDD;95;0.5;NS
+W.plant.Mpd.ab;GDD;2400;0.5;NS
+W.plant.Mpd.ab;Snow;130;0.5;*
+W.plant.Rao.ab;elevation;2130;0.25;NS
+W.plant.Rao.ab;FDD;95;0.25;NS
+W.plant.Rao.ab;GDD;2400;0.25;**
+W.plant.Rao.ab;Snow;130;0.25;*
