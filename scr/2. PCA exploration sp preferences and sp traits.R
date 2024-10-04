@@ -185,7 +185,7 @@ ggplot(pcaInds_traits_med, aes(x = Dim.1, y = Dim.2)) +
   coord_fixed() +
   geom_hline(yintercept = 0, linetype = "dashed") +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_segment(data = pcaVars_traits_med, aes(x = 0, y = 0, xend = 3*Dim.1, yend = 3*Dim.2)) +
+  geom_segment(data = pcaVars_traits_med, aes(x = 0, y = 0, xend = 3*Dim.1, yend = 3*Dim.2), arrow = arrow(length = unit(0.3,"cm"))) +
   geom_point(aes(fill = family), color = "black", show.legend = T, size = 4, shape = 21) + # family
   #geom_label(data = pcaVars_picos, aes(x = 3*Dim.1, y = 3*Dim.2, label = Variable),  show.legend = F, size = 4) +
   geom_label_repel(data = pcaVars_traits_med, aes(x = 3*Dim.1, y = 3*Dim.2, label = Variable),  show.legend = FALSE, size = 5, segment.size= 1,
@@ -241,7 +241,7 @@ ggplot(pcaInds_traits_tem, aes(x = Dim.1, y = Dim.2)) +
   coord_fixed() +
   geom_hline(yintercept = 0, linetype = "dashed") +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_segment(data = pcaVars_traits_tem, aes(x = 0, y = 0, xend = 3*Dim.1, yend = 3*Dim.2)) +
+  geom_segment(data = pcaVars_traits_tem, aes(x = 0, y = 0, xend = 3*Dim.1, yend = 3*Dim.2), arrow = arrow(length = unit(0.3,"cm"))) +
   geom_point(aes(fill = family), color = "black", show.legend = T, size = 4, shape = 21) + # family
   #geom_label(data = pcaVars_picos, aes(x = 3*Dim.1, y = 3*Dim.2, label = Variable),  show.legend = F, size = 4) +
   geom_label_repel(data = pcaVars_traits_tem, aes(x = 3*Dim.1, y = 3*Dim.2, label = Variable),  show.legend = FALSE, size = 5, segment.size= 1,
@@ -263,3 +263,153 @@ ggplot(pcaInds_traits_tem, aes(x = Dim.1, y = Dim.2)) +
                                   "% variance explained)", sep = ""), limits = c(-5, 5)) + 
   scale_y_continuous(name = paste("Axis 2 (", round(pca_traits_tem$eig[2, 2], 0), 
                                   "% variance explained)", sep = ""), limits = c(-4, 4)) 
+
+#### Plot climatic indices PCA ####
+read.csv("data/spatial-survey-temperatures-Med.csv") %>%
+  mutate(Time = as.POSIXct(Time, tz = "UTC", format = "%d/%m/%Y %H:%M")) %>%
+  group_by(plot, Day = lubridate::floor_date(Time, "day")) %>%
+  dplyr::summarize(T = mean(Temperature), X = max(Temperature), N = min(Temperature), n = length(Time)) %>% # Daily mean, max, min
+  mutate(Snow = ifelse(X < 0.5 & N > -0.5, 1, 0)) %>% # Day is snow day or not
+  mutate(FreezeThaw = ifelse(X > 0.5 & N < -0.5, 1, 0)) %>% # Day with freeze-thaw cycles
+  mutate(FDD = ifelse(T < 0, T, 0)) %>% # Freezing degrees per day
+  mutate(GDD = ifelse(T >= 5, T, 0)) %>% # Growing degrees day per month https://link.springer.com/article/10.1007/s00035-021-00250-1
+  group_by(plot, Month = lubridate::floor_date(Day, "month")) %>%
+  dplyr::summarize(T = mean(T), X = mean(X), N = mean(N), # Daily mean, max, min
+                   Snow = sum(Snow), # Snow days per month
+                   FreezeThaw = sum(FreezeThaw), # Freeze-thaw days per month
+                   FDD = sum(FDD), # FDD per month
+                   GDD = sum(GDD)) %>% # GDD per month
+  group_by(plot) %>%
+  dplyr::summarize(bio1 = round(mean(T),2), # Annual Mean Temperature
+                   bio2 = round(mean(X - N),2), # Mean Diurnal Range (Mean of monthly (max temp - min temp))
+                   bio7 = round(max(X) - min(N), 2), # Temperature Annual Range (BIO5-BIO6)
+                   Snw = sum(Snow),
+                   FDD = round(abs(sum(FDD)),2), # FDD per year
+                   GDD = round(sum(GDD)),2) %>%  # GDD per year
+  merge(read.csv("data/spatial-survey-header-Med.csv")) %>% 
+  #dplyr::select(plot, site, aspect, elevation, latitude, longitude, bio1:GDD)%>% 
+  dplyr::select(site, plot, elevation,bio1:GDD)-> bioclim_M
+
+bioclim_M[, 3:9] %>%
+  FactoMineR::PCA() -> pca_bioclim_M
+
+pca_bioclim_M$var$contrib
+pca_bioclim_M$eig
+bioclim_M[, 3:9] %>%cor()
+
+cbind((bioclim_M %>%  dplyr::select(site, plot)), data.frame(pca_bioclim_M$ind$coord[, 1:4])) %>%
+  mutate(site = factor(site)) -> pcaInds_bioclim_M
+
+pca_bioclim_M$var$coord[, 1:2] %>%
+  data.frame %>%
+  rownames_to_column(var = "Variable")%>%
+  mutate(Variable = fct_recode(Variable, "Snow" = "Snw"))-> pcaVars_bioclim_M
+
+### Plot PCA
+x11()
+ggplot(pcaInds_bioclim_M, aes(x = Dim.1, y = Dim.2)) +
+  #coord_fixed() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_segment(data = pcaVars_bioclim_M, aes(x = 0, y = 0, xend = 3*Dim.1, yend = 3*Dim.2), arrow = arrow(length = unit(0.3,"cm"))) +
+  geom_point(aes(fill = site), color = "black", show.legend = T, size = 4, shape = 21) + # family
+  scale_fill_manual(values = c("Rabinalto" ="limegreen","Canada"="deeppink4",
+                               "Solana"="darkorange1", "Penouta"="dodgerblue4"))+
+  #geom_label(data = pcaVars_bioclim_M, aes(x = 3*Dim.1, y = 3*Dim.2, label = Variable),  show.legend = F, size = 4) +
+  geom_label_repel(data = pcaVars_bioclim_M, aes(x = 3*Dim.1, y = 3*Dim.2, label = Variable),  show.legend = FALSE, size = 5, segment.size= 1,
+                   point.padding = 0.2, nudge_x = .15, nudge_y = .5,segment.curvature = -1e-20, segment.linetype = 1, segment.color = "red", arrow = arrow(length = unit(0.015, "npc")))+
+  #geom_text_repel (data = pcaInds_bioclim_M, aes (x = Dim.1, y = Dim.2, label = species), show.legend = F, size =4) +
+  ggthemes::theme_tufte(base_size=12) + 
+  labs(title= "Bioclimatic indices Mediterranean community", tag = "A")+
+  theme(text = element_text(family = "sans"),
+        plot.title = element_text (size= 16),
+        legend.position = "right", 
+        legend.title = element_blank(),
+        legend.text = element_text(size = 12, color = "black"),
+        panel.background = element_rect(color = "black", fill = NULL),
+        axis.title = element_text(size = 12),
+        axis.text = element_text(size = 12, color = "black"),
+        plot.tag.position = c(0.02,1),
+        plot.margin = unit(c(1, 0, 0, 0), "cm")) +
+  scale_x_continuous(name = paste("Axis 1 (", round(pca_bioclim_M$eig[1, 2], 0),
+                                  "% variance explained)", sep = ""), limits = c(-4.5, 4.5)) + 
+  scale_y_continuous(name = paste("Axis 2 (", round(pca_bioclim_M$eig[2, 2], 0), 
+                                  "% variance explained)", sep = ""), limits = c(-3, 4)) -> Med_bioclim;Med_bioclim
+
+# temperate
+read.csv("data/spatial-survey-temperatures-Tem.csv") %>%
+  mutate(Time = as.POSIXct(Time, tz = "UTC", format = "%d/%m/%Y %H:%M")) %>%
+  group_by(plot, Day = lubridate::floor_date(Time, "day")) %>%
+  dplyr::summarize(T = mean(Temperature), X = max(Temperature), N = min(Temperature), n = length(Time)) %>% # Daily mean, max, min
+  mutate(Snow = ifelse(X < 0.5 & N > -0.5, 1, 0)) %>% # Day is snow day or not
+  mutate(FreezeThaw = ifelse(X > 0.5 & N < -0.5, 1, 0)) %>% # Day with freeze-thaw cycles
+  mutate(FDD = ifelse(T < 0, T, 0)) %>% # Freezing degrees per day
+  mutate(GDD = ifelse(T >= 5, T, 0)) %>% # Growing degrees day per month https://link.springer.com/article/10.1007/s00035-021-00250-1
+  group_by(plot, Month = lubridate::floor_date(Day, "month")) %>%
+  dplyr::summarize(T = mean(T), X = mean(X), N = mean(N), # Daily mean, max, min
+                   Snow = sum(Snow), # Snow days per month
+                   FreezeThaw = sum(FreezeThaw), # Freeze-thaw days per month
+                   FDD = sum(FDD), # FDD per month
+                   GDD = sum(GDD)) %>% # GDD per month
+  group_by(plot) %>%
+  dplyr::summarize(bio1 = round(mean(T),2), # Annual Mean Temperature
+                   bio2 = round(mean(X - N),2), # Mean Diurnal Range (Mean of monthly (max temp - min temp))
+                   bio7 = round(max(X) - min(N), 2), # Temperature Annual Range (BIO5-BIO6)
+                   Snw = sum(Snow),
+                   FDD = round(abs(sum(FDD)),2), # FDD per year
+                   GDD = round(sum(GDD)),2) %>%  # GDD per year
+  merge(read.csv("data/spatial-survey-header-Tem.csv")) %>% 
+  dplyr::select(site, plot, elevation,bio1:GDD)-> bioclim_T
+unique(bioclim_T$site)
+bioclim_T[, 3:9] %>%
+  FactoMineR::PCA() -> pca_bioclim_T
+
+pca_bioclim_T$var$contrib
+pca_bioclim_T$eig
+bioclim_T[, 3:9] %>%cor()
+
+cbind((bioclim_T %>%  dplyr::select(site, plot)), data.frame(pca_bioclim_T$ind$coord[, 1:4])) %>%
+  mutate(site = factor(site)) -> pcaInds_bioclim_T
+
+pca_bioclim_T$var$coord[, 1:2] %>%
+  data.frame %>%
+  rownames_to_column(var = "Variable")%>%
+  mutate(Variable = fct_recode(Variable, "Snow" = "Snw"))-> pcaVars_bioclim_T
+
+### Plot PCA
+x11()
+ggplot(pcaInds_bioclim_T, aes(x = Dim.1, y = Dim.2)) +
+  #coord_fixed() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_segment(data = pcaVars_bioclim_T, aes(x = 0, y = 0, xend = 3*Dim.1, yend = 3*Dim.2), arrow = arrow(length = unit(0.3,"cm"))) +
+  geom_point(aes(fill = site), color = "black", show.legend = T, size = 4, shape = 21) + # family
+  scale_fill_manual(values = c( "Los Cazadores"="limegreen","Hou Sin Tierri"="deeppink4",
+                               "Los Boches"="darkorange1", "Hoyo Sin Tierra"="dodgerblue4"))+
+  #geom_label(data = pcaVars_bioclim_T, aes(x = 3*Dim.1, y = 3*Dim.2, label = Variable),  show.legend = F, size = 4) +
+  geom_label_repel(data = pcaVars_bioclim_T, aes(x = 3*Dim.1, y = 3*Dim.2, label = Variable),  show.legend = FALSE, size = 5, segment.size= 1,
+                   point.padding = 0.2, nudge_x = .15, nudge_y = .5,segment.curvature = -1e-20, segment.linetype = 1, segment.color = "red", arrow = arrow(length = unit(0.015, "npc")))+
+  #geom_text_repel (data = pcaInds_bioclim_T, aes (x = Dim.1, y = Dim.2, label = species), show.legend = F, size =4) +
+  ggthemes::theme_tufte(base_size=12) + 
+  labs(title= "Bioclimatic indices Temperate community", tag = "B")+
+  theme(text = element_text(family = "sans"),
+        plot.title = element_text (size= 16),
+        legend.position = "right", 
+        legend.title = element_blank(),
+        legend.text = element_text(size = 12, color = "black"),
+        panel.background = element_rect(color = "black", fill = NULL),
+        axis.title = element_text(size = 12),
+        axis.text = element_text(size = 12, color = "black"),
+        plot.tag.position = c(0.02,1),
+        plot.margin = unit(c(1, 0, 0, 0), "cm")) +
+  scale_x_continuous(name = paste("Axis 1 (", round(pca_bioclim_T$eig[1, 2], 0),
+                                  "% variance explained)", sep = ""), limits = c(-4.5, 4.5)) + 
+  scale_y_continuous(name = paste("Axis 2 (", round(pca_bioclim_T$eig[2, 2], 0), 
+                                  "% variance explained)", sep = ""), limits = c(-3, 4)) -> Tem_bioclim;Tem_bioclim
+
+
+# combine graph
+ggarrange(Med_bioclim,Tem_bioclim,  ncol= 2, common.legend = F)-> bioclim;bioclim
+
+ggsave(filename = "Bioclimatic indices PCA.png", plot =bioclim , path = "results/Figures/", 
+       device = "png", dpi = 600)
