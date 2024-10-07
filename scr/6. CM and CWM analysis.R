@@ -51,9 +51,9 @@ CM_M%>%
   mutate(site = as.factor(site))%>%
   mutate(site = fct_relevel(site,"Rabinalto", "Canada","Solana","Penouta")) %>%
   mutate(trait = factor(trait))%>%
-  mutate(trait = fct_relevel(trait, "plant_height", "seed_mass",
-                             "leaf_area", "LDMC", "SLA",
-                             "odds_B_dark","odds_C_WP","odds_D_constant"))%>%
+  mutate(trait = fct_relevel(trait, "odds_B_dark","odds_C_WP","odds_D_constant",
+                             "seed_mass","plant_height", 
+                             "leaf_area", "LDMC", "SLA"))%>%
   dplyr::select(site, plot, trait, value, elevation, Snw, FDD, GDD)%>%
   rename(Snow=Snw)%>%
   gather(micro_variable, value_micro,  elevation:GDD)-> CM_microclima_M
@@ -90,12 +90,26 @@ for (var in unique(CM_microclima_M$trait)){
 
 # double facetting with significances
 ann.sig.CM.M <- data.frame (read.csv("results/sig_CM_M.csv", sep = ";"))
-
-ggplot(CM_microclima_M)+
+trait_names <- c("odds_B_dark" = "Darkness","odds_C_WP" = "Water stress",
+                 "odds_D_constant" = "Constant Temp","seed_mass" = "Seed mass",
+                 "plant_height" = "Plant height", "leaf_area" = "Leaf area",
+                  "LDMC" = "LDMC", "SLA" = "SLA", "elevation"= "Elevation", 
+                 "FDD" = "FDD", "GDD"="GDD", "Snow"="Snow")
+str(CM_microclima_M)
+x11()
+CM_microclima_M%>%
+  mutate(trait = factor(trait))%>%
+  mutate(trait = fct_relevel(trait, "odds_B_dark","odds_C_WP","odds_D_constant",
+                             "seed_mass","plant_height", 
+                             "leaf_area", "LDMC", "SLA"))%>%
+  ggplot()+
   geom_point(aes(y=value, x= value_micro, fill = site), color= "black",shape = 21, size =3)+
   scale_fill_manual( values = c("limegreen","deeppink4","darkorange1", "dodgerblue4"))+
   geom_smooth (aes(y=value, x= value_micro),method = "lm", se=T, color = "black", inherit.aes=F)+
-  facet_grid(trait~micro_variable, scales = "free")+
+  facet_grid(factor(trait, levels = c("odds_B_dark","odds_C_WP","odds_D_constant",
+                                      "seed_mass","plant_height", 
+                                      "leaf_area", "LDMC", "SLA"))~micro_variable, scales = "free", 
+             labeller = as_labeller(trait_names))+
   geom_text(data=ann.sig.CM.M, label =ann.sig.CM.M$label, aes(x=x, y=y),size= 6, color = "red")+
   labs(title="Community Means in Mediterranean system")+
   theme_classic(base_size = 16)+
@@ -193,12 +207,24 @@ for (var in unique(CWM_microclima_M$micro_variable)){
 }
 # double facetting with significances
 ann.sig.CWM.M <- data.frame (read.csv("results/sig_CWM_M.csv", sep = ";"))
-
-ggplot(CWM_microclima_M)+
+trait_names <- c("odds_B_dark" = "Darkness","odds_C_WP" = "Water stress",
+                 "odds_D_constant" = "Constant Temp","seed_mass" = "Seed mass",
+                 "plant_height" = "Plant height", "leaf_area" = "Leaf area",
+                 "LDMC" = "LDMC", "SLA" = "SLA", "elevation"= "Elevation", 
+                 "FDD" = "FDD", "GDD"="GDD", "Snow"="Snow")
+CWM_microclima_M%>%
+  mutate(trait = factor(trait))%>%
+  mutate(trait = fct_relevel(trait, "odds_B_dark","odds_C_WP","odds_D_constant",
+                             "seed_mass","plant_height", 
+                             "leaf_area", "LDMC", "SLA"))%>%
+  ggplot()+
   geom_point(aes(y=value, x= value_micro, fill = site), color= "black",shape = 21, size =3)+
   scale_fill_manual( values = c("limegreen","deeppink4","darkorange1", "dodgerblue4"))+
   geom_smooth (aes(y=value, x= value_micro),method = "lm", se=T, color = "black", inherit.aes=F)+
-  facet_grid(trait~micro_variable, scales = "free")+
+  facet_grid(factor(trait, levels = c("odds_B_dark","odds_C_WP","odds_D_constant",
+                                      "seed_mass","plant_height", 
+                                      "leaf_area", "LDMC", "SLA"))~micro_variable, scales = "free", 
+             labeller = as_labeller(trait_names))+
   geom_text(data=ann.sig.CWM.M, label =ann.sig.CWM.M$label, aes(x=x, y=y),size= 6, color = "red")+
   labs(title="Community Weighted Means in Mediterranean system")+
   theme_classic(base_size = 16)+
@@ -320,10 +346,12 @@ CM_T%>%
   gather(trait, value, seed_mass:odds_D_constant)%>%
   merge(plot_x_env_T2)%>%
   merge(read.csv("data/spatial-survey-header-Tem.csv"), by = c("plot", "elevation"))%>%
+  mutate(site = as.factor(site))%>%
+  mutate(site = fct_relevel(site,"Los Cazadores", "Hou Sin Tierri","Los Boches","Hoyo Sin Tierra")) %>%
   mutate(trait = factor(trait))%>%
-  mutate(trait = fct_relevel(trait, "plant_height", "seed_mass", 
-                             "leaf_area", "LDMC", "SLA",
-                             "odds_B_dark","odds_C_WP","odds_D_constant"))%>%
+  mutate(trait = fct_relevel(trait,"odds_B_dark","odds_C_WP","odds_D_constant",
+                             "seed_mass", "plant_height", 
+                             "leaf_area", "LDMC", "SLA"))%>%
   dplyr::select(site, plot, trait, value, elevation, Snw, FDD, GDD)%>%
   rename(Snow=Snw)%>%
   gather(micro_variable, value_micro,  elevation:GDD)-> CM_microclima_T
@@ -341,14 +369,28 @@ for (var in unique(CM_microclima_T$micro_variable)){
   ggsave(micro_plot, file = paste0("CM Temperate x ", var,".png"),
          path = "results/preliminar graphs", scale = 1, width = 360, height = 250, units = "mm", dpi = 600)
 }
+
 # double facetting with significances
 ann.sig.CM.T <- data.frame (read.csv("results/sig_CM_T.csv", sep = ";"))
+trait_names <- c("odds_B_dark" = "Darkness","odds_C_WP" = "Water stress",
+                 "odds_D_constant" = "Constant Temp","seed_mass" = "Seed mass",
+                 "plant_height" = "Plant height", "leaf_area" = "Leaf area",
+                 "LDMC" = "LDMC", "SLA" = "SLA", "elevation"= "Elevation", 
+                 "FDD" = "FDD", "GDD"="GDD", "Snow"="Snow")
 
-ggplot(CM_microclima_T)+
+CM_microclima_T%>%
+  mutate(trait = factor(trait))%>%
+  mutate(trait = fct_relevel(trait, "odds_B_dark","odds_C_WP","odds_D_constant",
+                             "seed_mass","plant_height", 
+                             "leaf_area", "LDMC", "SLA"))%>%
+  ggplot()+
   geom_point(aes(y=value, x= value_micro, fill = site), color= "black",shape = 21, size =3)+
   scale_fill_manual( values = c("limegreen","deeppink4","darkorange1", "dodgerblue4"))+
   geom_smooth (aes(y=value, x= value_micro),method = "lm", se=T, color = "black", inherit.aes=F)+
-  facet_grid(trait~micro_variable, scales = "free")+
+  facet_grid(factor(trait, levels = c("odds_B_dark","odds_C_WP","odds_D_constant",
+                                      "seed_mass","plant_height", 
+                                      "leaf_area", "LDMC", "SLA"))~micro_variable, scales = "free", 
+             labeller = as_labeller(trait_names))+
   geom_text(data=ann.sig.CM.T, label =ann.sig.CM.T$label, aes(x=x, y=y),size= 6, color = "red")+
   labs(title="Community Means in Temperate system")+
   theme_classic(base_size = 16)+
@@ -418,10 +460,12 @@ CWM_T%>%
   gather(trait, value, seed_mass:odds_D_constant)%>%
   merge(plot_x_env_T2)%>%
   merge(read.csv("data/spatial-survey-header-Tem.csv"), by = c("plot", "elevation"))%>%
+  mutate(site = as.factor(site))%>%
+  mutate(site = fct_relevel(site,"Los Cazadores", "Hou Sin Tierri","Los Boches","Hoyo Sin Tierra")) %>%
   mutate(trait = factor(trait))%>%
-  mutate(trait = fct_relevel(trait, "plant_height", "seed_mass", 
-                             "leaf_area", "LDMC", "SLA",
-                             "odds_B_dark","odds_C_WP","odds_D_constant"))%>%
+  mutate(trait = fct_relevel(trait,"odds_B_dark","odds_C_WP","odds_D_constant",
+                             "seed_mass", "plant_height", 
+                             "leaf_area", "LDMC", "SLA"))%>%
   dplyr::select(site, plot, trait, value, elevation, Snw, FDD, GDD)%>%
   rename(Snow=Snw)%>%
   gather(micro_variable, value_micro,  elevation:GDD)-> CWM_microclima_T
@@ -441,12 +485,25 @@ for (var in unique(CWM_microclima_T$micro_variable)){
 }
 # double facetting with significances
 ann.sig.CWM.T <- data.frame (read.csv("results/sig_CWM_T.csv", sep = ";"))
+trait_names <- c("odds_B_dark" = "Darkness","odds_C_WP" = "Water stress",
+                 "odds_D_constant" = "Constant Temp","seed_mass" = "Seed mass",
+                 "plant_height" = "Plant height", "leaf_area" = "Leaf area",
+                 "LDMC" = "LDMC", "SLA" = "SLA", "elevation"= "Elevation", 
+                 "FDD" = "FDD", "GDD"="GDD", "Snow"="Snow")
 
-ggplot(CWM_microclima_T)+
+CWM_microclima_T%>%
+  mutate(trait = factor(trait))%>%
+  mutate(trait = fct_relevel(trait, "odds_B_dark","odds_C_WP","odds_D_constant",
+                             "seed_mass","plant_height", 
+                             "leaf_area", "LDMC", "SLA"))%>%
+  ggplot()+
   geom_point(aes(y=value, x= value_micro, fill = site), color= "black",shape = 21, size =3)+
   scale_fill_manual( values = c("limegreen","deeppink4","darkorange1", "dodgerblue4"))+
   geom_smooth (aes(y=value, x= value_micro),method = "lm", se=T, color = "black", inherit.aes=F)+
-  facet_grid(trait~micro_variable, scales = "free")+
+  facet_grid(factor(trait, levels = c("odds_B_dark","odds_C_WP","odds_D_constant",
+                                      "seed_mass","plant_height", 
+                                      "leaf_area", "LDMC", "SLA"))~micro_variable, scales = "free", 
+             labeller = as_labeller(trait_names))+
   geom_text(data=ann.sig.CWM.T, label =ann.sig.CWM.T$label, aes(x=x, y=y),size= 6, color = "red")+
   labs(title="Community Weighted Means in Temperate system")+
   theme_classic(base_size = 16)+
