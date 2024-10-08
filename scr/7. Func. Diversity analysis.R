@@ -37,7 +37,7 @@ plant.traits.dist.M <- gowdis(sp_x_trait_M[,1:5])
 
 # plant traits weighted distance matrix by groups of traits 
 # info from https://cran.r-project.org/web/packages/gawdis/vignettes/gawdis.html
-plant.traits.weighted.dist.M<-gawdis(sp_x_trait_M[,1:5], w.type = "optimized", opti.maxiter = 200, 
+plant.traits.weighted.dist.M<-gawdis::gawdis(sp_x_trait_M[,1:5], w.type = "optimized", opti.maxiter = 200, 
                                      groups.weight=T, groups = c(1,2, 3, 3, 3))#
 
 # 5.5. Calculation of MDP (main pairwise dissimilarity) and RAo with melodic function ####

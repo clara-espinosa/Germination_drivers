@@ -298,7 +298,8 @@ pca_bioclim_M$eig
 bioclim_M[, 3:9] %>%cor()
 
 cbind((bioclim_M %>%  dplyr::select(site, plot)), data.frame(pca_bioclim_M$ind$coord[, 1:4])) %>%
-  mutate(site = factor(site)) -> pcaInds_bioclim_M
+  mutate(site = factor(site)) %>% 
+  mutate(site = fct_relevel(site, "Rabinalto", "Canada", "Solana", "Penouta"))-> pcaInds_bioclim_M
 
 pca_bioclim_M$var$coord[, 1:2] %>%
   data.frame %>%
@@ -369,7 +370,8 @@ pca_bioclim_T$eig
 bioclim_T[, 3:9] %>%cor()
 
 cbind((bioclim_T %>%  dplyr::select(site, plot)), data.frame(pca_bioclim_T$ind$coord[, 1:4])) %>%
-  mutate(site = factor(site)) -> pcaInds_bioclim_T
+  mutate(site = factor(site)) %>%
+  mutate(site = fct_relevel(site, "Los Cazadores", "Hou Sin Tierri", "Los Boches", "Hoyo Sin Tierra"))-> pcaInds_bioclim_T
 
 pca_bioclim_T$var$coord[, 1:2] %>%
   data.frame %>%
@@ -410,6 +412,9 @@ ggplot(pcaInds_bioclim_T, aes(x = Dim.1, y = Dim.2)) +
 
 # combine graph
 ggarrange(Med_bioclim,Tem_bioclim,  ncol= 2, common.legend = F)-> bioclim;bioclim
+
+library(patchwork)
+Med_bioclim + Tem_bioclim + plot_layout(widths = c(1,1))-> bioclim;bioclim
 
 ggsave(filename = "Bioclimatic indices PCA.png", plot =bioclim , path = "results/Figures/", 
        device = "png", dpi = 600)
