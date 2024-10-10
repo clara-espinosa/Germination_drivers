@@ -72,13 +72,13 @@ as.data.frame(weighted.plant.melodic.M$abundance$rao) %>%
   cbind (as.data.frame(weighted.plant.melodic.M$presence$rao))%>%
   cbind (as.data.frame(weighted.plant.melodic.M$presence$mpd))%>%
   cbind (plot_x_env_M2)%>%
-  mutate(W.plant.Rao.ab = weighted.plant.melodic.M$abundance$rao)%>%
-  mutate(W.plant.Mpd.ab = weighted.plant.melodic.M$abundance$mpd)%>%
-  mutate(W.plant.Rao.pa = weighted.plant.melodic.M$presence$rao)%>%
-  mutate(W.plant.Mpd.pa = weighted.plant.melodic.M$presence$mpd)%>%
-  dplyr::select(plot, elevation, FDD, GDD, Snw,W.plant.Rao.ab,W.plant.Mpd.ab, W.plant.Rao.pa,W.plant.Mpd.pa)%>%
+  mutate(Wplant.Rao.ab = weighted.plant.melodic.M$abundance$rao)%>%
+  mutate(Wplant.Mpd.ab = weighted.plant.melodic.M$abundance$mpd)%>%
+  mutate(Wplant.Rao.pa = weighted.plant.melodic.M$presence$rao)%>%
+  mutate(Wplant.Mpd.pa = weighted.plant.melodic.M$presence$mpd)%>%
+  dplyr::select(plot, elevation, FDD, GDD, Snw,Wplant.Rao.ab,Wplant.Mpd.ab, Wplant.Rao.pa,Wplant.Mpd.pa)%>%
   merge(read.csv("data/spatial-survey-header-Med.csv"), by = c("plot", "elevation"))%>%
-  dplyr::select(site, plot,W.plant.Rao.ab,W.plant.Mpd.ab, W.plant.Rao.pa,W.plant.Mpd.pa,elevation, FDD, GDD, Snw)-> FD.w.plant.M
+  dplyr::select(site, plot,Wplant.Rao.ab,Wplant.Mpd.ab, Wplant.Rao.pa,Wplant.Mpd.pa,elevation, FDD, GDD, Snw)-> FD.w.plant.M
 
 ## Join germ and plant mdp and rao calculations
 FD.germ.M %>%
@@ -87,13 +87,65 @@ FD.germ.M %>%
 # first let's check MPD and Rao normality
 x11()
 FD.M%>%
-  gather(Func.div, value, Germ.Rao.ab:W.plant.Mpd.pa)%>%
+  gather(Func.div, value, Germ.Rao.ab:Wplant.Mpd.pa)%>%
   ggplot()+
   geom_histogram(aes(x= value, fill = Func.div), color = "black") + 
   facet_wrap(~Func.div, ncol =2, scales = "free") +
   theme_bw(base_size = 12) # somewhat normal distributed !?!?!
 
-# data handling for visualization Rao and MPD (weigthed by abundance) vs microclimatic gradients.
+## 5.5.3 Rao and MPD differences between germination and adult plant traits ####
+strip_names <- c("ab"= "Abundance data", "pa"= "Presence/absence data", 
+                 "Mpd" = "Mean Pairwise Dissimilarity", "Rao" = "RaoQ")
+FD.M%>%
+  gather (Func.div, value, Germ.Rao.ab:Wplant.Mpd.pa)%>%
+  separate_wider_delim(Func.div, delim = ".", names = c("Traits","indices", "data_type"), too_many = "merge")%>%
+  group_by(Traits, indices, data_type)%>%
+  get_summary_stats(value)%>%
+  mutate(Traits= as.factor(Traits))%>%
+  mutate(Traits = fct_recode(Traits, "Germination"="Germ" , "Adult Plant"="Wplant"))%>%
+  ggplot()+
+  geom_errorbar(aes(Traits, mean, ymin = mean-ci, ymax = mean+ci), color = "black",linewidth = 0.5, size =1) +
+  geom_point(aes(x= Traits, y= mean, fill = Traits), color = "black", shape= 21, size = 5)+
+  scale_fill_manual(values = c("dodgerblue4","limegreen"))+
+  facet_grid(indices~data_type, labeller = as_labeller(strip_names), scales = "free_y")+
+  labs(title = "Mediterranean community FD differences", y= "Mean dissimilarity")+
+  theme_classic(base_size = 16)+
+  theme(strip.text = element_text(size =16),
+        panel.background = element_rect(color = "black", fill = NULL),
+        axis.title.x = element_blank(),
+        legend.position = "bottom")->FD.traits.M;FD.traits.M
+
+  ggsave(FD.traits.M, file = "FD traits diff Med.png", 
+       path = "results/preliminar graphs", scale = 1,dpi = 600) 
+  
+FD.M %>%
+  gather (Func.div, value, Germ.Rao.ab:Wplant.Mpd.pa)%>%
+  separate_wider_delim(Func.div, delim = ".", 
+                       names = c("Traits","indices", "data_type"), too_many = "merge")-> FD.M.diff
+
+ttest.fd.diff <- function(x) {
+  t.test(value ~ Traits, data = x) -> m1
+  broom::tidy(m1)
+}
+
+FD.M.diff%>%
+  group_by(indices, data_type)%>%
+  do(ttest.fd.diff(.)) %>%
+  write.csv("results/FD diff MED.csv")
+
+## 5.5.4. Rao and MPD (weigthed by abundance) vs microclimatic gradients#####
+# To test te CWM for microclimatic gradients we could use simple linear model or 
+# REML, restricted maximum likelihood model
+lms.fd.env <- function(x) {
+  glm(value ~ elevation+ FDD + GDD + Snw, data = x) -> m1
+  broom::tidy(m1)
+}
+FD.M%>%
+  gather (Func.div, value, Germ.Rao.ab:Wplant.Mpd.pa)%>%
+  group_by(Func.div)%>%
+  do(lms.fd.env(.)) %>%
+  write.csv("results/FD vs micro MED.csv")
+
 ann.sig.FD.M <- data.frame (read.csv("results/sig_FD_M.csv", sep = ";"))
 
 strip_names <- c("elevation"= "Elevation", "FDD" = "FDD", "GDD"="GDD", "Snow"="Snow")
@@ -101,7 +153,7 @@ FD.M%>%
   mutate(site = as.factor(site))%>%
   mutate(site = fct_relevel(site,"Rabinalto", "Canada","Solana","Penouta")) %>%
   rename(Snow=Snw)%>%
-  gather (Func.div, value, Germ.Rao.ab:W.plant.Mpd.pa)%>%
+  gather (Func.div, value, Germ.Rao.ab:Wplant.Mpd.pa)%>%
   gather (micro_variable, value_micro, elevation:Snow)%>%
   ggplot()+
   geom_point(aes(y=value, x= value_micro, fill = site), color= "black",shape = 21, size =3)+
@@ -120,19 +172,68 @@ FD.M%>%
 ggsave(FD_micro_M, file = "FD (p_a) vs micro Med.png", 
        path = "results/preliminar graphs", scale = 1,dpi = 600) 
 
-# To test te CWM for microclimatic gradients we could use simple linear model or 
-# REML, restricted maximum likelihood model
-lms.fd <- function(x) {
-  glm(value ~ elevation+ FDD + GDD + Snw, data = x) -> m1
-  broom::tidy(m1)
-}
-FD.M%>%
-  gather (Func.div, value, Germ.Rao.ab:W.plant.Mpd.pa)%>%
-  group_by(Func.div)%>%
-  do(lms.fd(.)) %>%
-  write.csv("results/FD vs micro MED.csv")
 
-## 5.5.3 Plant traits NO weighted (not use?) ##### 
+
+## 5.5.5. explore correlation with plot richness  ####
+#medFD$nbsp from scrp community level analysis
+# richness x environmental gradients
+as.data.frame(medFD$nbsp)%>%
+  rownames_to_column(var= "plot")%>%
+  mutate (richness = medFD$nbsp )%>%
+  merge(FD.M, by= "plot")%>%
+  mutate(site = as.factor(site))%>%
+  mutate(site = fct_relevel(site,"Rabinalto", "Canada","Solana","Penouta")) %>%
+  rename(Snow=Snw)%>%
+  gather (Func.div, value, Germ.Rao.ab:Wplant.Mpd.pa)%>%
+  gather (micro_variable, value_micro, elevation:Snow)%>%
+  ggplot()+
+  geom_point(aes(y=richness, x= value_micro, fill = site), color= "black",shape = 21, size =3)+
+  scale_fill_manual(values = c("limegreen","deeppink4","darkorange1", "dodgerblue4"))+
+  geom_smooth (aes(y=richness, x= value_micro),method = "lm", se=T, color = "black", inherit.aes=F)+
+  facet_grid(~micro_variable, scales = "free")+
+  labs(title="Mediterranean plots richness across environmental gradients")+
+  theme_classic(base_size = 16)+
+  theme(strip.text = element_text(size =12),
+        panel.background = element_rect(color = "black", fill = NULL),
+        axis.title.x = element_blank(),
+        legend.position = "bottom")-> richness_x_env_M; richness_x_env_M
+
+ggsave(richness_x_env_M, file = "richness x env Med.png", 
+       path = "results/preliminar graphs/richness", scale = 1,dpi = 600) 
+# richness x FD indices
+as.data.frame(medFD$nbsp)%>%
+  rownames_to_column(var= "plot")%>%
+  mutate (richness = medFD$nbsp )%>%
+  merge(FD.M, by= "plot")%>%
+  mutate(site = as.factor(site))%>%
+  mutate(site = fct_relevel(site,"Rabinalto", "Canada","Solana","Penouta")) %>%
+  rename(Snow=Snw)%>%
+  gather (Func.div, value, Germ.Rao.ab:Wplant.Mpd.pa)%>%
+  gather (micro_variable, value_micro, elevation:Snow)%>%
+  ggplot()+
+  geom_point(aes(y=richness, x= value, fill = site), color= "black",shape = 21, size =3)+
+  scale_fill_manual(values = c("limegreen","deeppink4","darkorange1", "dodgerblue4"))+
+  geom_smooth (aes(y=richness, x= value),method = "lm", se=T, color = "black", inherit.aes=F)+
+  facet_wrap(~Func.div, scales = "free_x", ncol=4)+
+  labs(title="Mediterranean plots richness correlation with FD indices")+
+  theme_classic(base_size = 16)+
+  theme(strip.text = element_text(size =12),
+        panel.background = element_rect(color = "black", fill = NULL),
+        axis.title.x = element_blank(),
+        legend.position = "bottom")-> richness_x_FD_M; richness_x_FD_M
+
+ggsave(richness_x_FD_M, file = "richness x FD Med.png", 
+       path = "results/preliminar graphs/richness", scale = 1,dpi = 600) 
+
+# combine plots
+library(patchwork)
+richness_x_env_M / richness_x_FD_M + 
+  plot_layout(heights = c(1,2), guides = "collect") & theme(legend.position = "bottom")-> richness_M;richness_M
+
+ggsave(filename = "Richness_Med.png", plot =richness_M , path = "results/preliminar graphs/richness", 
+       device = "png", dpi = 600)
+
+## 5.5.6 Plant traits NO weighted (not use?) ##### 
 plot_x_sp_M <- as.matrix(plot_x_sp_M)
 plant.melodic.M <- melodic(plot_x_sp_M, plant.traits.dist.M)
 str(plant.melodic.M)
@@ -238,13 +339,13 @@ as.data.frame(weighted.plant.melodic.T$abundance$rao) %>%
   cbind (as.data.frame(weighted.plant.melodic.T$presence$rao))%>%
   cbind (as.data.frame(weighted.plant.melodic.T$presence$mpd))%>%
   cbind (plot_x_env_T2)%>%
-  mutate(W.plant.Rao.ab = weighted.plant.melodic.T$abundance$rao)%>%
-  mutate(W.plant.Mpd.ab = weighted.plant.melodic.T$abundance$mpd)%>%
-  mutate(W.plant.Rao.pa = weighted.plant.melodic.T$presence$rao)%>%
-  mutate(W.plant.Mpd.pa = weighted.plant.melodic.T$presence$mpd)%>%
-  dplyr::select(plot, elevation, FDD, GDD, Snw,W.plant.Rao.ab,W.plant.Mpd.ab,W.plant.Rao.pa,W.plant.Mpd.pa )%>%
+  mutate(Wplant.Rao.ab = weighted.plant.melodic.T$abundance$rao)%>%
+  mutate(Wplant.Mpd.ab = weighted.plant.melodic.T$abundance$mpd)%>%
+  mutate(Wplant.Rao.pa = weighted.plant.melodic.T$presence$rao)%>%
+  mutate(Wplant.Mpd.pa = weighted.plant.melodic.T$presence$mpd)%>%
+  dplyr::select(plot, elevation, FDD, GDD, Snw,Wplant.Rao.ab,Wplant.Mpd.ab,Wplant.Rao.pa,Wplant.Mpd.pa )%>%
   merge(read.csv("data/spatial-survey-header-Tem.csv"), by = c("plot", "elevation"))%>%
-  dplyr::select(site, plot,W.plant.Rao.ab,W.plant.Mpd.ab,W.plant.Rao.pa,W.plant.Mpd.pa, elevation, FDD, GDD, Snw)-> FD.w.plant.T
+  dplyr::select(site, plot,Wplant.Rao.ab,Wplant.Mpd.ab,Wplant.Rao.pa,Wplant.Mpd.pa, elevation, FDD, GDD, Snw)-> FD.w.plant.T
 
 ## Join germ and plant mdp and rao calculations
 FD.germ.T %>%
@@ -253,20 +354,72 @@ FD.germ.T %>%
 # first let's check MPD and Rao normality
 x11()
 FD.T%>%
-  gather(Func.div, value, Germ.Rao.ab:W.plant.Mpd.pa)%>%
+  gather(Func.div, value, Germ.Rao.ab:Wplant.Mpd.pa)%>%
   ggplot()+
   geom_histogram(aes(x= value, fill = Func.div), color = "black") + 
   facet_wrap(~Func.div, ncol =2, scales = "free") +
   theme_bw(base_size = 12) #  normally distributed 
+## 5.5.3 Rao and MPD differences between germination and adult plant traits ####
+strip_names <- c("ab"= "Abundance data", "pa"= "Presence/absence data", 
+                 "Mpd" = "Mean Pairwise Dissimilarity", "Rao" = "RaoQ")
+FD.T%>%
+  gather (Func.div, value, Germ.Rao.ab:Wplant.Mpd.pa)%>%
+  separate_wider_delim(Func.div, delim = ".", names = c("Traits","indices", "data_type"), too_many = "merge")%>%
+  group_by(Traits, indices, data_type)%>%
+  get_summary_stats(value)%>%
+  mutate(Traits= as.factor(Traits))%>%
+  mutate(Traits = fct_recode(Traits, "Germination"="Germ" , "Adult Plant"="Wplant"))%>%
+  ggplot()+
+  geom_errorbar(aes(Traits, mean, ymin = mean-ci, ymax = mean+ci), color = "black",linewidth = 0.5, size =1) +
+  geom_point(aes(x= Traits, y= mean, fill = Traits), color = "black", shape= 21, size = 5)+
+  scale_fill_manual(values = c("dodgerblue4","limegreen"))+
+  facet_grid(indices~data_type, labeller = as_labeller(strip_names), scales = "free_y")+
+  labs(title = "Temperate community FD differences", y= "Mean dissimilarity")+
+  theme_classic(base_size = 16)+
+  theme(strip.text = element_text(size =16),
+        panel.background = element_rect(color = "black", fill = NULL),
+        axis.title.x = element_blank(),
+        legend.position = "bottom")->FD.traits.T;FD.traits.T
 
-# data handling for visualization Rao and MPD (weigthed by abundance) vs microclimatic gradients.
+ggsave(FD.traits.T, file = "FD traits diff Tem.png", 
+       path = "results/preliminar graphs", scale = 1,dpi = 600) 
+
+FD.T %>%
+  gather (Func.div, value, Germ.Rao.ab:Wplant.Mpd.pa)%>%
+  separate_wider_delim(Func.div, delim = ".", 
+                       names = c("Traits","indices", "data_type"), too_many = "merge")-> FD.T.diff
+
+ttest.fd.diff <- function(x) {
+  t.test(value ~ Traits, data = x) -> m1
+  broom::tidy(m1)
+}
+
+FD.T.diff%>%
+  group_by(indices, data_type)%>%
+  do(ttest.fd.diff(.)) %>%
+  write.csv("results/FD diff TEM.csv")
+
+## 5.5.4. Rao and MPD (weigthed by abundance) vs microclimatic gradients####
+
+# To test te CWM for microclimatic gradients we could use simple linear model or 
+# REML, restricted maximum likelihood model
+lms.fd.env <- function(x) {
+  glm(value ~ elevation+ FDD + GDD + Snw, data = x) -> m1
+  broom::tidy(m1)
+}
+FD.T%>%
+  gather (Func.div, value, Germ.Rao.ab:Wplant.Mpd.pa)%>%
+  group_by(Func.div)%>%
+  do(lms.fd.env(.)) %>%
+  write.csv("results/FD vs micro TEM.csv")
+
 ann.sig.FD.T <- data.frame (read.csv("results/sig_FD_T.csv", sep = ";"))
 
 FD.T%>%
   mutate(site = as.factor(site))%>%
   mutate(site = fct_relevel(site,"Los Cazadores", "Hou Sin Tierri","Los Boches","Hoyo Sin Tierra"))%>% 
   rename(Snow=Snw)%>%
-  gather (Func.div, value, Germ.Rao.ab:W.plant.Mpd.pa)%>%
+  gather (Func.div, value, Germ.Rao.ab:Wplant.Mpd.pa)%>%
   gather (micro_variable, value_micro, elevation:Snow)%>%
   ggplot()+
   geom_point(aes(y=value, x= value_micro, fill = site), color= "black",shape = 21, size =3)+
@@ -284,19 +437,66 @@ FD.T%>%
 ggsave(FD_micro_T, file = "FD (p_a) vs micro Tem.png", 
        path = "results/preliminar graphs", scale = 1,dpi = 600) 
 
-# To test te CWM for microclimatic gradients we could use simple linear model or 
-# REML, restricted maximum likelihood model
-lms.fd <- function(x) {
-  glm(value ~ elevation+ FDD + GDD + Snw, data = x) -> m1
-  broom::tidy(m1)
-}
-FD.T%>%
-  gather (Func.div, value, Germ.Rao.ab:W.plant.Mpd.pa)%>%
-  group_by(Func.div)%>%
-  do(lms.fd(.)) %>%
-  write.csv("results/FD vs micro TEM.csv")
+## 5.5.5. explore correlation with plot richness  ####
+# temFD$nbsp from scrp community level analysis
+# richnes x environmental gradients
+as.data.frame(temFD$nbsp)%>%
+  rownames_to_column(var= "plot")%>%
+  mutate (richness = temFD$nbsp )%>%
+  merge(FD.T, by= "plot")%>%
+  mutate(site = as.factor(site))%>%
+  mutate(site = fct_relevel(site,"Los Cazadores", "Hou Sin Tierri","Los Boches","Hoyo Sin Tierra"))%>% 
+  rename(Snow=Snw)%>%
+  gather (Func.div, value, Germ.Rao.ab:Wplant.Mpd.pa)%>%
+  gather (micro_variable, value_micro, elevation:Snow)%>%
+  ggplot()+
+  geom_point(aes(y=richness, x= value_micro, fill = site), color= "black",shape = 21, size =3)+
+  scale_fill_manual(values = c("limegreen","deeppink4","darkorange1", "dodgerblue4"))+
+  geom_smooth (aes(y=richness, x= value_micro),method = "lm", se=T, color = "black", inherit.aes=F)+
+  facet_grid(~micro_variable, scales = "free")+
+  labs(title="Temperate plots richness across environmental gradients")+
+  theme_classic(base_size = 16)+
+  theme(strip.text = element_text(size =12),
+        panel.background = element_rect(color = "black", fill = NULL),
+        axis.title.x = element_blank(),
+        legend.position = "bottom")-> richness_x_env_T; richness_x_env_T
 
-## 5.5.3 Plant traits NO weighted (not use?) ####
+ggsave(richness_x_env_T, file = "richness x env Tem.png", 
+       path = "results/preliminar graphs/richness", scale = 1,dpi = 600) 
+# richness x FD indices
+as.data.frame(temFD$nbsp)%>%
+  rownames_to_column(var= "plot")%>%
+  mutate (richness = temFD$nbsp )%>%
+  merge(FD.T, by= "plot")%>%
+  mutate(site = as.factor(site))%>%
+  mutate(site = fct_relevel(site,"Los Cazadores", "Hou Sin Tierri","Los Boches","Hoyo Sin Tierra"))%>% 
+  rename(Snow=Snw)%>%
+  gather (Func.div, value, Germ.Rao.ab:Wplant.Mpd.pa)%>%
+  gather (micro_variable, value_micro, elevation:Snow)%>%
+  ggplot()+
+  geom_point(aes(y=richness, x= value, fill = site), color= "black",shape = 21, size =3)+
+  scale_fill_manual(values = c("limegreen","deeppink4","darkorange1", "dodgerblue4"))+
+  geom_smooth (aes(y=richness, x= value),method = "lm", se=T, color = "black", inherit.aes=F)+
+  facet_wrap(~Func.div, scales = "free_x", ncol = 4)+
+  labs(title="Temperate plots richness correlation with FD indices")+
+  theme_classic(base_size = 16)+
+  theme(strip.text = element_text(size =12),
+        panel.background = element_rect(color = "black", fill = NULL),
+        axis.title.x = element_blank(),
+        legend.position = "bottom")-> richness_x_FD_T; richness_x_FD_T
+                                      
+
+ggsave(richness_x_FD_T, file = "richness x FD Tem.png", 
+       path = "results/preliminar graphs/richness", scale = 1,dpi = 600) 
+
+library(patchwork)
+richness_x_env_T / richness_x_FD_T + 
+  plot_layout(heights = c(1,2), guides = "collect") & theme(legend.position = "bottom")-> richness_T;richness_T
+
+ggsave(filename = "Richness_Tem.png", plot =richness_T , path = "results/preliminar graphs/richness", 
+       device = "png", dpi = 600)
+
+## 5.5.6 Plant traits NO weighted (not use?) ####
 plot_x_sp_T <- as.data.frame(plot_x_sp_T)
 plant.melodic.T <- melodic(plot_x_sp_T, plant.traits.dist.T)
 str(plant.melodic.T)

@@ -412,6 +412,7 @@ medFD<-dbFD(sp_x_trait_M,plot_x_sp_M, CWM.type = "all")
 important.indices.M <- cbind(medFD$nbsp,medFD$FRic,medFD$FEve,medFD$FDiv,medFD$FDis,medFD$RaoQ)
 colnames(important.indices.M) <- c("NumbSpecies", "FRic", "FEve", "FDiv", "FDis", "Rao")
 pairs(important.indices.M, pch=20)
+x11()
 # FRis is positively correlated with number of species as expected
 # FDis and Rao very similar, actually same index with only a squating difference
 # PROBLEM? Number of species positively correlated with FRic, FDis and Rao
