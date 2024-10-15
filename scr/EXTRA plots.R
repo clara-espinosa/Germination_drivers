@@ -1,9 +1,10 @@
 library(tidyverse);library(readxl);library(ggplot2);library(dplyr)
-library(viridis);library(rstatix)
+library(viridis);library(rstatix);library(lubridate);library(vegan)
+library(rstatix);library(geomtextpath);library(psych)
+library (ggrepel);library (ggpubr)
 
 ######## EXTRA PLOTS playing with VISUALIZATION #####
-###UPDATE WITH ERROR BARS 
-# germination curves / rate  x community and x treatment #### 
+# germination curves / rate  x community and x treatment (update with error bars) #### 
 x11()
 raw_df %>%
   mutate ( D0 = 0) %>%
@@ -43,7 +44,7 @@ raw_df %>%
   theme (plot.title = element_text ( size = 32), #hjust = 0.5,
          legend.position = "right")
 
-#final germination percentage calculation ####
+#final germination percentage calculation (update with error bars) ####
 read.csv("data/raw_data.csv", sep = ",") %>%
   convert_as_factor(species, code, treatment, temp) %>%
   dplyr::select (species, code, treatment, petri, initial, D7, D14, D21, D28, D35, D42) %>%
@@ -232,3 +233,200 @@ finalgerm %>%
          axis.text.x= element_blank(), 
          legend.position = "none")
 
+
+# visualization exploration with density plots #####
+##### MEDITERRANEAN SPECIES ALONG MICROCLIMATIC GRADIENTS ###########
+# dataframe with species data from germination experiments
+read.csv("data/species.csv", sep=",") %>%
+  select(species, code,  family, community, habitat, germ_drivers)  %>%
+  convert_as_factor(species, code, family, community, habitat, germ_drivers) %>%
+  filter (community == "Mediterranean")%>%
+  #filter(!species=="Solidago virgaurea")%>% # 0 germ across all treatments
+  #filter(!species == "Teesdalia conferta") %>% # all germinated during cold stratification
+  #filter(!species == "Jasione laevis")%>% # without leaves traits
+  as.data.frame()-> species_med
+
+# dataframe with species data from spatial survay
+read.csv("data/spatial-survey-species-Med.csv", sep=",")%>%
+  group_by(plot)%>%
+  mutate(total_cover= sum(cover),
+         rel_cover = (cover/total_cover)*100,
+         N_sp = length(unique(species)))-> spatial_sp_Med
+
+# 3-  plot x Environmental data
+read.csv("data/spatial-survey-temperatures-Med.csv") %>%
+  mutate(Time = as.POSIXct(Time, tz = "UTC", format = "%d/%m/%Y %H:%M")) %>%
+  group_by(plot, Day = lubridate::floor_date(Time, "day")) %>%
+  dplyr::summarize(T = mean(Temperature), X = max(Temperature), N = min(Temperature), n = length(Time)) %>% # Daily mean, max, min
+  mutate(Snow = ifelse(X < 0.5 & N > -0.5, 1, 0)) %>% # Day is snow day or not
+  mutate(FreezeThaw = ifelse(X > 0.5 & N < -0.5, 1, 0)) %>% # Day with freeze-thaw cycles
+  mutate(FDD = ifelse(T < 0, T, 0)) %>% # Freezing degrees per day
+  mutate(GDD = ifelse(T >= 5, T, 0)) %>% # Growing degrees day per month https://link.springer.com/article/10.1007/s00035-021-00250-1
+  group_by(plot, Month = lubridate::floor_date(Day, "month")) %>%
+  dplyr::summarize(T = mean(T), X = mean(X), N = mean(N), # Daily mean, max, min
+                   Snow = sum(Snow), # Snow days per month
+                   FreezeThaw = sum(FreezeThaw), # Freeze-thaw days per month
+                   FDD = sum(FDD), # FDD per month
+                   GDD = sum(GDD)) %>% # GDD per month
+  group_by(plot) %>%
+  dplyr::summarize(bio1 = round(mean(T),2), # Annual Mean Temperature
+                   bio2 = round(mean(X - N),2), # Mean Diurnal Range (Mean of monthly (max temp - min temp))
+                   bio7 = round(max(X) - min(N), 2), # Temperature Annual Range (BIO5-BIO6)
+                   Snw = sum(Snow),
+                   FDD = round(abs(sum(FDD)),2), # FDD per year
+                   GDD = round(sum(GDD)),2) %>%  # GDD per year
+  merge(read.csv("data/spatial-survey-header-Med.csv")) %>% 
+  dplyr::select(plot, elevation,Snw:GDD)  %>% 
+  merge(spatial_sp_Med, by = "plot") %>% 
+  dplyr::select(plot, elevation,Snw:GDD, species, cover, rel_cover)%>% 
+  merge(sp_med, by="species")%>%
+  dplyr::select(plot, elevation,Snw:GDD, species, cover, rel_cover, family)%>%
+  gather(env, micro_value, elevation:GDD)%>%
+  ggplot()+
+  geom_density(aes(x=micro_value, group=family, fill=family), alpha = 0.5)+ #, position = "fill"
+  geom_textdensity (aes(x=micro_value, group=family, label = family), hjust = "ymax", position= "jitter", color="black", show.legend = F)+
+  #geom_density(aes(x=micro_value, group=species, fill=species), alpha = 0.5)+ #, position = "fill"
+  #geom_textdensity (aes(x=micro_value, group=species, label = species), hjust = "ymax", position= "jitter", color="black", show.legend = F)+
+  facet_wrap(~env, scales = "free", ncol=1)+
+  theme_classic()
+x11()
+
+##### MEDITERRANEAN PLOTS ALONG MICROCLIMATIC GRADIENTS ###########
+# join traits subset
+germ_odds_M%>% # log odds ratios
+  merge(seed_mass_M)%>% # log transformed
+  merge(plant_height_M)%>% # log transformed
+  merge(leaves_traits_M )%>% #only leaf area log transformed
+  dplyr::select(species, seed_mass,plant_height,leaf_area, LDMC, SLA,
+                odds_B_dark, odds_C_WP, odds_D_constant)-> species_traits_M
+# 3-  plot x Environmental data 
+read.csv("data/spatial-survey-temperatures-Med.csv") %>%
+  mutate(Time = as.POSIXct(Time, tz = "UTC", format = "%d/%m/%Y %H:%M")) %>%
+  group_by(plot, Day = lubridate::floor_date(Time, "day")) %>%
+  dplyr::summarize(T = mean(Temperature), X = max(Temperature), N = min(Temperature), n = length(Time)) %>% # Daily mean, max, min
+  mutate(Snow = ifelse(X < 0.5 & N > -0.5, 1, 0)) %>% # Day is snow day or not
+  mutate(FreezeThaw = ifelse(X > 0.5 & N < -0.5, 1, 0)) %>% # Day with freeze-thaw cycles
+  mutate(FDD = ifelse(T < 0, T, 0)) %>% # Freezing degrees per day
+  mutate(GDD = ifelse(T >= 5, T, 0)) %>% # Growing degrees day per month https://link.springer.com/article/10.1007/s00035-021-00250-1
+  group_by(plot, Month = lubridate::floor_date(Day, "month")) %>%
+  dplyr::summarize(T = mean(T), X = mean(X), N = mean(N), # Daily mean, max, min
+                   Snow = sum(Snow), # Snow days per month
+                   FreezeThaw = sum(FreezeThaw), # Freeze-thaw days per month
+                   FDD = sum(FDD), # FDD per month
+                   GDD = sum(GDD)) %>% # GDD per month
+  group_by(plot) %>%
+  dplyr::summarize(bio1 = round(mean(T),2), # Annual Mean Temperature
+                   bio2 = round(mean(X - N),2), # Mean Diurnal Range (Mean of monthly (max temp - min temp))
+                   bio7 = round(max(X) - min(N), 2), # Temperature Annual Range (BIO5-BIO6)
+                   Snw = sum(Snow),
+                   FDD = round(abs(sum(FDD)),2), # FDD per year
+                   GDD = round(sum(GDD)),2) %>%  # GDD per year
+  merge(read.csv("data/spatial-survey-header-Med.csv")) %>% 
+  #dplyr::select(plot, site, aspect, elevation, latitude, longitude, bio1:GDD)%>% 
+  dplyr::select(site,plot, elevation,bio1:GDD)%>% 
+  filter(plot%in%spatial_env_med$plot)%>%
+  merge(spatial_sp_Med, by = "plot") %>% 
+  dplyr::select(site,plot, elevation,Snw:GDD, species, cover, rel_cover)%>% 
+  merge(sp_med, by="species")%>%
+  merge(species_traits_M, by="species")%>%
+  dplyr::select (site,plot, elevation:GDD, species, cover, rel_cover, seed_mass:odds_D_constant) %>%
+  gather (traits, trait_value, seed_mass:odds_D_constant )%>%
+  gather(env, micro_value, elevation:GDD)%>%
+  ggplot()+
+  geom_density(aes(x=trait_value, group=plot, fill=site), alpha = 0.5)+ #, position = "fill"
+  geom_textdensity (aes(x=trait_value, group=plot, label = plot), hjust = "ymax", position= "jitter", color="black", show.legend = F)+
+  #geom_density(aes(x=micro_value, group=species, fill=species), alpha = 0.5)+ #, position = "fill"
+  #geom_textdensity (aes(x=micro_value, group=species, label = species), hjust = "ymax", position= "jitter", color="black", show.legend = F)+
+  facet_wrap(~traits, scales = "free", ncol=1)+
+  theme_classic()
+
+# Effect size plots for CM and CWM ####
+effect_names <- c("odds_B_dark" = "Darkness","odds_C_WP" = "Water stress",
+                 "odds_D_constant" = "Constant Temp","seed_mass" = "Seed mass",
+                 "plant_height" = "Plant height", "leaf_area" = "Leaf area",
+                 "LDMC" = "LDMC", "SLA" = "SLA", "CM" = "Communty Means", "CWM"="Community Weighted Means")
+dat_text <- data.frame(label = "positive", "negative")
+
+x11()
+read.csv("results/lm community estimates graphs.csv", sep=";") %>% # table with lm model results from script 6 CM 
+  convert_as_factor(community, analysis, trait, term) %>%
+  mutate(trait = fct_relevel(trait, "odds_B_dark","odds_C_WP","odds_D_constant",
+                             "seed_mass","plant_height", 
+                             "leaf_area", "LDMC", "SLA"))%>%
+  mutate(term=fct_recode(term, "Elevation"="elevation", 
+                 "FDD" = "FDD", "GDD"="GDD", "Snow"="Snw"))%>%
+  filter(community == "Temperate")%>%
+  mutate(CI = 1.96*std.error)%>% # confidence interval multiply 1.96 per std error
+  mutate(CImin = estimate-CI, 
+         CImax= estimate+CI)%>%
+  mutate(color = case_when(CImin>0 & CImax>0 ~ "deepskyblue",
+                           CImin<0 & CImax<0~ "deepskyblue",
+                           TRUE ~"grey"))%>%
+  ggplot(aes(x= term, y =estimate, ymin = CImin, ymax = CImax))+
+  geom_errorbar (aes(color=color),width = 0, linewidth =1.2) + #, color="black" 
+  geom_point(aes(color=color), size = 3) +#
+  scale_color_manual (values = c("deepskyblue"="deepskyblue","deepskyblue"="deepskyblue", "grey"= "grey" ))+
+  facet_grid (analysis~trait,labeller = as_labeller(effect_names),  scales = "free_x") + #ncol = 8, nrow =2,
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth =1, color = "red") +
+  coord_flip() +
+  labs(y = "Parameter estimate", title = "Temperate community") + # Temperate   Mediterranean
+  theme_classic (base_size = 12)+#ggthemes::theme_tufte(base_size = 14) +
+  theme(text = element_text(family = "sans"),
+        plot.title = element_text (size = 20),
+        strip.text = element_text( size = 16), #face = "bold",
+        strip.text.y = element_text(size = 14),
+        legend.position = "none",
+        strip.background = element_blank (),
+        panel.background = element_rect(color = "black", fill = NULL),
+        plot.tag.position = c(0.015,1),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 10, color = "black", angle = 30),
+        axis.text.y = element_text(size = 16, color = "black"),
+        axis.title.x = element_text (size=14))-> Comsig_T;Comsig_T #Comsig_T;Comsig_T
+
+ggsave(Comsig_T, file = "Temperate community significances.png", 
+       path = "results/preliminar graphs", scale = 1,dpi = 600) 
+
+# Effect size plots for functional diversity #####
+FD_names <- c("Germ.Mpd" = "Germ.Mpd","Germ.Rao" = "Germ.Rao",
+              "Plant.Mpd" = "Plant.Mpd","Plant.Rao" = "Plant.Rao",
+              "abundance" = "Abundace data", "presence_absence"="Presence/Absence data")
+
+
+x11()
+read.csv("results/lm FD estimates graphs.csv", sep=";") %>% # table with lm model results from script 7
+  convert_as_factor(community, data, Func.div, term) %>%
+  #mutate(trait = fct_relevel(Func.div, ))%>%
+  mutate(term=fct_recode(term, "Elevation"="elevation", 
+                         "FDD" = "FDD", "GDD"="GDD", "Snow"="Snw"))%>%
+  filter(community == "Mediterranean")%>%
+  mutate(CI = 1.96*std.error)%>% # confidence interval multiply 1.96 per std error
+  mutate(CImin = estimate-CI, 
+         CImax= estimate+CI)%>%
+  mutate(color = case_when(CImin>0 & CImax>0 ~ "deepskyblue",
+                           CImin<0 & CImax<0~ "deepskyblue",
+                           TRUE ~"grey"))%>%
+  ggplot(aes(x= term, y =estimate, ymin = CImin, ymax = CImax))+
+  geom_errorbar (aes(color=color),width = 0, linewidth =1.2) + #, color="black" 
+  geom_point(aes(color=color), size = 3) +#
+  scale_color_manual (values = c("deepskyblue"="deepskyblue","deepskyblue"="deepskyblue", "grey"= "grey" ))+
+  facet_grid (data~Func.div,labeller = as_labeller(FD_names),  scales = "free_x") + #ncol = 8, nrow =2,
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth =1, color = "red") +
+  coord_flip() +
+  labs(y = "Parameter estimate", title = "Mediterranean community") + # Temperate   Mediterranean
+  theme_classic (base_size = 12)+#ggthemes::theme_tufte(base_size = 14) +
+  theme(text = element_text(family = "sans"),
+        plot.title = element_text (size = 20),
+        strip.text = element_text( size = 16), #face = "bold",
+        strip.text.y = element_text(size = 14),
+        legend.position = "none",
+        strip.background = element_blank (),
+        panel.background = element_rect(color = "black", fill = NULL),
+        plot.tag.position = c(0.015,1),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 10, color = "black", angle = 30),
+        axis.text.y = element_text(size = 16, color = "black"),
+        axis.title.x = element_text (size=14))-> FDsig_M; FDsig_M    #FDsig_T
+
+ggsave(FDsig_M, file = "Mediterranean community FD significances.png", 
+       path = "results/preliminar graphs", scale = 1,dpi = 600) 

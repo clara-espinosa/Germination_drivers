@@ -266,7 +266,8 @@ read.csv("data/spatial-survey-temperatures-Med.csv") %>%
   filter(plot%in%spatial_env_med$plot)%>% 
   column_to_rownames(var="plot")-> plot_x_env_M
 
-
+plot_x_env_M2 %>%
+  get_summary_stats()
 
 ################################# TEMPERATE ########################################################################
 # 1-check species names to match####
@@ -533,3 +534,5 @@ read.csv("data/spatial-survey-temperatures-Tem.csv") %>%
   dplyr::select(plot, elevation,bio1:GDD)%>%
   filter(plot%in%spatial_env_tem$plot)%>%
   column_to_rownames(var="plot")-> plot_x_env_T
+plot_x_env_T%>%
+  get_summary_stats()
