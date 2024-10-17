@@ -32,7 +32,7 @@ sp_med %>%
 
 # 59 plots with more than 80% coverage with sp traits (drivers) (considering relative cover, up to 100%)
 
-# 2B- Number of species with germination traits per plot (not to be used) ####
+# 2B- Number of species with germination traits per plot (not to be used?) ####
 sp_med %>%
   merge(spatial_sp_Med, by = "species")%>%
   select(species, plot, N_sp)%>%
@@ -40,10 +40,12 @@ sp_med %>%
   summarise(N_sp = first(N_sp), 
             sp_traits = length(unique(species)), 
             sp_covered = sp_traits/N_sp)%>%
-  filter(sp_covered>0.75) %>%
+  filter(sp_covered>0.49) %>%
+  filter(sp_traits>1)%>%
+  #arrange(sp_covered)%>%
   print(n=84)
-# in 65 plots more than 75% sp covered with drivers traits (focused on presence)
-
+# in 40 plots more than 75% sp covered with drivers traits (focused on presence)
+# in 72 plots more than 49% sp covered with drivers traits and more than 1 sp per plot
 # 3- temperature graphs of plots with 80% coverage with trait data ####
 med_plot%>%
   merge(read.csv("data/spatial-survey-temperatures-Med.csv")) %>%
@@ -314,10 +316,12 @@ sp_tem %>%
   summarise(N_sp = first(N_sp), 
             sp_traits = length(unique(species)), 
             sp_covered = sp_traits/N_sp)%>%
-  filter(sp_covered>0.75) %>%
+  filter(sp_covered>0.49) %>%
+  filter(sp_traits>1)%>%
+  arrange(sp_covered)%>%
   print(n=84)
-# only 9 plots more than 75% sp covered with drivers traits (focused on presence)
-
+# only 5 plots more than 75% sp covered with drivers traits (focused on presence)
+# 70 plots more than 49% of species covered with drivers traits
 # 3- temperature graphs of plots with 80% coverage with trait data NEED TO UPDATE ####
 tem_plot%>%
   merge(read.csv("data/spatial-survey-temperatures-Tem.csv")) %>%

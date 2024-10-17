@@ -399,7 +399,7 @@ read.csv("results/lm FD estimates graphs.csv", sep=";") %>% # table with lm mode
   #mutate(trait = fct_relevel(Func.div, ))%>%
   mutate(term=fct_recode(term, "Elevation"="elevation", 
                          "FDD" = "FDD", "GDD"="GDD", "Snow"="Snw"))%>%
-  filter(community == "Mediterranean")%>%
+  filter(community == "Temperate")%>%
   mutate(CI = 1.96*std.error)%>% # confidence interval multiply 1.96 per std error
   mutate(CImin = estimate-CI, 
          CImax= estimate+CI)%>%
@@ -413,7 +413,7 @@ read.csv("results/lm FD estimates graphs.csv", sep=";") %>% # table with lm mode
   facet_grid (data~Func.div,labeller = as_labeller(FD_names),  scales = "free_x") + #ncol = 8, nrow =2,
   geom_hline(yintercept = 0, linetype = "dashed", linewidth =1, color = "red") +
   coord_flip() +
-  labs(y = "Parameter estimate", title = "Mediterranean community") + # Temperate   Mediterranean
+  labs(y = "Parameter estimate", title = "Temperate community") + # Temperate   Mediterranean
   theme_classic (base_size = 12)+#ggthemes::theme_tufte(base_size = 14) +
   theme(text = element_text(family = "sans"),
         plot.title = element_text (size = 20),
@@ -426,7 +426,48 @@ read.csv("results/lm FD estimates graphs.csv", sep=";") %>% # table with lm mode
         axis.title.y = element_blank(),
         axis.text.x = element_text(size = 10, color = "black", angle = 30),
         axis.text.y = element_text(size = 16, color = "black"),
-        axis.title.x = element_text (size=14))-> FDsig_M; FDsig_M    #FDsig_T
+        axis.title.x = element_text (size=14))-> FDsig_T; FDsig_T    #FDsig_T  FDsig_M
 
-ggsave(FDsig_M, file = "Mediterranean community FD significances.png", 
+ggsave(FDsig_T, file = "Temperate community FD significances.png", 
+       path = "results/preliminar graphs", scale = 1,dpi = 600) 
+
+# Visualization as de Bello 2013 foe community metrics (problem with FD, different scale) #####
+trait_names <- c("odds_B_dark" = "Darkness","odds_C_WP" = "Water stress",
+                 "odds_D_constant" = "Constant Temp","seed_mass" = "Seed mass",
+                 "plant_height" = "Plant height", "leaf_area" = "Leaf area",
+                 "LDMC" = "LDMC", "SLA" = "SLA", "elevation"= "Elevation", 
+                 "FDD" = "FDD", "GDD"="GDD", "Snow"="Snow")
+
+CM_microclima_M%>%
+  rename(CM = value)%>%
+  merge(CWM_microclima_M, by = c("site", "plot", "micro_variable", "value_micro", "trait"))%>%
+  rename(CWM = value)%>%
+  mutate(trait = factor(trait))%>%
+  mutate(trait = fct_relevel(trait, "odds_B_dark","odds_C_WP","odds_D_constant",
+                             "seed_mass","plant_height", 
+                             "leaf_area", "LDMC", "SLA"))%>%
+  ggplot()+
+  #geom_point(aes(y=CM, x= value_micro, color= "black" ),size =1, show.legend = T, alpha = 0.5)+
+  geom_smooth (aes(y=CM, x= value_micro, color = "black"),method = "lm", se=F, inherit.aes=F, linewidth =1.5)+
+  #geom_point(aes(y=CWM, x= value_micro,color= "grey"),  size =1, show.legend = T, alpha = 0.5)+
+  geom_smooth (aes(y=CWM, x= value_micro, color = "grey"),method = "lm", se=F, inherit.aes=F, linewidth =1.5)+
+  facet_grid(factor(trait, levels = c("odds_B_dark","odds_C_WP","odds_D_constant",
+                                      "seed_mass","plant_height", 
+                                      "leaf_area", "LDMC", "SLA"))~micro_variable, scales = "free", 
+             labeller = as_labeller(trait_names))+
+  geom_text(data=ann.sig.CM.M, label =ann.sig.CM.M$label, aes(x=x, y=y),size= 6, color = "black")+
+  geom_text(data=ann.sig.CWM.M, label =ann.sig.CWM.M$label, aes(x=x, y=y),size= 6, color = "grey")+
+  #labs(title="Community Means in Mediterranean system")+
+  scale_color_manual (name = "Community metrics", values = c("black"="black", "grey"="grey"), 
+                      labels = c("CM", "CWM"), guide= guide_legend(theme=theme(legend.title.position = "top")))+
+  theme_classic(base_size = 16)+
+  theme(strip.text = element_text(size =12),
+        strip.background = element_blank(),
+        panel.background = element_rect(color = "black", fill = NULL),
+        axis.title = element_blank(),
+        #axis.text= element_blank(),
+        axis.ticks = element_blank(),
+        legend.position = "bottom")
+
+ggsave(plot_CM_M, file = "CM Med trait vs micro.png", 
        path = "results/preliminar graphs", scale = 1,dpi = 600) 

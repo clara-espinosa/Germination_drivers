@@ -31,9 +31,17 @@ sp_x_trait_M <- as.data.frame(sp_x_trait_M)
 
 # germination traits distance matrix
 germ.traits.dist.M <- gowdis(sp_x_trait_M[,6:8])
-
+dark.dist.M <- gowdis(sp_x_trait_M["odds_B_dark"])
+WP.dist.M <- gowdis(sp_x_trait_M["odds_C_WP"])
+Tconstant.dist.M <- gowdis(sp_x_trait_M["odds_D_constant"])
 # plant traits NO weighted distance matrix
 plant.traits.dist.M <- gowdis(sp_x_trait_M[,1:5]) 
+seedmass.dist.M <- gowdis(sp_x_trait_M["seed_mass"]) 
+plantheight.dist.M <- gowdis(sp_x_trait_M["plant_height"]) 
+leafarea.dist.M <- gowdis(sp_x_trait_M["leaf_area"]) 
+LDMC.dist.M <- gowdis(sp_x_trait_M["LDMC"]) 
+SLA.dist.M <- gowdis(sp_x_trait_M["SLA"]) 
+
 
 # plant traits weighted distance matrix by groups of traits 
 # info from https://cran.r-project.org/web/packages/gawdis/vignettes/gawdis.html
