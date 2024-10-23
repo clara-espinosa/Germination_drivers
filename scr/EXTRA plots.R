@@ -340,96 +340,91 @@ read.csv("data/spatial-survey-temperatures-Med.csv") %>%
   facet_wrap(~traits, scales = "free", ncol=1)+
   theme_classic()
 
-# Effect size plots for CM and CWM ####
-effect_names <- c("odds_B_dark" = "Darkness","odds_C_WP" = "Water stress",
-                 "odds_D_constant" = "Constant Temp","seed_mass" = "Seed mass",
-                 "plant_height" = "Plant height", "leaf_area" = "Leaf area",
-                 "LDMC" = "LDMC", "SLA" = "SLA", "CM" = "Communty Means", "CWM"="Community Weighted Means")
-dat_text <- data.frame(label = "positive", "negative")
-
-x11()
-read.csv("results/lm community estimates graphs.csv", sep=";") %>% # table with lm model results from script 6 CM 
-  convert_as_factor(community, analysis, trait, term) %>%
+# loop for visualization plots CM x microclimatic gradients####
+CM_M%>%
+  rownames_to_column(var = "plot")%>%
+  gather(trait, value, seed_mass:odds_D_constant)%>%
+  merge(plot_x_env_M2)%>%
+  merge(read.csv("data/spatial-survey-header-Med.csv"), by = c("plot", "elevation"))%>%
+  mutate(site = as.factor(site))%>%
+  mutate(site = fct_relevel(site,"Rabinalto", "Canada","Solana","Penouta")) %>%
+  mutate(trait = factor(trait))%>%
   mutate(trait = fct_relevel(trait, "odds_B_dark","odds_C_WP","odds_D_constant",
                              "seed_mass","plant_height", 
                              "leaf_area", "LDMC", "SLA"))%>%
-  mutate(term=fct_recode(term, "Elevation"="elevation", 
-                 "FDD" = "FDD", "GDD"="GDD", "Snow"="Snw"))%>%
-  filter(community == "Temperate")%>%
-  mutate(CI = 1.96*std.error)%>% # confidence interval multiply 1.96 per std error
-  mutate(CImin = estimate-CI, 
-         CImax= estimate+CI)%>%
-  mutate(color = case_when(CImin>0 & CImax>0 ~ "deepskyblue",
-                           CImin<0 & CImax<0~ "deepskyblue",
-                           TRUE ~"grey"))%>%
-  ggplot(aes(x= term, y =estimate, ymin = CImin, ymax = CImax))+
-  geom_errorbar (aes(color=color),width = 0, linewidth =1.2) + #, color="black" 
-  geom_point(aes(color=color), size = 3) +#
-  scale_color_manual (values = c("deepskyblue"="deepskyblue","deepskyblue"="deepskyblue", "grey"= "grey" ))+
-  facet_grid (analysis~trait,labeller = as_labeller(effect_names),  scales = "free_x") + #ncol = 8, nrow =2,
-  geom_hline(yintercept = 0, linetype = "dashed", linewidth =1, color = "red") +
-  coord_flip() +
-  labs(y = "Parameter estimate", title = "Temperate community") + # Temperate   Mediterranean
-  theme_classic (base_size = 12)+#ggthemes::theme_tufte(base_size = 14) +
-  theme(text = element_text(family = "sans"),
-        plot.title = element_text (size = 20),
-        strip.text = element_text( size = 16), #face = "bold",
-        strip.text.y = element_text(size = 14),
-        legend.position = "none",
-        strip.background = element_blank (),
-        panel.background = element_rect(color = "black", fill = NULL),
-        plot.tag.position = c(0.015,1),
-        axis.title.y = element_blank(),
-        axis.text.x = element_text(size = 10, color = "black", angle = 30),
-        axis.text.y = element_text(size = 16, color = "black"),
-        axis.title.x = element_text (size=14))-> Comsig_T;Comsig_T #Comsig_T;Comsig_T
+  dplyr::select(site, plot, trait, value, elevation, Snw, FDD, GDD)%>%
+  rename(Snow=Snw)%>%
+  gather(micro_variable, value_micro,  elevation:GDD)-> CM_microclima_M
 
-ggsave(Comsig_T, file = "Temperate community significances.png", 
-       path = "results/preliminar graphs", scale = 1,dpi = 600) 
-
-# Effect size plots for functional diversity #####
-FD_names <- c("Germ.Mpd" = "Germ.Mpd","Germ.Rao" = "Germ.Rao",
-              "Plant.Mpd" = "Plant.Mpd","Plant.Rao" = "Plant.Rao",
-              "abundance" = "Abundace data", "presence_absence"="Presence/Absence data")
-
-
+for (var in unique(CM_microclima_M$micro_variable)){
+  micro_plot=ggplot(CM_microclima_M[CM_microclima_M$micro_variable==var,])+
+    geom_point(aes(y=value, x= value_micro, fill = site), color= "black",shape = 21, size =4)+
+    scale_fill_manual( values = c("limegreen","deeppink4","darkorange1", "dodgerblue4"))+
+    geom_smooth (aes(y=value, x= value_micro),method = "lm", se=T, color = "black", inherit.aes=F)+
+    facet_wrap(~trait, ncol = 4, scales = "free")+
+    labs(title="Community Means in Mediterranean system", x= var)+
+    theme_classic(base_size = 16)+
+    theme(strip.text = element_text(size =12),
+          legend.position = "bottom")
+  ggsave(micro_plot, file = paste0("CM Mediterranean x ", var,".png"),
+         path = "results/preliminar graphs", scale = 1, width = 360, height = 250, units = "mm", dpi = 600)
+}
+## facet for trait
 x11()
-read.csv("results/lm FD estimates graphs.csv", sep=";") %>% # table with lm model results from script 7
-  convert_as_factor(community, data, Func.div, term) %>%
-  #mutate(trait = fct_relevel(Func.div, ))%>%
-  mutate(term=fct_recode(term, "Elevation"="elevation", 
-                         "FDD" = "FDD", "GDD"="GDD", "Snow"="Snw"))%>%
-  filter(community == "Temperate")%>%
-  mutate(CI = 1.96*std.error)%>% # confidence interval multiply 1.96 per std error
-  mutate(CImin = estimate-CI, 
-         CImax= estimate+CI)%>%
-  mutate(color = case_when(CImin>0 & CImax>0 ~ "deepskyblue",
-                           CImin<0 & CImax<0~ "deepskyblue",
-                           TRUE ~"grey"))%>%
-  ggplot(aes(x= term, y =estimate, ymin = CImin, ymax = CImax))+
-  geom_errorbar (aes(color=color),width = 0, linewidth =1.2) + #, color="black" 
-  geom_point(aes(color=color), size = 3) +#
-  scale_color_manual (values = c("deepskyblue"="deepskyblue","deepskyblue"="deepskyblue", "grey"= "grey" ))+
-  facet_grid (data~Func.div,labeller = as_labeller(FD_names),  scales = "free_x") + #ncol = 8, nrow =2,
-  geom_hline(yintercept = 0, linetype = "dashed", linewidth =1, color = "red") +
-  coord_flip() +
-  labs(y = "Parameter estimate", title = "Temperate community") + # Temperate   Mediterranean
-  theme_classic (base_size = 12)+#ggthemes::theme_tufte(base_size = 14) +
-  theme(text = element_text(family = "sans"),
-        plot.title = element_text (size = 20),
-        strip.text = element_text( size = 16), #face = "bold",
-        strip.text.y = element_text(size = 14),
-        legend.position = "none",
-        strip.background = element_blank (),
-        panel.background = element_rect(color = "black", fill = NULL),
-        plot.tag.position = c(0.015,1),
-        axis.title.y = element_blank(),
-        axis.text.x = element_text(size = 10, color = "black", angle = 30),
-        axis.text.y = element_text(size = 16, color = "black"),
-        axis.title.x = element_text (size=14))-> FDsig_T; FDsig_T    #FDsig_T  FDsig_M
+for (var in unique(CM_microclima_M$trait)){
+  micro_plot=ggplot(CM_microclima_M[CM_microclima_M$trait==var,])+
+    geom_point(aes(y=value, x= value_micro, fill = site), color= "black",shape = 21, size =4)+
+    scale_fill_manual( values = c("limegreen","deeppink4","darkorange1", "dodgerblue4"))+
+    geom_smooth (aes(y=value, x= value_micro),method = "lm", se=T, color = "black", inherit.aes=F)+
+    facet_wrap(~micro_variable, ncol = 4, scales = "free")+
+    labs(title="Community Means in Mediterranean system", subtitle = var, y= var )+
+    theme_classic(base_size = 16)+
+    theme(strip.text = element_text(size =12),
+          axis.title.x = element_blank(),
+          legend.position = "bottom")
+  ggsave(micro_plot, file = paste0("CM Mediterranean x ", var,".png"),
+         path = "results/preliminar graphs", scale = 1, width = 360, height = 125, units = "mm", dpi = 600)
+}
 
-ggsave(FDsig_T, file = "Temperate community FD significances.png", 
-       path = "results/preliminar graphs", scale = 1,dpi = 600) 
+for (var in unique(CWM_microclima_M$micro_variable)){
+  micro_plot=ggplot(CWM_microclima_M[CWM_microclima_M$micro_variable==var,])+
+    geom_point(aes(y=value, x= value_micro, fill = site), color= "black",shape = 21, size =4)+
+    scale_fill_manual( values = c("limegreen","deeppink4","darkorange1", "dodgerblue4"))+
+    geom_smooth (aes(y=value, x= value_micro),method = "lm", se=T, color = "black", inherit.aes=F)+
+    facet_wrap(~trait, ncol = 4, scales = "free")+
+    labs(title="Community Weigthed Means in Mediterranean system", x= var)+
+    theme_classic(base_size = 16)+
+    theme(strip.text = element_text(size =12),
+          legend.position = "bottom")
+  ggsave(micro_plot, file = paste0("CWM Mediterranean x ", var,".png"),
+         path = "results/preliminar graphs", scale = 1, width = 360, height = 250, units = "mm", dpi = 600)
+}
+for (var in unique(CM_microclima_T$micro_variable)){
+  micro_plot=ggplot(CM_microclima_T[CM_microclima_T$micro_variable==var,])+
+    geom_point(aes(y=value, x= value_micro, fill = site), color= "black",shape = 21, size =4)+
+    scale_fill_manual( values = c("limegreen","deeppink4","darkorange1", "dodgerblue4"))+
+    geom_smooth (aes(y=value, x= value_micro),method = "lm", se=T, color = "black", inherit.aes=F)+
+    facet_wrap(~trait, ncol = 4, scales = "free")+
+    labs(title="Community Means in Temperate system", x= var)+
+    theme_classic(base_size = 16)+
+    theme(strip.text = element_text(size =12),
+          legend.position = "bottom")
+  ggsave(micro_plot, file = paste0("CM Temperate x ", var,".png"),
+         path = "results/preliminar graphs", scale = 1, width = 360, height = 250, units = "mm", dpi = 600)
+}
+for (var in unique(CWM_microclima_T$micro_variable)){
+  micro_plot=ggplot(CWM_microclima_T[CWM_microclima_T$micro_variable==var,])+
+    geom_point(aes(y=value, x= value_micro, fill = site), color= "black",shape = 21, size =4)+
+    scale_fill_manual( values = c("limegreen","deeppink4","darkorange1", "dodgerblue4"))+
+    geom_smooth (aes(y=value, x= value_micro),method = "lm", se=T, color = "black", inherit.aes=F)+
+    facet_wrap(~trait, ncol = 4, scales = "free")+
+    labs(title="Community Weighted Means in Temperate system", x= var)+
+    theme_classic(base_size = 16)+
+    theme(strip.text = element_text(size =12),
+          legend.position = "bottom")
+  ggsave(micro_plot, file = paste0("CWM Temperate x ", var,".png"),
+         path = "results/preliminar graphs", scale = 1, width = 360, height = 250, units = "mm", dpi = 600)
+}
 
 # Visualization as de Bello 2013 foe community metrics (problem with FD, different scale) #####
 trait_names <- c("odds_B_dark" = "Darkness","odds_C_WP" = "Water stress",

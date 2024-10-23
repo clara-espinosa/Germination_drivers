@@ -1,5 +1,5 @@
 trait;micro_variable;x;y;label
-LDMC;elevation;2130;0.2;NS
+LDMC;elevation;2130;0.2;*
 LDMC;FDD;95;0.2;NS
 LDMC;GDD;2400;0.2;NS
 LDMC;Snow;130;0.2;NS
@@ -10,12 +10,12 @@ leaf_area;Snow;130;5.1;NS
 odds_B_dark;elevation;2130;-8;NS
 odds_B_dark;FDD;95;-8;NS
 odds_B_dark;GDD;2400;-8;*
-odds_B_dark;Snow;130;-8;*
+odds_B_dark;Snow;130;-8;NS
 odds_C_WP;elevation;2130;-3;**
 odds_C_WP;FDD;95;-3;NS
 odds_C_WP;GDD;2400;-3;NS
 odds_C_WP;Snow;130;-3;**
-odds_D_constant;elevation;2130;0;***
+odds_D_constant;elevation;2130;0;**
 odds_D_constant;FDD;95;0;NS
 odds_D_constant;GDD;2400;0;NS
 odds_D_constant;Snow;130;0;**
@@ -27,7 +27,7 @@ seed_mass;elevation;2130;4.7;NS
 seed_mass;FDD;95;4.7;NS
 seed_mass;GDD;2400;4.7;**
 seed_mass;Snow;130;4.7;*
-SLA;elevation;2130;8.5;**
+SLA;elevation;2130;8.5;***
 SLA;FDD;95;8.5;NS
 SLA;GDD;2400;8.5;NS
 SLA;Snow;130;8.5;NS

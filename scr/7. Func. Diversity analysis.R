@@ -42,13 +42,27 @@ leafarea.dist.M <- gowdis(sp_x_trait_M["leaf_area"])
 LDMC.dist.M <- gowdis(sp_x_trait_M["LDMC"]) 
 SLA.dist.M <- gowdis(sp_x_trait_M["SLA"]) 
 
-
 # plant traits weighted distance matrix by groups of traits 
 # info from https://cran.r-project.org/web/packages/gawdis/vignettes/gawdis.html
 plant.traits.weighted.dist.M<-gawdis::gawdis(sp_x_trait_M[,1:5], w.type = "optimized", opti.maxiter = 200, 
                                      groups.weight=T, groups = c(1,2, 3, 3, 3))#
 
-# 5.5. Calculation of MDP (main pairwise dissimilarity) and RAo with melodic function ####
+# check distribution of distances germ vs plant
+as.matrix(germ.traits.dist.M)%>%
+  as.data.frame(germ.traits.dist.M)%>%
+  gather(sp, germ.dist, 1:18)%>%
+  cbind((as.matrix(plant.traits.weighted.dist.M)%>%
+          as.data.frame(plant.traits.weighted.dist.M)%>%
+          gather(sp, plant.dist, 1:18)))%>%
+  dplyr::select(1,2,4)%>%
+  gather(trait, dist, germ.dist:plant.dist)%>%
+  filter(dist>0)%>%
+  ggplot(aes(dist, fill=trait))+
+  #geom_density(alpha= 0.5)+
+  geom_histogram(color = "black")+
+  scale_fill_manual(values = c("dodgerblue4","limegreen"))
+
+# rbind()# 5.5. Calculation of MDP (main pairwise dissimilarity) and RAo with melodic function ####
 # Use of melodic function to compute both weighted and unweighted forms of MPD and Rao
 # activate function from melodic.R script in src folder
 ## 5.5.1 Germ traits####
@@ -112,7 +126,7 @@ FD.M%>%
   mutate(Traits= as.factor(Traits))%>%
   mutate(Traits = fct_recode(Traits, "Germination"="Germ" , "Adult Plant"="Wplant"))%>%
   ggplot()+
-  geom_errorbar(aes(Traits, mean, ymin = mean-ci, ymax = mean+ci), color = "black",linewidth = 0.5, size =1) +
+  geom_errorbar(aes(Traits, mean, ymin = mean-ci, ymax = mean+ci), color = "black",linewidth =1) +
   geom_point(aes(x= Traits, y= mean, fill = Traits), color = "black", shape= 21, size = 5)+
   scale_fill_manual(values = c("dodgerblue4","limegreen"))+
   facet_grid(indices~data_type, labeller = as_labeller(strip_names), scales = "free_y")+
@@ -131,8 +145,10 @@ FD.M %>%
   separate_wider_delim(Func.div, delim = ".", 
                        names = c("Traits","indices", "data_type"), too_many = "merge")-> FD.M.diff
 
+#PAIRED t-test?? http://www.sthda.com/english/wiki/paired-samples-t-test-in-r  
+
 ttest.fd.diff <- function(x) {
-  t.test(value ~ Traits, data = x) -> m1
+  t.test(value ~ Traits, data = x) -> m1 #paired = TRUE, 
   broom::tidy(m1)
 }
 
@@ -177,7 +193,7 @@ FD.M%>%
         axis.title = element_blank(),
         legend.position = "bottom")-> FD_micro_M;FD_micro_M
 
-ggsave(FD_micro_M, file = "FD (p_a) vs micro Med.png", 
+ggsave(FD_micro_M, file = "FD vs micro Med.png", 
        path = "results/preliminar graphs", scale = 1,dpi = 600) 
 
 
@@ -314,7 +330,20 @@ plant.traits.dist.T <- gowdis(sp_x_trait_T[,1:5])
 # info from https://cran.r-project.org/web/packages/gawdis/vignettes/gawdis.html
 plant.traits.weighted.dist.T<-gawdis(sp_x_trait_T[,1:5], w.type = "optimized", opti.maxiter = 200, 
                                      groups.weight=T, groups = c(1,2, 3, 3, 3))
-
+# check distribution of distances germ vs plant
+as.matrix(germ.traits.dist.T)%>%
+  as.data.frame(germ.traits.dist.T)%>%
+  gather(sp, germ.dist, 1:25)%>%
+  cbind((as.matrix(plant.traits.weighted.dist.T)%>%
+           as.data.frame(plant.traits.weighted.dist.T)%>%
+           gather(sp, plant.dist, 1:25)))%>%
+  dplyr::select(1,2,4)%>%
+  gather(trait, dist, germ.dist:plant.dist)%>%
+  filter(dist>0)%>%
+  ggplot(aes(dist, fill=trait))+
+  #geom_density(alpha= 0.5)+
+  geom_histogram(color = "black")+
+  scale_fill_manual(values = c("dodgerblue4","limegreen"))
 # 5.5. Calculation of MDP (main pairwise dissimilarity) and RAo with melodic function ####
 # Use of melodic function to compute both weighted and no weighted forms of MPD and Rao
 # activate function from melodic.R script in src folder
@@ -442,7 +471,7 @@ FD.T%>%
         axis.title = element_blank(),
         legend.position = "bottom")-> FD_micro_T;FD_micro_T
 
-ggsave(FD_micro_T, file = "FD (p_a) vs micro Tem.png", 
+ggsave(FD_micro_T, file = "FD vs micro Tem.png", 
        path = "results/preliminar graphs", scale = 1,dpi = 600) 
 
 ## 5.5.5. explore correlation with plot richness  ####
@@ -533,3 +562,47 @@ as.data.frame(plant.melodic.T$abundance$rao) %>%
         axis.title.x = element_blank(),
         legend.position = "bottom")
 
+
+# Effect size plots for functional diversity #####
+FD_names <- c("Germ.Mpd" = "Germ.Mpd","Germ.Rao" = "Germ.Rao",
+              "Plant.Mpd" = "Plant.Mpd","Plant.Rao" = "Plant.Rao",
+              "abundance" = "Abundace data", "presence_absence"="Presence/Absence data")
+
+
+x11()
+read.csv("results/lm FD estimates graphs.csv", sep=";") %>% # table with lm model results from script 7
+  convert_as_factor(community, data, Func.div, term) %>%
+  #mutate(trait = fct_relevel(Func.div, ))%>%
+  mutate(term=fct_recode(term, "Elevation"="elevation", 
+                         "FDD" = "FDD", "GDD"="GDD", "Snow"="Snw"))%>%
+  filter(community == "Mediterranean")%>%
+  mutate(CI = 1.96*std.error)%>% # confidence interval multiply 1.96 per std error
+  mutate(CImin = estimate-CI, 
+         CImax= estimate+CI)%>%
+  mutate(color = case_when(CImin>0 & CImax>0 ~ "deepskyblue",
+                           CImin<0 & CImax<0~ "deepskyblue",
+                           TRUE ~"grey"))%>%
+  ggplot(aes(x= term, y =estimate, ymin = CImin, ymax = CImax))+
+  geom_errorbar (aes(color=color),width = 0, linewidth =1.2) + #, color="black" 
+  geom_point(aes(color=color), size = 3) +#
+  scale_color_manual (values = c("deepskyblue"="deepskyblue","deepskyblue"="deepskyblue", "grey"= "grey" ))+
+  facet_grid (data~Func.div,labeller = as_labeller(FD_names),  scales = "free_x") + #ncol = 8, nrow =2,
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth =1, color = "red") +
+  coord_flip() +
+  labs(y = "Parameter estimate", title = "Mediterranean community") + # Temperate   Mediterranean
+  theme_classic (base_size = 12)+#ggthemes::theme_tufte(base_size = 14) +
+  theme(text = element_text(family = "sans"),
+        plot.title = element_text (size = 20),
+        strip.text = element_text( size = 16), #face = "bold",
+        strip.text.y = element_text(size = 14),
+        legend.position = "none",
+        strip.background = element_blank (),
+        panel.background = element_rect(color = "black", fill = NULL),
+        plot.tag.position = c(0.015,1),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 10, color = "black", angle = 30),
+        axis.text.y = element_text(size = 16, color = "black"),
+        axis.title.x = element_text (size=14))-> FDsig_M; FDsig_M   #FDsig_T  FDsig_M
+
+ggsave(FDsig_M, file = "Mediterranean community FD significances.png", 
+       path = "results/preliminar graphs", scale = 1,dpi = 600) 

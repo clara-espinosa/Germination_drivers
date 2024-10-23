@@ -8,10 +8,13 @@ read.csv("data/species.csv", sep=",") %>%
   convert_as_factor(species, code, family, community, habitat, germ_drivers) %>%
   filter (community == "Mediterranean")%>%
   filter(!species=="Solidago virgaurea")%>% # 0 germ across all treatments
+  filter(!species=="Avenella flexuosa")%>% # 0 germ across all treatments
+  filter(!species=="Cerastium ramosissimum")%>% # 0 germ across all treatments
+  filter(!species=="Phalacrocarpum oppositifolium")%>% # 0 germ across all treatments
   filter(!species == "Teesdalia conferta") %>% # all germinated during cold stratification
   filter(!species == "Jasione laevis")%>% # without leaves traits
   as.data.frame()-> sp_med 
-unique(sp_med$species) # 21 species with full traits
+unique(sp_med$species) # 18 species with full traits
 # dataframe with species data from spatial survay
 read.csv("data/spatial-survey-species-Med.csv", sep=",")%>%
   group_by(plot)%>%
@@ -23,14 +26,15 @@ setdiff(species$species,spatial_sp_Med$species)
 # 2A- Cover/plot of species with germination traits ####
 sp_med %>%
   merge(spatial_sp_Med, by = "species")%>%
-  group_by(plot) %>%
+  group_by(plot, N_sp) %>%
   #summarise(cover = sum(cover))%>%
   #filter(cover>79)%>%
   summarise(rel_cover = sum(rel_cover))%>%
   filter(rel_cover>79)%>%
+  filter(N_sp>2)%>%
   dplyr:: select(plot)->med_plot
 
-# 59 plots with more than 80% coverage with sp traits (drivers) (considering relative cover, up to 100%)
+# 55 plots with more than 80% coverage with sp traits (drivers) (considering relative cover, up to 100%)
 
 # 2B- Number of species with germination traits per plot (not to be used?) ####
 sp_med %>%
@@ -40,18 +44,17 @@ sp_med %>%
   summarise(N_sp = first(N_sp), 
             sp_traits = length(unique(species)), 
             sp_covered = sp_traits/N_sp)%>%
-  filter(sp_covered>0.49) %>%
-  filter(sp_traits>1)%>%
+  filter(sp_covered>0.74) %>%
+  filter(sp_traits>2)%>%
   #arrange(sp_covered)%>%
   print(n=84)
-# in 40 plots more than 75% sp covered with drivers traits (focused on presence)
-# in 72 plots more than 49% sp covered with drivers traits and more than 1 sp per plot
+# in 44 plots more than 75% sp covered with drivers traits (focused on presence)
+# in 70 plots more than 49% sp covered with drivers traits and more than 1 sp per plot
 # 3- temperature graphs of plots with 80% coverage with trait data ####
-med_plot%>%
+med_plot%>%# 55 plots with >80% coverage with trait and environmental data
   merge(read.csv("data/spatial-survey-temperatures-Med.csv")) %>%
   mutate(Time = as.POSIXct(Time, tz = "UTC", format = "%d/%m/%Y %H:%M" )) %>% 
-  merge(read.csv("data/spatial-survey-header-Med.csv"))-> spatial_env_med 
-# 51 plots with >80% coverage with trait and environmental data
+  merge(read.csv("data/spatial-survey-header-Med.csv"))%>%
   filter(!plot=="A00")%>% # plot with Microlog data NO iButton
   filter(!plot=="B00")%>%# plot with Microlog data NO iButton
   filter(!plot=="C00")%>%# plot with Microlog data NO iButton
@@ -59,7 +62,7 @@ med_plot%>%
   filter(!plot=="B13")%>% # iButtons could no be recovered
   filter(!plot=="B14")%>% # iButtons could no be recovered
   filter(!plot=="B15")%>% # iButtons could no be recovered
-  filter(!plot=="C07")%>% # iButtons could no be recovered
+  filter(!plot=="C07")-> spatial_env_med 
 
 setdiff(med_plot$plot, spatial_env_med$plot)
 setdiff(spatial_env_med$plot,med_plot$plot)
@@ -78,7 +81,7 @@ spatial_env_med %>%
   geom_line(linewidth = .05, alpha = 0.5) +
   geom_line(data = spatial_mean_med, linewidth = .75) +
   facet_wrap(~ plot,nrow = 10 ) + #   ,  labeller = plot
-  labs(title = "Spatial survey (Jul 2021 - May 2022)", subtitle = "Plots with 80% relative cover with traits", 
+  labs(title = "Spatial survey (July 2021 - May 2022)", subtitle = "Plots with 80% relative cover with traits", 
        x= "Time (4-h recording inverval)", y= "Temperature (ºC)") +
   ggthemes::theme_tufte() +
   coord_cartesian(ylim = c(-5, 45)) +
@@ -126,7 +129,7 @@ read.csv("data/spatial-survey-species-Med.csv") %>%
   filter(plot%in%spatial_env_med$plot)%>% 
   column_to_rownames(var="plot")-> plot_x_sp_M # replace Na with 0
 sp_x_plot_M <- t(plot_x_sp_M)
-unique(spe_med$species)
+unique(sp_med$species)
 # presence_absence sp x plot matrix (TO USE in CM)
 read.csv("data/spatial-survey-species-Med.csv") %>%
   group_by(plot)%>%
@@ -158,6 +161,9 @@ read.csv("data/raw_data.csv", sep = ",") %>%
   group_by (species, code, treatment) %>%
   dplyr::summarize(finalgerm = sum (finalgerm)) %>% 
   filter (!species == "Solidago virgaurea")%>%  #filter species with 0 germination traits
+  filter(!species=="Avenella flexuosa")%>% # 0 germ across all treatments
+  filter(!species=="Cerastium ramosissimum")%>% # 0 germ across all treatments
+  filter(!species=="Phalacrocarpum oppositifolium")%>% # 0 germ across all treatments
   filter(!species == "Teesdalia conferta") %>% # all germinated in pretreatment
   spread(treatment, finalgerm)%>%
   mutate (B_alternate_dark = B_alternate_dark - E_cold_stratification)  %>% # substract cold stratification
@@ -166,7 +172,7 @@ read.csv("data/raw_data.csv", sep = ",") %>%
   filter(!treatment=="E_cold_stratification")%>%
   merge(viables_sp, by= c("code", "species", "treatment"))%>%
   mutate(treatment = as.factor(treatment))%>%
-  merge(spe_med)-> germ_to_odds_M
+  merge(sp_med)-> germ_to_odds_M
 unique(germ_to_odds_M$species)
 str(germ_to_odds_M)
 
@@ -227,9 +233,9 @@ read.csv("data/leaves_traits.csv", sep = ",") %>%
           SLA = SLA)%>%
   right_join(sp_med, by= "species")-> leaves_traits_M 
 unique (leaves_traits_M $species)
-hist(leaves_traits_M $leaf_area) # all look normal
-hist(leaves_traits_M $LDMC)
-hist(leaves_traits_M $SLA)
+hist(leaves_traits_M$leaf_area) # all look normal
+hist(leaves_traits_M$LDMC)
+hist(leaves_traits_M$SLA)# 
 
 # join traits subset
 germ_odds_M%>% # log odds ratios
@@ -267,7 +273,8 @@ read.csv("data/spatial-survey-temperatures-Med.csv") %>%
   dplyr::select(plot, elevation,bio1:GDD)%>% 
   filter(plot%in%spatial_env_med$plot)%>% 
   column_to_rownames(var="plot")-> plot_x_env_M
-
+plot_x_env_M%>%
+  rownames_to_column(var = "plot")->plot_x_env_M2 
 plot_x_env_M2 %>%
   get_summary_stats()
 
@@ -285,9 +292,10 @@ read.csv("data/species.csv", sep=",") %>%
   filter (!species == "Salix breviserrata")%>% #0 germ across all treatments
   filter (!species == "Sedum album")%>% #0 germ across all treatments
   filter (!species == "Sedum atratum")%>% #0 germ across all treatments
+  filter (! species == "Veronica nummularia") %>% #0 germ across all treatments
   filter (!species == "Minuartia CF")%>% #missing traits 
   as.data.frame()-> sp_tem 
-unique(sp_tem$species) # 26 species with full traits
+unique(sp_tem$species) # 25 species with full traits
 # dataframe with species data from spatial survay
 read.csv("data/spatial-survey-species-Tem.csv", sep=",")%>%
   group_by(plot)%>%
@@ -299,11 +307,12 @@ setdiff(spatial_sp_Tem$species, species$species)
 # 2A- Cover/plot of species with germination traits ####
 sp_tem %>%
   merge(spatial_sp_Tem, by = "species")%>%
-  group_by(plot) %>%
+  group_by(plot, N_sp) %>%
   #summarise(cover = sum(cover))%>%
   #filter(cover>79)%>%
   summarise(rel_cover = sum(rel_cover))%>%
   filter(rel_cover>79)%>%
+  filter(N_sp>2)%>%
   dplyr:: select(plot)->tem_plot
 
 # 47 plot with more than 80% coverage with sp traits (drivers)(considering raw cover, not to 100%)
@@ -316,12 +325,12 @@ sp_tem %>%
   summarise(N_sp = first(N_sp), 
             sp_traits = length(unique(species)), 
             sp_covered = sp_traits/N_sp)%>%
-  filter(sp_covered>0.49) %>%
-  filter(sp_traits>1)%>%
+  filter(sp_covered>0.75) %>%
+  filter(sp_traits>2)%>%
   arrange(sp_covered)%>%
   print(n=84)
 # only 5 plots more than 75% sp covered with drivers traits (focused on presence)
-# 70 plots more than 49% of species covered with drivers traits
+# 67 plots more than 49% of species covered with drivers traits
 # 3- temperature graphs of plots with 80% coverage with trait data NEED TO UPDATE ####
 tem_plot%>%
   merge(read.csv("data/spatial-survey-temperatures-Tem.csv")) %>%
@@ -379,6 +388,7 @@ read.csv("data/species.csv", sep=",") %>%
   filter (!species == "Salix breviserrata")%>% #0 germ across all treatments
   filter (!species == "Sedum album")%>% #0 germ across all treatments
   filter (!species == "Sedum atratum")%>% #0 germ across all treatments
+  filter (!species == "Veronica nummularia")%>% #0 germ across all treatments
   filter (!species == "Minuartia CF")%>% #missing traits 
   as.data.frame()-> sp_tem 
 unique(sp_tem$species) # 26 species with full traits
@@ -435,6 +445,8 @@ read.csv("data/raw_data.csv", sep = ",") %>%
   filter (!species == "Salix breviserrata")%>%
   filter (!species == "Sedum album")%>%
   filter (!species == "Sedum atratum")%>%
+  filter (!species == "Veronica nummularia")%>%
+  filter (!species == "Minuartia CF")%>%
   spread(treatment, finalgerm)%>%
   mutate (B_alternate_dark = B_alternate_dark - E_cold_stratification)  %>% # substract cold stratification
   mutate (B_alternate_dark = ifelse(B_alternate_dark < 0, 0, B_alternate_dark)) %>% # convert negative values to 0 germination
@@ -469,7 +481,7 @@ read.csv("data/seed_mass.csv", sep = ",") %>%
   dplyr::summarize(seed_mass= round(mean(weight_50_mg),2))%>%
   mutate(seed_mass=log(seed_mass))%>%
   merge(sp_tem, by= "species") -> seed_mass_T 
-hist(seed_mass_T $seed_mass) # looks almost normal
+hist(seed_mass_T $seed_mass) # looks normal
 
 # plant and floral height (only Gentianella campestris missing but is excluded due to no germination across Treat)
 read.csv("data/plant_height.csv", sep = ",") %>%
