@@ -118,3 +118,8 @@ read.csv("data/raw_data.csv", sep = ",") %>%
   gather ("treatment", "finalgerm", A_alternate_light:E_cold_stratification) %>%
   filter(!treatment=="E_cold_stratification")%>%
   merge(viables_sp, by= c("code", "species", "treatment"))-> finalgerm 
+
+finalgerm%>%
+  group_by(species, code)%>%
+  summarise(finalgerm = sum(finalgerm))%>%
+  filter(!finalgerm>0)

@@ -40,8 +40,12 @@ read.csv("data/species.csv", sep =",") %>%
   filter (!species == "Kobresia myosuroides")%>%
   filter (!species == "Salix breviserrata")%>%
   filter (!species == "Sedum album")%>%
+  filter (!species == "Veronica nummularium")%>%
   filter (!species == "Sedum atratum")%>%
   filter (!species == "Solidago virgaurea") %>%
+  filter(!species=="Avenella flexuosa")%>% # 0 germ across all treatments
+  filter(!species=="Cerastium ramosissimum")%>% # 0 germ across all treatments
+  filter(!species=="Phalacrocarpum oppositifolium")%>% # 0 germ across all treatments
   filter(!species == "Teesdalia conferta")%>%
   separate(species, into = c("genus", "species"), sep = " ") %>%
   mutate(species = paste(genus, species),

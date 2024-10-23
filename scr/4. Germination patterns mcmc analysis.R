@@ -12,8 +12,13 @@ library(glmmTMB); library(DHARMa);library(scales)
   filter (!species == "Salix breviserrata")%>%
   filter (!species == "Sedum album")%>%
   filter (!species == "Sedum atratum")%>%
+  filter (!species == "Veronica nummularia")%>%
   filter (!species == "Solidago virgaurea")%>%
   filter (!species == "Teesdalia conferta")%>%
+  filter (!species == "Avenella flexuosa")%>%
+  filter (!species == "Cerastium ramosissimum")%>%
+  filter (!species == "Phalacrocarpum oppositifolium")%>%
+  
 
 # dataframe with species data ####
 read.csv("data/species.csv", sep=",") %>%
@@ -66,7 +71,12 @@ cold_strat%>%
   filter (!species == "Salix breviserrata")%>%
   filter (!species == "Sedum album")%>%
   filter (!species == "Sedum atratum")%>%
+  filter (!species == "Veronica nummularia")%>%
   filter (!species == "Solidago virgaurea") %>%
+  #filter (!species == "Teesdalia conferta")%>%
+  filter (!species == "Avenella flexuosa")%>%
+  filter (!species == "Cerastium ramosissimum")%>%
+  filter (!species == "Phalacrocarpum oppositifolium")%>%
   merge (species)%>%
   group_by (community)%>%
   summarize(finalgerm = sum (finalgerm), viable = sum(viable))%>%
@@ -117,9 +127,12 @@ finalgerm %>%
   filter (!species == "Sedum atratum")%>%
   filter (!species == "Solidago virgaurea") %>%
   filter (!species == "Teesdalia conferta")%>%
-  filter(community =="Temperate")%>% #Temperate    Mediterranean
-  na.omit ()-> mcmc_tem
-
+  filter (!species == "Veronica nummularia")%>%
+  filter (!species == "Avenella flexuosa")%>%
+  filter (!species == "Cerastium ramosissimum")%>%
+  filter (!species == "Phalacrocarpum oppositifolium")%>%
+  #filter(community =="Mediterranean")%>% #Temperate    Mediterranean
+  na.omit ()-> mcmc
 
 str(mcmc)# all species
 str (mcmc_tem) # temperate species
@@ -135,7 +148,7 @@ phangorn::nnls.tree(cophenetic(ape::read.tree("results/treegerm.tree")),
   nnls_orig
 
 nnls_orig$node.label <- NULL
-# ONly temperate community
+# Only temperate community
 phangorn::nnls.tree(cophenetic(ape::read.tree("results/TEM_tree.tree")), 
                     ape::read.tree("results/TEM_tree.tree"), method = "ultrametric") -> 
   nnls_orig
@@ -147,7 +160,7 @@ phangorn::nnls.tree(cophenetic(ape::read.tree("results/MED_tree.tree")),
   nnls_orig
 
 nnls_orig$node.label <- NULL
- plot(ape::read.tree("results/MED_tree.tree"))
+
 ### Set number of iterations
 nite = 1000000
 nthi = 100
@@ -173,39 +186,39 @@ MCMCglmm::MCMCglmm(cbind(finalgerm, viable - finalgerm) ~ treatment, # ,*communi
 
 #save(m1, file = "results/mcmc.Rdata")
 x11()
-plot(mc_both) # models with  both communities treatment * community
+plot(mc_both) # models with  both communities treatment * community (need to be updated is we want to use it)
 plot(mc_tem) 
 plot(mc_med)
 
 # load("results/mcmc.Rdata")
-summary(mc_both)
+summary(mc_both) # need to be updated is we want to use it
 summary(mc_tem)
 summary(mc_med)
 
 ### Random and phylo
 # Calculate lambda http://www.mpcm-evolution.com/practice/online-practical-material-chapter-11/chapter-11-1-simple-model-mcmcglmm
 
-lambda <- mc_med$VCV[,"animal"]/(mc_med$VCV[,"animal"] + mc_med$VCV[,"units"]) 
+lambda <- mc_tem$VCV[,"animal"]/(mc_tem$VCV[,"animal"] + mc_tem$VCV[,"units"]) 
 
-mean(mc_med$VCV[,"animal"]/(mc_med$VCV[,"animal"] + mc_med$VCV[,"units"])) %>% round(2)
-coda::HPDinterval(mc_med$VCV[,"animal"]/(mc_med$VCV[,"animal"] + mc_med$VCV[,"units"]))[, 1] %>% round(2)
-coda::HPDinterval(mc_med$VCV[,"animal"]/(mc_med$VCV[,"animal"] + mc_med$VCV[,"units"]))[, 2] %>% round(2)
+mean(mc_tem$VCV[,"animal"]/(mc_tem$VCV[,"animal"] + mc_tem$VCV[,"units"])) %>% round(2)
+coda::HPDinterval(mc_tem$VCV[,"animal"]/(mc_tem$VCV[,"animal"] + mc_tem$VCV[,"units"]))[, 1] %>% round(2)
+coda::HPDinterval(mc_tem$VCV[,"animal"]/(mc_tem$VCV[,"animal"] + mc_tem$VCV[,"units"]))[, 2] %>% round(2)
 
 # Random effects animal
-summary(mc_med)$Gcovariances[1, 1] %>% round(2) 
-summary(mc_med)$Gcovariances[1, 2] %>% round(2) 
-summary(mc_med)$Gcovariances[1, 3] %>% round(2)
+summary(mc_tem)$Gcovariances[1, 1] %>% round(2) 
+summary(mc_tem)$Gcovariances[1, 2] %>% round(2) 
+summary(mc_tem)$Gcovariances[1, 3] %>% round(2)
 
 # Random effects ID
-summary(mc_med)$Gcovariances[2, 1] %>% round(2)
-summary(mc_med)$Gcovariances[2, 2] %>% round(2) 
-summary(mc_med)$Gcovariances[2, 3] %>% round(2) 
+summary(mc_tem)$Gcovariances[2, 1] %>% round(2)
+summary(mc_tem)$Gcovariances[2, 2] %>% round(2) 
+summary(mc_tem)$Gcovariances[2, 3] %>% round(2) 
 
 
 #### visualization significant differences MCMC-GLMM ####
 # treatment x community, only differnce in WP, lower in temperate
-ann_text_m <- data.frame (x=1.6, y= 0.41, label = "*", community = "Mediterranean")
-ann_text_t <- data.frame (x=1.6, y= 0.41, label = "*", community = "Temperate")
+ann_text_m <- data.frame (x=1.6, y= 0.425, label = "*", community = "Mediterranean")
+ann_text_t <- data.frame (x=1.6, y= 0.425, label = "*", community = "Temperate")
 x11()
 finalgerm %>%
   merge(species)%>%
@@ -218,6 +231,10 @@ finalgerm %>%
   filter (!species == "Sedum atratum")%>%
   filter (!species == "Solidago virgaurea") %>%
   filter(!species == "Teesdalia conferta") %>%
+  filter (!species == "Veronica nummularia")%>%
+  filter (!species == "Avenella flexuosa")%>%
+  filter (!species == "Cerastium ramosissimum")%>%
+  filter (!species == "Phalacrocarpum oppositifolium")%>%
   na.omit() %>%
   group_by (treatment, community) %>% #, temperature_regime 
   summarise(finalgerm=sum(finalgerm),
@@ -239,7 +256,7 @@ finalgerm %>%
   # add significances
   geom_segment (aes(x= 1,xend =3.1,  y = 0.45, yend= 0.45), color = "black", linewidth = 1.3, show.legend = F)+
   annotate ("text", x= 2, y= 0.46, label = "***", size= 6)+
-  geom_segment(aes(x=1, xend =2.1, y= 0.4, yend=0.4), color = "black", linewidth = 1.3,inherit.aes=FALSE)+
+  geom_segment(aes(x=1, xend =2.1, y= 0.42, yend=0.42), color = "black", linewidth = 1.3,inherit.aes=FALSE)+
   geom_text(data=ann_text_m, label ="***", aes(x=x, y=y), size= 6)+
   geom_text(data=ann_text_t, label ="*", aes(x=x, y=y), size= 6)+
   theme_classic (base_size = 16) + #theme_minimal for all species for mean treatment
