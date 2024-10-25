@@ -337,7 +337,7 @@ read.csv("data/spatial-survey-temperatures-Med.csv") %>%
   geom_textdensity (aes(x=trait_value, group=plot, label = plot), hjust = "ymax", position= "jitter", color="black", show.legend = F)+
   #geom_density(aes(x=micro_value, group=species, fill=species), alpha = 0.5)+ #, position = "fill"
   #geom_textdensity (aes(x=micro_value, group=species, label = species), hjust = "ymax", position= "jitter", color="black", show.legend = F)+
-  facet_wrap(~traits, scales = "free", ncol=1)+
+  facet_wrap(~traits, scales = "free", ncol=3)+
   theme_classic()
 
 # loop for visualization plots CM x microclimatic gradients####
