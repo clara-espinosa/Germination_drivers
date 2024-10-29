@@ -36,7 +36,7 @@ sp_med %>%
 
 # 55 plots with more than 80% coverage with sp traits (drivers) (considering relative cover, up to 100%)
 
-# 2B- Number of species with germination traits per plot (not to be used?) ####
+# 2B- Number of species with germination traits per plot (extended data set) ####
 sp_med %>%
   merge(spatial_sp_Med, by = "species")%>%
   select(species, plot, N_sp)%>%
@@ -44,12 +44,12 @@ sp_med %>%
   summarise(N_sp = first(N_sp), 
             sp_traits = length(unique(species)), 
             sp_covered = sp_traits/N_sp)%>%
-  filter(sp_covered>0.74) %>%
-  filter(sp_traits>2)%>%
+  filter(sp_covered>0.49) %>%
+  filter(sp_traits>1)->med_plot_extended
   #arrange(sp_covered)%>%
   print(n=84)
 # in 44 plots more than 75% sp covered with drivers traits (focused on presence)
-# in 70 plots more than 49% sp covered with drivers traits and more than 1 sp per plot
+# in 70 plots more than 49% sp covered with drivers traits and more than 2 sp per plot
 # 3- temperature graphs of plots with 80% coverage with trait data ####
 med_plot%>%# 55 plots with >80% coverage with trait and environmental data
   merge(read.csv("data/spatial-survey-temperatures-Med.csv")) %>%
@@ -102,6 +102,63 @@ spatial_env_med %>%
 ggsave(filename = "Temperatures plots with traits Med.png", plot =tem_plots_Med , path = "results/Supplementary/", 
        device = "png", dpi = 600)
 
+# 4- temperature graphs of plot with more than 50% species with traits and at least 2 species ####
+med_plot_extended%>%# 70 plots 
+  merge(read.csv("data/spatial-survey-temperatures-Med.csv")) %>%
+  mutate(Time = as.POSIXct(Time, tz = "UTC", format = "%d/%m/%Y %H:%M" )) %>% 
+  merge(read.csv("data/spatial-survey-header-Med.csv"))%>%
+  filter(!plot=="A00")%>% # plot with Microlog data NO iButton
+  filter(!plot=="B00")%>%# plot with Microlog data NO iButton
+  filter(!plot=="C00")%>%# plot with Microlog data NO iButton
+  filter(!plot=="D00")%>%# plot with Microlog data NO iButton
+  filter(!plot=="B13")%>% # iButtons could no be recovered
+  filter(!plot=="B14")%>% # iButtons could no be recovered
+  filter(!plot=="B15")%>% # iButtons could no be recovered
+  filter(!plot=="C07")-> spatial_env_med_extended
+
+setdiff(med_plot_extended$plot, spatial_env_med_extended$plot)
+setdiff(spatial_env_med_extended$plot,med_plot_extended$plot)
+unique(med_plot_extended$plot)
+unique(spatial_env_med_extended$plot)
+
+spatial_env_med_extended %>% 
+  group_by(Time = lubridate::floor_date(Time, "day"), site, plot) %>%
+  summarise(Temperature = mean(Temperature)) -> spatial_mean_med
+
+x11()
+spatial_env_med %>%
+  mutate(site = fct_relevel(site,"Rabinalto", "Canada","Solana","Penouta")) %>%
+  ggplot(aes(x=Time, y=Temperature, color = site)) + 
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_line(linewidth = .05, alpha = 0.5) +
+  geom_line(data = spatial_mean_med, linewidth = .75) +
+  facet_wrap(~ plot,nrow = 10 ) + #   ,  labeller = plot
+  labs(title = "Spatial survey (July 2021 - May 2022)", subtitle = "Plots with 80% relative cover with traits", 
+       x= "Time (4-h recording inverval)", y= "Temperature (ºC)") +
+  ggthemes::theme_tufte() +
+  coord_cartesian(ylim = c(-5, 45)) +
+  #scale_color_manual( values = c( "limegreen")) +
+  scale_color_manual( values = c("limegreen","deeppink4","darkorange1", "dodgerblue4")) +
+  theme(text = element_text(family = "sans"),
+        strip.background = element_blank(),
+        legend.position = c(0.75,0.025), # 
+        legend.direction = "vertical",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 12), #, face = "italic"
+        panel.background = element_rect(color = "black", fill = NULL),
+        strip.text = element_text(size = 12),
+        axis.title = element_text(size = 12),
+        axis.text.x = element_text(size = 8, color = "black"),
+        axis.text.y = element_text(size = 11, color = "black"))->tem_plots_Med;tem_plots_Med
+
+ggsave(filename = "Temperatures plots with traits Med.png", plot =tem_plots_Med , path = "results/Supplementary/", 
+       device = "png", dpi = 600)
+# 5- disturbance per plot measure####
+read.csv("data/spatial-survey-header-Med.csv") %>%
+  dplyr::select(plot, soil, rock, vasculars, nonvasculars)%>%
+  gather(covertyper, percentage, soil:nonvasculars)%>%
+  group_by(plot)%>%
+  summarise(disturbance = diversity(percentage, index= "shannon"))-> disturbance_M
 # DATA MATRICES ####
 # header species data ####
 read.csv("data/species.csv", sep=",") %>%
@@ -130,7 +187,8 @@ read.csv("data/spatial-survey-species-Med.csv") %>%
   column_to_rownames(var="plot")-> plot_x_sp_M # replace Na with 0
 sp_x_plot_M <- t(plot_x_sp_M)
 unique(sp_med$species)
-# presence_absence sp x plot matrix (TO USE in CM)
+
+# presence_absence sp x plot matrix (TO USE in CM) with restrictive data set
 read.csv("data/spatial-survey-species-Med.csv") %>%
   group_by(plot)%>%
   mutate(total_cover= sum(cover),
@@ -145,6 +203,22 @@ read.csv("data/spatial-survey-species-Med.csv") %>%
   replace(is.na(.), 0)%>% 
   filter(plot%in%spatial_env_med$plot)%>% 
   column_to_rownames(var="plot")-> plot_x_sp_M_PA 
+
+# presence_absence sp x plot matrix (TO USE in CM) with extended data set
+read.csv("data/spatial-survey-species-Med.csv") %>%
+  group_by(plot)%>%
+  mutate(total_cover= sum(cover),
+         rel_cover = round((cover/total_cover)*100,2), # relative cover according to max vegetation cover
+         N_sp = length(unique(species)))%>%
+  merge(sp_med, by="species")%>% # get species names shortened
+  dplyr::select(plot, species, rel_cover)%>%
+  group_by(species, plot)%>%
+  mutate(presence= ifelse(rel_cover>0,1,0))%>%
+  dplyr::select(plot, species,presence)%>%
+  spread(species, presence)%>% # species in columns
+  replace(is.na(.), 0)%>% 
+  filter(plot%in%spatial_env_med_extended$plot)%>% 
+  column_to_rownames(var="plot")-> plot_x_sp_M_PA_ext 
 
 # 2-  species x traits matrix ########
 #### species x traits matrix with germination as log odd ratios 
@@ -271,11 +345,47 @@ read.csv("data/spatial-survey-temperatures-Med.csv") %>%
   merge(read.csv("data/spatial-survey-header-Med.csv")) %>% 
   #dplyr::select(plot, site, aspect, elevation, latitude, longitude, bio1:GDD)%>% 
   dplyr::select(plot, elevation,bio1:GDD)%>% 
+  merge(disturbance_M, by="plot")%>%
   filter(plot%in%spatial_env_med$plot)%>% 
   column_to_rownames(var="plot")-> plot_x_env_M
+
 plot_x_env_M%>%
   rownames_to_column(var = "plot")->plot_x_env_M2 
 plot_x_env_M2 %>%
+  get_summary_stats()
+
+### extended dataset for CM
+read.csv("data/spatial-survey-temperatures-Med.csv") %>%
+  mutate(Time = as.POSIXct(Time, tz = "UTC", format = "%d/%m/%Y %H:%M")) %>%
+  group_by(plot, Day = lubridate::floor_date(Time, "day")) %>%
+  dplyr::summarize(T = mean(Temperature), X = max(Temperature), N = min(Temperature), n = length(Time)) %>% # Daily mean, max, min
+  mutate(Snow = ifelse(X < 0.5 & N > -0.5, 1, 0)) %>% # Day is snow day or not
+  mutate(FreezeThaw = ifelse(X > 0.5 & N < -0.5, 1, 0)) %>% # Day with freeze-thaw cycles
+  mutate(FDD = ifelse(T < 0, T, 0)) %>% # Freezing degrees per day
+  mutate(GDD = ifelse(T >= 5, T, 0)) %>% # Growing degrees day per month https://link.springer.com/article/10.1007/s00035-021-00250-1
+  group_by(plot, Month = lubridate::floor_date(Day, "month")) %>%
+  dplyr::summarize(T = mean(T), X = mean(X), N = mean(N), # Daily mean, max, min
+                   Snow = sum(Snow), # Snow days per month
+                   FreezeThaw = sum(FreezeThaw), # Freeze-thaw days per month
+                   FDD = sum(FDD), # FDD per month
+                   GDD = sum(GDD)) %>% # GDD per month
+  group_by(plot) %>%
+  dplyr::summarize(bio1 = round(mean(T),2), # Annual Mean Temperature
+                   bio2 = round(mean(X - N),2), # Mean Diurnal Range (Mean of monthly (max temp - min temp))
+                   bio7 = round(max(X) - min(N), 2), # Temperature Annual Range (BIO5-BIO6)
+                   Snw = sum(Snow),
+                   FDD = round(abs(sum(FDD)),2), # FDD per year
+                   GDD = round(sum(GDD)),2) %>%  # GDD per year
+  merge(read.csv("data/spatial-survey-header-Med.csv")) %>% 
+  #dplyr::select(plot, site, aspect, elevation, latitude, longitude, bio1:GDD)%>% 
+  dplyr::select(plot, elevation,bio1:GDD)%>% 
+  merge(disturbance_M, by="plot")%>%
+  filter(plot%in%spatial_env_med_extended$plot)%>% 
+  column_to_rownames(var="plot")-> plot_x_env_M_ext
+
+plot_x_env_M_ext%>%
+  rownames_to_column(var = "plot")->plot_x_env_M2_ext 
+plot_x_env_M2_ext %>%
   get_summary_stats()
 
 ################################# TEMPERATE ########################################################################
@@ -317,7 +427,7 @@ sp_tem %>%
 
 # 47 plot with more than 80% coverage with sp traits (drivers)(considering raw cover, not to 100%)
 
-# 2B- Number of species with germination traits per plot (not to be used) ####
+# 2B- Number of species with germination traits per plot (extended data set) ####
 sp_tem %>%
   merge(spatial_sp_Tem, by = "species")%>%
   select(species, plot, N_sp)%>%
@@ -325,12 +435,12 @@ sp_tem %>%
   summarise(N_sp = first(N_sp), 
             sp_traits = length(unique(species)), 
             sp_covered = sp_traits/N_sp)%>%
-  filter(sp_covered>0.75) %>%
-  filter(sp_traits>2)%>%
+  filter(sp_covered>0.49) %>%
+  filter(sp_traits>1)-> tem_plot_extended
   arrange(sp_covered)%>%
   print(n=84)
 # only 5 plots more than 75% sp covered with drivers traits (focused on presence)
-# 67 plots more than 49% of species covered with drivers traits
+# 68 plots more than 49% of species covered with drivers traits
 # 3- temperature graphs of plots with 80% coverage with trait data NEED TO UPDATE ####
 tem_plot%>%
   merge(read.csv("data/spatial-survey-temperatures-Tem.csv")) %>%
@@ -375,6 +485,55 @@ ggsave(filename = "Temperatures plots with traits Tem.png", plot =tem_plots_Tem 
        device = "png", dpi = 600)
 
 
+# 4- temperature graphs of plot with more than 50% species with traits and at least 2 species ####
+tem_plot_extended%>%
+  merge(read.csv("data/spatial-survey-temperatures-Tem.csv")) %>%
+  mutate(Time = as.POSIXct(Time, tz = "UTC", format = "%d/%m/%Y %H:%M" )) %>% 
+  merge(read.csv("data/spatial-survey-header-Tem.csv"))-> spatial_env_tem_extended 
+
+setdiff(tem_plot_extended$plot, spatial_env_tem_extended$plot)
+unique(tem_plot_extended$plot)
+unique(spatial_env_tem_extended$plot)
+
+spatial_env_tem %>% 
+  group_by(Time = lubridate::floor_date(Time, "day"), site, plot) %>%
+  summarise(Temperature = mean(Temperature)) -> spatial_mean_tem
+
+x11()
+spatial_env_tem  %>%
+  mutate(site = fct_relevel(site,"Los Cazadores", "Hou Sin Tierri","Los Boches","Hoyo Sin Tierra")) %>%
+  ggplot(aes(x=Time, y=Temperature, color = site)) + 
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_line(linewidth = .05, alpha = 0.5) +
+  geom_line(data = spatial_mean_tem, linewidth = .75) +
+  facet_wrap(~ plot,nrow = 10 ) + #   ,  labeller = plot
+  labs(title = "Spatial survey (Oct 2018 - Aug 2019)", subtitle = "Plots with 80% relative cover with traits", 
+       x= "Time (4-h recording inverval)", y= "Temperature (ºC)") +
+  ggthemes::theme_tufte() +
+  coord_cartesian(ylim = c(-5, 45)) +
+  #scale_color_manual( values = c( "limegreen")) +
+  scale_color_manual( values = c("limegreen","deeppink4","darkorange1", "dodgerblue4")) +
+  theme(text = element_text(family = "sans"),
+        strip.background = element_blank(),
+        legend.position = c(0.75,0.025), # 
+        legend.direction = "vertical",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 12), #, face = "italic"
+        panel.background = element_rect(color = "black", fill = NULL),
+        strip.text = element_text(size = 12),
+        axis.title = element_text(size = 12),
+        axis.text.x = element_text(size = 8, color = "black"),
+        axis.text.y = element_text(size = 11, color = "black")) ->tem_plots_Tem;tem_plots_Tem
+
+ggsave(filename = "Temperatures plots with traits Tem.png", plot =tem_plots_Tem , path = "results/Supplementary/", 
+       device = "png", dpi = 600)
+
+# 5- disturbance per plot measure####
+read.csv("data/spatial-survey-header-Tem.csv", sep = ";") %>%
+  dplyr::select(plot, soil, rock, plant)%>%
+  gather(covertyper, percentage, soil:plant)%>%
+  group_by(plot)%>%
+  summarise(disturbance = diversity(percentage, index= "shannon"))-> disturbance_T
 # DATA MATRICES ####
 # header species data  #######
 read.csv("data/species.csv", sep=",") %>%
@@ -409,7 +568,7 @@ read.csv("data/spatial-survey-species-Tem.csv") %>%
   column_to_rownames(var="plot")-> plot_x_sp_T # replace Na with 0
 sp_x_plot_T <- t(plot_x_sp_T)
 
-# presence_absence sp x plot matrix (to use in CM)
+# presence_absence sp x plot matrix (to use in CM) with restrictive dataset
 read.csv("data/spatial-survey-species-Tem.csv") %>%
   group_by(plot)%>%
   mutate(total_cover= sum(cover),
@@ -424,6 +583,22 @@ read.csv("data/spatial-survey-species-Tem.csv") %>%
   replace(is.na(.), 0)%>% 
   filter(plot%in%spatial_env_tem$plot)%>%
   column_to_rownames(var="plot")-> plot_x_sp_T_PA 
+
+# presence_absence sp x plot matrix (TO USE in CM) with extended data set
+read.csv("data/spatial-survey-species-Tem.csv") %>%
+  group_by(plot)%>%
+  mutate(total_cover= sum(cover),
+         rel_cover = round((cover/total_cover)*100,2), # relative cover according to max vegetation cover
+         N_sp = length(unique(species)))%>%
+  merge(sp_tem, by="species")%>% # get species names shortened
+  dplyr::select(plot, species, rel_cover)%>%
+  group_by(species, plot)%>%
+  mutate(presence= ifelse(rel_cover>0,1,0))%>%
+  dplyr::select(plot, species,presence)%>%
+  spread(species, presence)%>% # species in columns
+  replace(is.na(.), 0)%>% 
+  filter(plot%in%spatial_env_tem_extended$plot)%>% 
+  column_to_rownames(var="plot")-> plot_x_sp_T_PA_ext 
 # 2-  species x traits matrix ###########
 #### species x traits matrix with germination  as odd ratios 
 read.csv("data/raw_data.csv", sep = ",") %>%
@@ -546,9 +721,52 @@ read.csv("data/spatial-survey-temperatures-Tem.csv") %>%
                    Snw = sum(Snow),
                    FDD = round(abs(sum(FDD)),2), # FDD per year
                    GDD = round(sum(GDD)),2) %>%  # GDD per year
-  merge(read.csv("data/spatial-survey-header-Tem.csv")) %>% 
+  merge(read.csv("data/spatial-survey-header-Tem.csv", sep= ";")) %>% 
   dplyr::select(plot, elevation,bio1:GDD)%>%
+  merge(disturbance_T, by= "plot")%>%
   filter(plot%in%spatial_env_tem$plot)%>%
   column_to_rownames(var="plot")-> plot_x_env_T
+
 plot_x_env_T%>%
+  get_summary_stats()
+
+plot_x_env_T%>%
+  rownames_to_column(var = "plot")->plot_x_env_T2 
+plot_x_env_T2 %>%
+  get_summary_stats()
+
+### extended dataset for CM
+read.csv("data/spatial-survey-temperatures-Tem.csv") %>%
+  mutate(Time = as.POSIXct(Time, tz = "UTC", format = "%d/%m/%Y %H:%M")) %>%
+  group_by(plot, Day = lubridate::floor_date(Time, "day")) %>%
+  dplyr::summarize(T = mean(Temperature), X = max(Temperature), N = min(Temperature), n = length(Time)) %>% # Daily mean, max, min
+  mutate(Snow = ifelse(X < 0.5 & N > -0.5, 1, 0)) %>% # Day is snow day or not
+  mutate(FreezeThaw = ifelse(X > 0.5 & N < -0.5, 1, 0)) %>% # Day with freeze-thaw cycles
+  mutate(FDD = ifelse(T < 0, T, 0)) %>% # Freezing degrees per day
+  mutate(GDD = ifelse(T >= 5, T, 0)) %>% # Growing degrees day per month https://link.springer.com/article/10.1007/s00035-021-00250-1
+  group_by(plot, Month = lubridate::floor_date(Day, "month")) %>%
+  dplyr::summarize(T = mean(T), X = mean(X), N = mean(N), # Daily mean, max, min
+                   Snow = sum(Snow), # Snow days per month
+                   FreezeThaw = sum(FreezeThaw), # Freeze-thaw days per month
+                   FDD = sum(FDD), # FDD per month
+                   GDD = sum(GDD)) %>% # GDD per month
+  group_by(plot) %>%
+  dplyr::summarize(bio1 = round(mean(T),2), # Annual Mean Temperature
+                   bio2 = round(mean(X - N),2), # Mean Diurnal Range (Mean of monthly (max temp - min temp))
+                   bio7 = round(max(X) - min(N), 2), # Temperature Annual Range (BIO5-BIO6)
+                   Snw = sum(Snow),
+                   FDD = round(abs(sum(FDD)),2), # FDD per year
+                   GDD = round(sum(GDD)),2) %>%  # GDD per year
+  merge(read.csv("data/spatial-survey-header-Tem.csv", sep= ";")) %>% 
+  dplyr::select(plot, elevation,bio1:GDD)%>%
+  merge(disturbance_T, by= "plot")%>%
+  filter(plot%in%spatial_env_tem_extended$plot)%>%
+  column_to_rownames(var="plot")-> plot_x_env_T_ext
+
+plot_x_env_T_ext%>%
+  get_summary_stats()
+
+plot_x_env_T_ext%>%
+  rownames_to_column(var = "plot")->plot_x_env_T2_ext
+plot_x_env_T2_ext %>%
   get_summary_stats()
