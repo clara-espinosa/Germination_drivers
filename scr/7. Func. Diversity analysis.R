@@ -135,7 +135,7 @@ ggsave(filename = "Full FD subsets.png", plot =Full.FD, path = "results/prelimin
 x11()
 ## 5.5.1 Germ traits####
 plot_x_sp_M <- as.data.frame(plot_x_sp_M)
-germ.melodic.M <- melodic(plot_x_sp_M, germ.traits.dist.M)
+germ.melodic.M <- melodic(plot_x_sp_M, germtraits.dist.M)
 str(germ.melodic.M)
 
 # germ melodic object data handling
@@ -149,7 +149,7 @@ as.data.frame(germ.melodic.M$abundance$mpd) %>%
   dplyr::select(site, plot, Germ.Mpd.ab,Germ.Mpd.pa , elevation, FDD, GDD, Snw)-> FD.germ.M
 
 ## 5.5.2 Plant traits Weighted  ####
-weighted.plant.melodic.M <- melodic(plot_x_sp_M, plant.traits.weighted.dist.M)
+weighted.plant.melodic.M <- melodic(plot_x_sp_M, Wplanttraits.dist.M)
 str(weighted.plant.melodic.M)
 
 # plant melodic object data handling
@@ -160,7 +160,7 @@ as.data.frame(weighted.plant.melodic.M$abundance$mpd) %>%
   mutate(Wplant.Mpd.pa = weighted.plant.melodic.M$presence$mpd)%>%
   dplyr::select(plot, elevation, FDD, GDD, Snw,Wplant.Mpd.ab, Wplant.Mpd.pa)%>%
   merge(read.csv("data/spatial-survey-header-Med.csv"), by = c("plot", "elevation"))%>%
-  merge(disturbance_M, by= "plot")
+  merge(disturbance_M, by= "plot")%>%
   dplyr::select(site, plot,Wplant.Mpd.ab,Wplant.Mpd.pa,elevation, FDD, GDD, Snw, disturbance)-> FD.w.plant.M
 
 ## Join germ and plant mdp calculations
@@ -190,7 +190,7 @@ FD.M%>%
   geom_errorbar(aes(Traits, mean, ymin = mean-ci, ymax = mean+ci), color = "black",linewidth =1) +
   geom_point(aes(x= Traits, y= mean, fill = Traits), color = "black", shape= 21, size = 5)+
   scale_fill_manual(values = c("dodgerblue4","limegreen"))+
-  facet_grid(indices~data_type, labeller = as_labeller(strip_names), scales = "free_y")+
+  facet_grid(~data_type, labeller = as_labeller(strip_names))+
   labs(title = "Mediterranean community FD differences", y= "Mean dissimilarity")+
   theme_classic(base_size = 16)+
   theme(strip.text = element_text(size =16),
