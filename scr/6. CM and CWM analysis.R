@@ -47,28 +47,12 @@ CM_M%>%
 plot_x_env_M%>%
   rownames_to_column(var = "plot")->plot_x_env_M2 
 
-# loop for visualization plots
-CM_M%>%
-  rownames_to_column(var = "plot")%>%
-  gather(trait, value, seed_mass:odds_D_constant)%>%
-  merge(plot_x_env_M2)%>%
-  merge(read.csv("data/spatial-survey-header-Med.csv"), by = c("plot", "elevation"))%>%
-  mutate(site = as.factor(site))%>%
-  mutate(site = fct_relevel(site,"Rabinalto", "Canada","Solana","Penouta")) %>%
-  mutate(trait = factor(trait))%>%
-  mutate(trait = fct_relevel(trait, "odds_B_dark","odds_C_WP","odds_D_constant",
-                             "seed_mass","plant_height", 
-                             "leaf_area", "LDMC", "SLA"))%>%
-  dplyr::select(site, plot, trait, value, elevation, Snw, FDD, GDD)%>%
-  rename(Snow=Snw)%>%
-  gather(micro_variable, value_micro,  elevation:GDD)-> CM_microclima_M
-
 # To test te CWM for microclimatic gradients we could use simple linear model or 
 # REML, restricted maximum likelihood model 
 # (function written to repeat each lm x microclimatic variable)
 # formula adapted from PICOS github repository scr Fig5-GLMs
 lms.cm <- function(x) {
-  glm(CM ~ elevation +FDD + GDD +  Snw, data = x) -> m1
+  glm(CM ~ s(elevation) +s(FDD) + s(GDD) +  s(Snw), data = x) -> m1
   broom::tidy(m1)
 }
 
@@ -80,7 +64,22 @@ CM_M%>%
   do(lms.cm(.)) %>%
   write.csv("results/CM vs micro MED.csv")
 
-# double facetting with significances
+# visualization double facetting with significances
+CM_M%>%
+  rownames_to_column(var = "plot")%>%
+  gather(trait, CM, seed_mass:odds_D_constant)%>%
+  merge(plot_x_env_M2)%>%
+  merge(read.csv("data/spatial-survey-header-Med.csv"), by = c("plot", "elevation"))%>%
+  mutate(site = as.factor(site))%>%
+  mutate(site = fct_relevel(site,"Rabinalto", "Canada","Solana","Penouta")) %>%
+  mutate(trait = factor(trait))%>%
+  mutate(trait = fct_relevel(trait, "odds_B_dark","odds_C_WP","odds_D_constant",
+                             "seed_mass","plant_height", 
+                             "leaf_area", "LDMC", "SLA"))%>%
+  dplyr::select(site, plot, latitude, longitude, trait, CM, elevation, Snw, FDD, GDD)%>%
+  rename(Snow=Snw)%>%
+  gather(micro_variable, value_micro,  elevation:GDD)-> CM_microclima_M
+
 ann.sig.CM.M <- data.frame (read.csv("results/sig_CM_M.csv", sep = ";"))
 trait_names <- c("odds_B_dark" = "Darkness","odds_C_WP" = "Water stress",
                  "odds_D_constant" = "Constant Temp","seed_mass" = "Seed mass",
@@ -112,21 +111,6 @@ CM_microclima_M%>%
 ggsave(plot_CM_M, file = "CM Med trait vs micro.png", 
        path = "results/preliminar graphs", scale = 1,dpi = 600) 
 #width = 320, height = 260, units = "mm", 
-
-# see summary in results
-# we can also use the multivariate analyses for the representation, for example RDA
-
-rda_med_all<-rda(CM_M~elevation+ FDD + GDD + Snw , data= plot_x_env_M)
-plot(rda_med_all, type = "n", scaling = "sites")
-text(rda_med_all, dis = "cn", scaling = "sites")
-text(rda_med_all, dis = "sp", scaling = "sites", col = "red")
-
-rda_med_0<-rda(CM_M~1, data= plot_x_env_M)
-rda_med_all<-rda(CM_M~elevation+ FDD + GDD + Snw , data= plot_x_env_M)
-ordistep(rda_med_0, scope=formula(rda_med_all), direction = "forward")
-
-RsquareAdj (rda_med_all)$adj.r.squared # 0.06
-# final model only with elevation
 
 # 5.2.2 Calculation of CM extended dataset ####
 sp_x_trait_M<- as.matrix(sp_x_trait_M)

@@ -70,8 +70,6 @@ as.matrix(germ.traits.dist.M)%>%
 # activate function from melodic.R script in src folder
 ## 5.5. Calculation of MDP for individual traits
 # try to do with a function
-
-
 MPD.M <-function(distancematrix, communitydata){ # function to obtained omly interested indices from melodic function
     a <- deparse(substitute(distancematrix)) # get the name of the input distance matrix
     melodic(samp=communitydata, dis = distancematrix)-> x1 # plly melodic function to specific distance matrix
