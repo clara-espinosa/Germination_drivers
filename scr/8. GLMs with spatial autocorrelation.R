@@ -224,3 +224,194 @@ MPD.T(dark.dist.T, plot_x_sp_T)%>%
   group_by(trait, data_type)%>%
   do(glms.FD.T (.))%>%
   write.csv("results/GLMs auto FD Tem.csv")
+
+
+########## GLMs SIZE EFFECTS VISUALIZATION ######
+### Community metrics Mediterranean ####
+effect_names <- c("odds_B_dark" = "Darkness","odds_C_WP" = "Water stress",
+                  "odds_D_constant" = "Constant Temp","seed_mass" = "Seed mass",
+                  "plant_height" = "Plant height", "leaf_area" = "Leaf area",
+                  "LDMC" = "LDMC", "SLA" = "SLA", "CM_ext"= "Community Means Extended",
+                  "CM" = "Communty Means", "CWM"="Community Weighted Means")
+x11()
+read.csv("results/GLMs auto Med.csv", sep =";")%>%
+  mutate(data_type = ifelse(community_metric== "CM", "Presence", "Abundance"))%>%
+  rbind(read.csv("results/GLMs auto Med ext.csv", sep =";")%>%
+           mutate(data_type = "Presence", 
+                  community_metric = "CM_ext"))%>%
+  mutate(trait = factor(trait))%>%
+  mutate(trait = fct_relevel(trait, "odds_B_dark","odds_C_WP","odds_D_constant",
+                             "seed_mass","plant_height", 
+                             "leaf_area", "LDMC", "SLA"))%>%
+  mutate(community_metric = factor(community_metric))%>%
+  mutate(community_metric = fct_relevel(community_metric, "CM_ext", "CM", "CWM"))%>%
+  filter(!term == "(Intercept)")%>%
+  filter(!term == "scale(auto)")%>%
+  mutate(term= factor(term))%>%
+  mutate(term= fct_recode(term, "Elevation" = "scale(elevation)", "FDD"="scale(FDD)",
+                      "GDD"="scale(GDD)", "Snow"="scale(Snw)"))%>%
+  mutate(CI = 1.96*std.error)%>% # confidence interval multiply 1.96 per std error
+  mutate(CImin = estimate-CI, 
+         CImax= estimate+CI)%>%
+  mutate(color = case_when(CImin>0 & CImax>0 ~ "deepskyblue",
+                           CImin<0 & CImax<0~ "deepskyblue",
+                           TRUE ~"grey"))%>%
+  ggplot(aes(x= term, y =estimate, ymin = CImin, ymax = CImax))+
+  geom_errorbar (aes(color=color),width = 0, linewidth =1.2) + #, color="black" 
+  geom_point(aes(color=color), size = 3) +#
+  scale_color_manual (values = c("deepskyblue"="deepskyblue","deepskyblue"="deepskyblue", "grey"= "grey" ))+
+  facet_grid (community_metric~trait,labeller = as_labeller(effect_names),  scales = "free_x") + #ncol = 8, nrow =2,
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth =1, color = "red") +
+  coord_flip() +
+  labs(y = "Parameter estimate", title = "Mediterranean community") + # Temperate   Mediterranean
+  theme_classic (base_size = 12)+#ggthemes::theme_tufte(base_size = 14) +
+  theme(text = element_text(family = "sans"),
+        plot.title = element_text (size = 20),
+        strip.text = element_text( size = 16), #face = "bold",
+        strip.text.y = element_text(size = 14),
+        legend.position = "none",
+        strip.background = element_blank (),
+        panel.background = element_rect(color = "black", fill = NULL),
+        plot.tag.position = c(0.015,1),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 10, color = "black", angle = 30),
+        axis.text.y = element_text(size = 16, color = "black"),
+        axis.title.x = element_text (size=14))
+
+### Community metrics Temperate ####
+effect_names <- c("odds_B_dark" = "Darkness","odds_C_WP" = "Water stress",
+                  "odds_D_constant" = "Constant Temp","seed_mass" = "Seed mass",
+                  "plant_height" = "Plant height", "leaf_area" = "Leaf area",
+                  "LDMC" = "LDMC", "SLA" = "SLA", "CM_ext"= "Community Means Extended",
+                  "CM" = "Communty Means", "CWM"="Community Weighted Means")
+x11()
+read.csv("results/GLMs auto Tem.csv", sep =";")%>%
+  mutate(data_type = ifelse(community_metric== "CM", "Presence", "Abundance"))%>%
+  rbind(read.csv("results/GLMs auto Tem ext.csv", sep =";")%>%
+          mutate(data_type = "Presence", 
+                 community_metric = "CM_ext"))%>%
+  mutate(trait = factor(trait))%>%
+  mutate(trait = fct_relevel(trait, "odds_B_dark","odds_C_WP","odds_D_constant",
+                             "seed_mass","plant_height", 
+                             "leaf_area", "LDMC", "SLA"))%>%
+  mutate(community_metric = factor(community_metric))%>%
+  mutate(community_metric = fct_relevel(community_metric, "CM_ext", "CM", "CWM"))%>%
+  filter(!term == "(Intercept)")%>%
+  filter(!term == "scale(auto)")%>%
+  mutate(term= factor(term))%>%
+  mutate(term= fct_recode(term, "Elevation" = "scale(elevation)", "FDD"="scale(FDD)",
+                          "GDD"="scale(GDD)", "Snow"="scale(Snw)"))%>%
+  mutate(CI = 1.96*std.error)%>% # confidence interval multiply 1.96 per std error
+  mutate(CImin = estimate-CI, 
+         CImax= estimate+CI)%>%
+  mutate(color = case_when(CImin>0 & CImax>0 ~ "deepskyblue",
+                           CImin<0 & CImax<0~ "deepskyblue",
+                           TRUE ~"grey"))%>%
+  ggplot(aes(x= term, y =estimate, ymin = CImin, ymax = CImax))+
+  geom_errorbar (aes(color=color),width = 0, linewidth =1.2) + #, color="black" 
+  geom_point(aes(color=color), size = 3) +#
+  scale_color_manual (values = c("deepskyblue"="deepskyblue","deepskyblue"="deepskyblue", "grey"= "grey" ))+
+  facet_grid (community_metric~trait,labeller = as_labeller(effect_names),  scales = "free_x") + #ncol = 8, nrow =2,
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth =1, color = "red") +
+  coord_flip() +
+  labs(y = "Parameter estimate", title = "Temperate community") + # Temperate   Mediterranean
+  theme_classic (base_size = 12)+#ggthemes::theme_tufte(base_size = 14) +
+  theme(text = element_text(family = "sans"),
+        plot.title = element_text (size = 20),
+        strip.text = element_text( size = 16), #face = "bold",
+        strip.text.y = element_text(size = 14),
+        legend.position = "none",
+        strip.background = element_blank (),
+        panel.background = element_rect(color = "black", fill = NULL),
+        plot.tag.position = c(0.015,1),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 10, color = "black", angle = 30),
+        axis.text.y = element_text(size = 16, color = "black"),
+        axis.title.x = element_text (size=14))
+
+
+### FD Presence/abcense MEDITERRANEAN ####
+x11()
+read.csv("results/GLMs auto FD Med.csv", sep=";") %>% # table with glm model results from script 7
+  convert_as_factor(trait, data_type,term) %>%
+  filter(!term == "(Intercept)")%>%
+  filter(!term == "scale(auto)")%>%
+  filter(!trait == "alltraits")%>%
+  mutate(trait= fct_recode(trait, "LDMC"= "LDMC", "SLA"="SLA", "Constant Temp"= "Tconstant",
+                           "Water stress"="WP", "Adult plant"="Wplanttraits", "Darkness"="dark",
+                           "Germ traits" = "germtraits", "Leaf area"= "leafarea", 
+                           "Plant height"= "plantheight", "Seed mass"= "seedmass"))%>%
+  mutate (trait = fct_relevel(trait, "Germ traits", "Darkness", "Water stress", "Constant Temp",
+                              "Adult plant", "Seed mass", "Plant height", "Leaf area", "LDMC", "SLA"))%>%
+  mutate(term= fct_recode(term, "Elevation" = "scale(elevation)", "FDD"="scale(FDD)",
+                          "GDD"="scale(GDD)", "Snow"="scale(Snw)", "Disturbance" = "scale(disturbance)"))%>%
+  mutate(CI = 1.96*std.error)%>% # confidence interval multiply 1.96 per std error
+  mutate(CImin = estimate-CI, 
+         CImax= estimate+CI)%>%
+  mutate(color = case_when(CImin>0 & CImax>0 ~ "deepskyblue",
+                           CImin<0 & CImax<0~ "deepskyblue",
+                           TRUE ~"grey"))%>%
+  ggplot(aes(x= term, y =estimate, ymin = CImin, ymax = CImax))+
+  geom_errorbar (aes(color=color),width = 0, linewidth =1.2) + #, color="black" 
+  geom_point(aes(color=color), size = 3) +#
+  scale_color_manual (values = c("deepskyblue"="deepskyblue","deepskyblue"="deepskyblue", "grey"= "grey" ))+
+  facet_grid (data_type~trait,  scales = "free_x") + #ncol = 8, nrow =2,
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth =1, color = "red") +
+  coord_flip() +
+  labs(y = "Parameter estimate", title = "Mediterranean community") + # Temperate   Mediterranean
+  theme_classic (base_size = 12)+#ggthemes::theme_tufte(base_size = 14) +
+  theme(text = element_text(family = "sans"),
+        plot.title = element_text (size = 20),
+        strip.text = element_text( size = 16), #face = "bold",
+        strip.text.y = element_text(size = 14),
+        legend.position = "none",
+        strip.background = element_blank (),
+        panel.background = element_rect(color = "black", fill = NULL),
+        plot.tag.position = c(0.015,1),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 10, color = "black", angle = 30),
+        axis.text.y = element_text(size = 16, color = "black"),
+        axis.title.x = element_text (size=14))
+
+### FD Presence/abcense Temperate ####
+x11()
+read.csv("results/GLMs auto FD Tem.csv", sep=";") %>% # table with glm model results from script 7
+  convert_as_factor(trait, data_type,term) %>%
+  filter(!term == "(Intercept)")%>%
+  filter(!term == "scale(auto)")%>%
+  filter(!trait == "alltraits")%>%
+  mutate(trait= fct_recode(trait, "LDMC"= "LDMC", "SLA"="SLA", "Constant Temp"= "Tconstant",
+                           "Water stress"="WP", "Adult plant"="Wplanttraits", "Darkness"="dark",
+                           "Germ traits" = "germtraits", "Leaf area"= "leafarea", 
+                           "Plant height"= "plantheight", "Seed mass"= "seedmass"))%>%
+  mutate (trait = fct_relevel(trait, "Germ traits", "Darkness", "Water stress", "Constant Temp",
+                              "Adult plant", "Seed mass", "Plant height", "Leaf area", "LDMC", "SLA"))%>%
+  mutate(term= fct_recode(term, "Elevation" = "scale(elevation)", "FDD"="scale(FDD)",
+                          "GDD"="scale(GDD)", "Snow"="scale(Snw)", "Disturbance" = "scale(disturbance)"))%>%
+  mutate(CI = 1.96*std.error)%>% # confidence interval multiply 1.96 per std error
+  mutate(CImin = estimate-CI, 
+         CImax= estimate+CI)%>%
+  mutate(color = case_when(CImin>0 & CImax>0 ~ "deepskyblue",
+                           CImin<0 & CImax<0~ "deepskyblue",
+                           TRUE ~"grey"))%>%
+  ggplot(aes(x= term, y =estimate, ymin = CImin, ymax = CImax))+
+  geom_errorbar (aes(color=color),width = 0, linewidth =1.2) + #, color="black" 
+  geom_point(aes(color=color), size = 3) +#
+  scale_color_manual (values = c("deepskyblue"="deepskyblue","deepskyblue"="deepskyblue", "grey"= "grey" ))+
+  facet_grid (data_type~trait,  scales = "free_x") + #ncol = 8, nrow =2,
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth =1, color = "red") +
+  coord_flip() +
+  labs(y = "Parameter estimate", title = "Temperate community") + # Temperate   Mediterranean
+  theme_classic (base_size = 12)+#ggthemes::theme_tufte(base_size = 14) +
+  theme(text = element_text(family = "sans"),
+        plot.title = element_text (size = 20),
+        strip.text = element_text( size = 16), #face = "bold",
+        strip.text.y = element_text(size = 14),
+        legend.position = "none",
+        strip.background = element_blank (),
+        panel.background = element_rect(color = "black", fill = NULL),
+        plot.tag.position = c(0.015,1),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 10, color = "black", angle = 30),
+        axis.text.y = element_text(size = 16, color = "black"),
+        axis.title.x = element_text (size=14))
