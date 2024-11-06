@@ -45,27 +45,12 @@ germtraits.dist.M <- gowdis(sp_x_trait_M[,6:8])
 # info from https://cran.r-project.org/web/packages/gawdis/vignettes/gawdis.html
 Wplanttraits.dist.M<-gawdis::gawdis(sp_x_trait_M[,1:5], w.type = "optimized", opti.maxiter = 200, 
                                      groups.weight=T, groups = c(1,2, 3, 3, 3))#
-rm(all.traits.dist.M)
+
 # all traits distance matrix 
 alltraits.dist.M <- gawdis::gawdis(as.data.frame(sp_x_trait_M[,1:8]), w.type = "optimized", opti.maxiter = 200, 
                                     groups.weight=T, groups = c(1,2, 3, 3, 3, 4, 5, 6))
 
-# check distribution of distances germ vs plant (not necessary?)
-as.matrix(germ.traits.dist.M)%>%
-  as.data.frame(germ.traits.dist.M)%>%
-  gather(sp, germ.dist, 1:18)%>%
-  cbind((as.matrix(plant.traits.weighted.dist.M)%>%
-          as.data.frame(plant.traits.weighted.dist.M)%>%
-          gather(sp, plant.dist, 1:18)))%>%
-  dplyr::select(1,2,4)%>%
-  gather(trait, dist, germ.dist:plant.dist)%>%
-  filter(dist>0)%>%
-  ggplot(aes(dist, fill=trait))+
-  #geom_density(alpha= 0.5)+
-  geom_histogram(color = "black")+
-  scale_fill_manual(values = c("dodgerblue4","limegreen"))
-
-# 5.5. Calculation of MDP (main pairwise dissimilarity) with melodic function ####
+# 5.5. Calculation of MDP (main pairwise dissimilarity) each trait with melodic function ####
 # Use of melodic function to compute both weighted and unweighted forms of MPD 
 # activate function from melodic.R script in src folder
 ## 5.5. Calculation of MDP for individual traits
@@ -370,21 +355,8 @@ Wplanttraits.dist.T<-gawdis(sp_x_trait_T[,1:5], w.type = "optimized", opti.maxit
 alltraits.dist.T <- gawdis::gawdis(as.data.frame(sp_x_trait_T[,1:8]), w.type = "optimized", opti.maxiter = 200, 
                                     groups.weight=T, groups = c(1,2, 3, 3, 3, 4, 5, 6))
 
-# check distribution of distances germ vs plant
-as.matrix(germtraits.dist.T)%>%
-  as.data.frame(germtraits.dist.T)%>%
-  gather(sp, germ.dist, 1:25)%>%
-  cbind((as.matrix(Wplanttraits.dist.T)%>%
-           as.data.frame(Wplanttraits.dist.T)%>%
-           gather(sp, plant.dist, 1:25)))%>%
-  dplyr::select(1,2,4)%>%
-  gather(trait, dist, germ.dist:plant.dist)%>%
-  filter(dist>0)%>%
-  ggplot(aes(dist, fill=trait))+
-  #geom_density(alpha= 0.5)+
-  geom_histogram(color = "black")+
-  scale_fill_manual(values = c("dodgerblue4","limegreen"))
-# 5.5. Calculation of MDP (main pairwise dissimilarity) with melodic function ####
+
+# 5.5. Calculation of MDP (main pairwise dissimilarity) each trait with melodic function ####
 # Use of melodic function to compute both weighted and no weighted forms of MPD and Rao
 # activate function from melodic.R script in src folder
 ## 5.5. Calculation of MDP for individual traits
@@ -439,7 +411,7 @@ MPD.T(dark.dist.T, plot_x_sp_T)%>%
 x11()
 ## 5.5.1 Germ traits####
 plot_x_sp_T <- as.data.frame(plot_x_sp_T)
-germ.melodic.T <- melodic(plot_x_sp_T, germ.traits.dist.T)
+germ.melodic.T <- melodic(plot_x_sp_T, germtraits.dist.T)
 str(germ.melodic.T)
 
 # germ melodic object data handling
@@ -453,7 +425,7 @@ as.data.frame(germ.melodic.T$abundance$mpd) %>%
   dplyr::select(site, plot, Germ.Mpd.ab, Germ.Mpd.pa,  elevation, FDD, GDD, Snw)-> FD.germ.T
 
 ## 5.5.2 Plant traits Weighted  ####
-weighted.plant.melodic.T <- melodic(plot_x_sp_T, plant.traits.weighted.dist.T)
+weighted.plant.melodic.T <- melodic(plot_x_sp_T, Wplanttraits.dist.T)
 str(weighted.plant.melodic.T)
 
 # plant melodic object data handling

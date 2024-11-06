@@ -40,9 +40,7 @@ plot(glm1.auto)
 ### attemps to speed up the process #####
 # try to combine data sets an run a loop group datasets with same plot subsets and coordinates
 # meaning CM and CWM restricted dataset (separate per each community)
-# CM_ext extended dataset apart
 # FD apart due to add disturbance as explanatory variable
-
 ###### CM and CWM MEDITERRANEAN ####
 read.csv("data/spatial-survey-header-Med.csv")%>%
   filter(plot%in%spatial_env_med$plot)%>% 
@@ -74,33 +72,7 @@ glms.auto.M <- function(x) {
   broom::tidy(glm1.auto)
 }
 
-###### CM_ext MEDITERRANEAN ####
-read.csv("data/spatial-survey-header-Med.csv")%>%
-  filter(plot%in%spatial_env_med_extended$plot)%>% 
-  dplyr::select(longitude, latitude)%>% 
-  as.matrix ()->longlat_M_ext # matrix with coordenates of Mediterranean plots
-
-glms.auto.M.ext <- function(x) {
-  glm1 <- glm(CM_ext ~ scale(elevation) +scale(FDD) + scale(GDD) +  scale(Snw), data = x) 
-  autocov <- autocov_dist(glm1$residuals, longlat_M_ext , nbs = 5, type= "inverse", style = "B", zero.policy = T, longlat = TRUE)
-  x$auto <- autocov
-  glm1.auto<- glm(CM_ext ~ scale(elevation) + scale(FDD) + scale(GDD) +  scale(Snw) + scale(auto), data = x)
-  broom::tidy(glm1.auto)
-}
-
-CM_M_ext%>%
-  rownames_to_column(var = "plot")%>%
-  gather(trait, CM_ext, seed_mass:odds_D_constant)%>%
-  merge(plot_x_env_M2_ext) %>%
-  merge(read.csv("data/spatial-survey-header-Med.csv"), by = c("plot", "elevation"))%>%
-  dplyr::select(site, plot, latitude, longitude,
-                trait, CM_ext,
-                Snw, FDD, GDD, elevation)%>%
-  group_by(trait)%>%
-  do(glms.auto.M.ext(.))%>%
-  write.csv("results/GLMs auto Med ext.csv")
-
-## FD in Mediterranan ####
+## FD in Mediterranean ####
 read.csv("data/spatial-survey-header-Med.csv")%>%
   filter(plot%in%spatial_env_med$plot)%>% 
   dplyr::select(longitude, latitude)%>% 
@@ -164,32 +136,6 @@ glms.auto.T <- function(x) {
   glm1.auto<- glm(value ~ scale(elevation) + scale(FDD) + scale(GDD) +  scale(Snw) + scale(auto), data = x)
   broom::tidy(glm1.auto)
 }
-
-###### CM_ext Temperate ####
-read.csv("data/spatial-survey-header-Tem.csv", sep= ";")%>%
-  filter(plot%in%spatial_env_tem_extended$plot)%>% 
-  dplyr::select(longitude, latitude)%>% 
-  as.matrix ()->longlat_T_ext# matrix with coordenates of Temperate plots
-
-glms.auto.T.ext <- function(x) {
-  glm1 <- glm(CM_ext ~ scale(elevation) +scale(FDD) + scale(GDD) +  scale(Snw), data = x) 
-  autocov <- autocov_dist(glm1$residuals, longlat_T_ext , nbs = 5, type= "inverse", style = "B", zero.policy = T, longlat = TRUE)
-  x$auto <- autocov
-  glm1.auto<- glm(CM_ext ~ scale(elevation) + scale(FDD) + scale(GDD) +  scale(Snw) + scale(auto), data = x)
-  broom::tidy(glm1.auto)
-}
-
-CM_T_ext%>%
-  rownames_to_column(var = "plot")%>%
-  gather(trait, CM_ext, seed_mass:odds_D_constant)%>%
-  merge(plot_x_env_T2_ext) %>%
-  merge(read.csv("data/spatial-survey-header-Tem.csv", sep = ";"))%>%
-  dplyr::select(site, plot, latitude, longitude,
-                trait, CM_ext,
-                Snw, FDD, GDD, elevation)%>%
-  group_by(trait)%>%
-  do(glms.auto.T.ext(.))%>%
-  write.csv("results/GLMs auto Tem ext.csv")
 
 ## FD in Temperate ####
 read.csv("data/spatial-survey-header-Tem.csv", sep= ";")%>%
@@ -330,7 +276,7 @@ read.csv("results/GLMs auto Tem.csv", sep =";")%>%
         axis.title.x = element_text (size=14))
 
 
-### FD Presence/abcense MEDITERRANEAN ####
+### FD Presence - abundance MEDITERRANEAN ####
 x11()
 read.csv("results/GLMs auto FD Med.csv", sep=";") %>% # table with glm model results from script 7
   convert_as_factor(trait, data_type,term) %>%
@@ -373,7 +319,7 @@ read.csv("results/GLMs auto FD Med.csv", sep=";") %>% # table with glm model res
         axis.text.y = element_text(size = 16, color = "black"),
         axis.title.x = element_text (size=14))
 
-### FD Presence/abcense Temperate ####
+### FD Presence - abundance Temperate ####
 x11()
 read.csv("results/GLMs auto FD Tem.csv", sep=";") %>% # table with glm model results from script 7
   convert_as_factor(trait, data_type,term) %>%
