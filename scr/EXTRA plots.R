@@ -431,12 +431,34 @@ trait_names <- c("odds_B_dark" = "Darkness","odds_C_WP" = "Water stress",
                  "odds_D_constant" = "Constant Temp","seed_mass" = "Seed mass",
                  "plant_height" = "Plant height", "leaf_area" = "Leaf area",
                  "LDMC" = "LDMC", "SLA" = "SLA", "elevation"= "Elevation", 
-                 "FDD" = "FDD", "GDD"="GDD", "Snow"="Snow")
-
-CM_microclima_M%>%
-  rename(CM = value)%>%
-  merge(CWM_microclima_M, by = c("site", "plot", "micro_variable", "value_micro", "trait"))%>%
-  rename(CWM = value)%>%
+                 "FDD" = "FDD", "GDD"="GDD", "Snw"="Snow")
+read.csv("results/GLMs auto Med.csv", sep= ",")%>%
+  filter(!term == "(Intercept)")%>%
+  filter(!term == "scale(auto)")%>%
+  mutate(term= factor(term))%>%
+  mutate(term= fct_recode(term, "elevation" = "scale(elevation)", "FDD"="scale(FDD)",
+                          "GDD"="scale(GDD)", "Snw"="scale(Snw)"))%>%
+  rename(micro_variable=term)%>%
+  filter(p.value<0.059)%>%
+  mutate(graph= "significant")%>%
+  dplyr::select(trait, community_metric, micro_variable, graph)-> sig.com.M
+x11()
+CM_M%>%
+  rownames_to_column(var = "plot")%>%
+  gather(trait, CM, seed_mass:odds_D_constant)%>%
+  merge(CWM_M%>%
+          rownames_to_column(var = "plot")%>%
+          gather(trait, CWM, seed_mass:odds_D_constant))%>%
+  full_join(plot_x_env_M2) %>%
+  merge(read.csv("data/spatial-survey-header-Med.csv"), by = c("plot", "elevation"))%>%
+  dplyr::select(site, plot, latitude, longitude,
+                trait, CM, CWM, 
+                Snw, FDD, GDD, elevation)%>%
+  gather(community_metric, value, CM:CWM)%>%
+  gather(micro_variable, value_micro, Snw:elevation)%>%
+  full_join(sig.com.M)%>%
+  filter(graph=="significant")%>%
+  spread(community_metric, value)%>%
   mutate(trait = factor(trait))%>%
   mutate(trait = fct_relevel(trait, "odds_B_dark","odds_C_WP","odds_D_constant",
                              "seed_mass","plant_height", 
@@ -450,17 +472,18 @@ CM_microclima_M%>%
                                       "seed_mass","plant_height", 
                                       "leaf_area", "LDMC", "SLA"))~micro_variable, scales = "free", 
              labeller = as_labeller(trait_names))+
-  geom_text(data=ann.sig.CM.M, label =ann.sig.CM.M$label, aes(x=x, y=y),size= 6, color = "black")+
-  geom_text(data=ann.sig.CWM.M, label =ann.sig.CWM.M$label, aes(x=x, y=y),size= 6, color = "grey")+
+  #geom_text(data=ann.sig.CM.M, label =ann.sig.CM.M$label, aes(x=x, y=y),size= 6, color = "black")+
+  #geom_text(data=ann.sig.CWM.M, label =ann.sig.CWM.M$label, aes(x=x, y=y),size= 6, color = "grey")+
   #labs(title="Community Means in Mediterranean system")+
   scale_color_manual (name = "Community metrics", values = c("black"="black", "grey"="grey"), 
                       labels = c("CM", "CWM"), guide= guide_legend(theme=theme(legend.title.position = "top")))+
   theme_classic(base_size = 16)+
+  labs(title= "Mediterranean significant community metrics")+
   theme(strip.text = element_text(size =12),
         strip.background = element_blank(),
         panel.background = element_rect(color = "black", fill = NULL),
         axis.title = element_blank(),
-        #axis.text= element_blank(),
+        axis.text= element_text(size=10),
         axis.ticks = element_blank(),
         legend.position = "bottom")
 
