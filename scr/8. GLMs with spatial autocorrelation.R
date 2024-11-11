@@ -1,6 +1,6 @@
 library(tidyverse);library(ggplot2);library(dplyr);library(rstatix)
 library(lubridate);library(FD); library(psych);library(picante);library(vegan)
-library (gawdis); library(glmm); library(spdep) # para crear la autocovariate
+library (gawdis); library(glmm); library (lme4); library(spdep) # para crear la autocovariate
 library(glmmTMB); library (DHARMa) # paquetes para los GLMs
 
  ####################### MEDITERRANEAN ##########################################
@@ -40,7 +40,7 @@ plot(glm1.auto)
 ### attemps to speed up the process #####
 # try to combine data sets an run a loop group datasets with same plot subsets and coordinates
 # meaning CM and CWM restricted dataset (separate per each community)
-# FD apart due to add disturbance as explanatory variable
+# FD apart due to 2 extra additional traits  (germ vs plant) as explanatory variable
 ###### CM and CWM MEDITERRANEAN ####
 read.csv("data/spatial-survey-header-Med.csv")%>%
   filter(plot%in%spatial_env_med$plot)%>% 
@@ -59,7 +59,7 @@ CM_M%>%
                 trait, CM, CWM, 
                 Snw, FDD, GDD, elevation)%>%
   gather(community_metric, value, CM:CWM)%>%
-  group_by(trait, community_metric)%>%
+  group_by(trait,community_metric)%>%
   do(glms.auto.M(.))%>%
   write.csv("results/GLMs auto Med.csv")
   
@@ -72,6 +72,7 @@ glms.auto.M <- function(x) {
   broom::tidy(glm1.auto)
 }
 
+
 ## FD in Mediterranean ####
 read.csv("data/spatial-survey-header-Med.csv")%>%
   filter(plot%in%spatial_env_med$plot)%>% 
@@ -79,10 +80,10 @@ read.csv("data/spatial-survey-header-Med.csv")%>%
   as.matrix ()->longlat_M
 
 glms.FD.M <- function(x) {
-  glm1 <- glm(MPD ~ scale(elevation) +scale(FDD) + scale(GDD) +  scale(Snw) + scale(disturbance), data = x) 
+  glm1 <- glm(MPD ~ scale(elevation) +scale(FDD) + scale(GDD) +  scale(Snw), data = x) 
   autocov <- autocov_dist(glm1$residuals, longlat_M , nbs = 5, type= "inverse", style = "B", zero.policy = T, longlat = TRUE)
   x$auto <- autocov
-  glm1.auto<- glm(MPD ~ scale(elevation) + scale(FDD) + scale(GDD) +  scale(Snw) + scale(disturbance) + scale(auto), data = x)
+  glm1.auto<- glm(MPD ~ scale(elevation) + scale(FDD) + scale(GDD) +  scale(Snw) + scale(auto), data = x)
   broom::tidy(glm1.auto)
 }
 MPD.M(dark.dist.M, plot_x_sp_M)%>% # check function in script 7. 
@@ -95,13 +96,13 @@ MPD.M(dark.dist.M, plot_x_sp_M)%>% # check function in script 7.
   rbind(MPD.M(LDMC.dist.M, plot_x_sp_M))%>%
   rbind(MPD.M(SLA.dist.M, plot_x_sp_M))%>%
   rbind(MPD.M(Wplanttraits.dist.M, plot_x_sp_M))%>%
-  rbind(MPD.M(alltraits.dist.M, plot_x_sp_M))%>%
+  #rbind(MPD.M(alltraits.dist.M, plot_x_sp_M))%>%
   gather(data_type, MPD, Abundance:Presence)%>%
   mutate(trait = gsub(".dist.M", "" , trait))%>%
   merge(read.csv("data/spatial-survey-header-Med.csv"), by = c("plot", "elevation"))%>%
   dplyr::select(site, plot, latitude, longitude,
                 trait, data_type, MPD, 
-                elevation,FDD, GDD, Snw,  disturbance)%>%
+                elevation,FDD, GDD, Snw)%>%
   group_by(trait, data_type)%>%
   do(glms.FD.M (.))%>%
   write.csv("results/GLMs auto FD Med.csv")
@@ -144,10 +145,10 @@ read.csv("data/spatial-survey-header-Tem.csv", sep= ";")%>%
   as.matrix ()->longlat_T
 
 glms.FD.T <- function(x) {
-  glm1 <- glm(MPD ~ scale(elevation) +scale(FDD) + scale(GDD) +  scale(Snw) + scale(disturbance), data = x) 
+  glm1 <- glm(MPD ~ scale(elevation) +scale(FDD) + scale(GDD) +  scale(Snw), data = x) 
   autocov <- autocov_dist(glm1$residuals, longlat_T , nbs = 5, type= "inverse", style = "B", zero.policy = T, longlat = TRUE)
   x$auto <- autocov
-  glm1.auto<- glm(MPD ~ scale(elevation) + scale(FDD) + scale(GDD) +  scale(Snw) + scale(disturbance) + scale(auto), data = x)
+  glm1.auto<- glm(MPD ~ scale(elevation) + scale(FDD) + scale(GDD) +  scale(Snw) + scale(auto), data = x)
   broom::tidy(glm1.auto)
 }
 MPD.T(dark.dist.T, plot_x_sp_T)%>%
@@ -160,13 +161,12 @@ MPD.T(dark.dist.T, plot_x_sp_T)%>%
   rbind(MPD.T(LDMC.dist.T, plot_x_sp_T))%>%
   rbind(MPD.T(SLA.dist.T, plot_x_sp_T))%>%
   rbind(MPD.T(Wplanttraits.dist.T, plot_x_sp_T))%>%
-  rbind(MPD.T(alltraits.dist.T, plot_x_sp_T))%>%
   gather(data_type, MPD, Abundance:Presence)%>%
   mutate(trait = gsub(".dist.T", "" , trait))%>%
   merge(read.csv("data/spatial-survey-header-Tem.csv", sep = ";"), by = c("plot", "elevation"))%>%
   dplyr::select(site, plot, latitude, longitude,
                 trait, data_type, MPD, 
-                elevation,FDD, GDD, Snw,  disturbance)%>%
+                elevation,FDD, GDD, Snw)%>%
   group_by(trait, data_type)%>%
   do(glms.FD.T (.))%>%
   write.csv("results/GLMs auto FD Tem.csv")
@@ -180,17 +180,14 @@ effect_names <- c("odds_B_dark" = "Darkness","odds_C_WP" = "Water stress",
                   "LDMC" = "LDMC", "SLA" = "SLA", "CM_ext"= "Community Means Extended",
                   "CM" = "Communty Means", "CWM"="Community Weighted Means")
 x11()
-read.csv("results/GLMs auto Med.csv", sep =";")%>%
+read.csv("results/GLMs auto Med.csv", sep =",")%>%
   mutate(data_type = ifelse(community_metric== "CM", "Presence", "Abundance"))%>%
-  rbind(read.csv("results/GLMs auto Med ext.csv", sep =";")%>%
-           mutate(data_type = "Presence", 
-                  community_metric = "CM_ext"))%>%
   mutate(trait = factor(trait))%>%
   mutate(trait = fct_relevel(trait, "odds_B_dark","odds_C_WP","odds_D_constant",
                              "seed_mass","plant_height", 
                              "leaf_area", "LDMC", "SLA"))%>%
   mutate(community_metric = factor(community_metric))%>%
-  mutate(community_metric = fct_relevel(community_metric, "CM_ext", "CM", "CWM"))%>%
+  mutate(community_metric = fct_relevel(community_metric, "CM", "CWM"))%>%
   filter(!term == "(Intercept)")%>%
   filter(!term == "scale(auto)")%>%
   mutate(term= factor(term))%>%
@@ -233,15 +230,12 @@ effect_names <- c("odds_B_dark" = "Darkness","odds_C_WP" = "Water stress",
 x11()
 read.csv("results/GLMs auto Tem.csv", sep =";")%>%
   mutate(data_type = ifelse(community_metric== "CM", "Presence", "Abundance"))%>%
-  rbind(read.csv("results/GLMs auto Tem ext.csv", sep =";")%>%
-          mutate(data_type = "Presence", 
-                 community_metric = "CM_ext"))%>%
   mutate(trait = factor(trait))%>%
   mutate(trait = fct_relevel(trait, "odds_B_dark","odds_C_WP","odds_D_constant",
                              "seed_mass","plant_height", 
                              "leaf_area", "LDMC", "SLA"))%>%
   mutate(community_metric = factor(community_metric))%>%
-  mutate(community_metric = fct_relevel(community_metric, "CM_ext", "CM", "CWM"))%>%
+  mutate(community_metric = fct_relevel(community_metric, "CM", "CWM"))%>%
   filter(!term == "(Intercept)")%>%
   filter(!term == "scale(auto)")%>%
   mutate(term= factor(term))%>%
@@ -278,11 +272,10 @@ read.csv("results/GLMs auto Tem.csv", sep =";")%>%
 
 ### FD Presence - abundance MEDITERRANEAN ####
 x11()
-read.csv("results/GLMs auto FD Med.csv", sep=";") %>% # table with glm model results from script 7
+read.csv("results/GLMs auto FD Med.csv", sep=",") %>% # table with glm model results from script 7
   convert_as_factor(trait, data_type,term) %>%
   filter(!term == "(Intercept)")%>%
   filter(!term == "scale(auto)")%>%
-  filter(!trait == "alltraits")%>%
   mutate(trait= fct_recode(trait, "LDMC"= "LDMC", "SLA"="SLA", "Constant Temp"= "Tconstant",
                            "Water stress"="WP", "Adult plant"="Wplanttraits", "Darkness"="dark",
                            "Germ traits" = "germtraits", "Leaf area"= "leafarea", 
@@ -290,7 +283,7 @@ read.csv("results/GLMs auto FD Med.csv", sep=";") %>% # table with glm model res
   mutate (trait = fct_relevel(trait, "Germ traits", "Darkness", "Water stress", "Constant Temp",
                               "Adult plant", "Seed mass", "Plant height", "Leaf area", "LDMC", "SLA"))%>%
   mutate(term= fct_recode(term, "Elevation" = "scale(elevation)", "FDD"="scale(FDD)",
-                          "GDD"="scale(GDD)", "Snow"="scale(Snw)", "Disturbance" = "scale(disturbance)"))%>%
+                          "GDD"="scale(GDD)", "Snow"="scale(Snw)"))%>%
   mutate(CI = 1.96*std.error)%>% # confidence interval multiply 1.96 per std error
   mutate(CImin = estimate-CI, 
          CImax= estimate+CI)%>%
@@ -321,7 +314,7 @@ read.csv("results/GLMs auto FD Med.csv", sep=";") %>% # table with glm model res
 
 ### FD Presence - abundance Temperate ####
 x11()
-read.csv("results/GLMs auto FD Tem.csv", sep=";") %>% # table with glm model results from script 7
+read.csv("results/GLMs auto FD Tem.csv", sep=",") %>% # table with glm model results from script 7
   convert_as_factor(trait, data_type,term) %>%
   filter(!term == "(Intercept)")%>%
   filter(!term == "scale(auto)")%>%
@@ -333,7 +326,7 @@ read.csv("results/GLMs auto FD Tem.csv", sep=";") %>% # table with glm model res
   mutate (trait = fct_relevel(trait, "Germ traits", "Darkness", "Water stress", "Constant Temp",
                               "Adult plant", "Seed mass", "Plant height", "Leaf area", "LDMC", "SLA"))%>%
   mutate(term= fct_recode(term, "Elevation" = "scale(elevation)", "FDD"="scale(FDD)",
-                          "GDD"="scale(GDD)", "Snow"="scale(Snw)", "Disturbance" = "scale(disturbance)"))%>%
+                          "GDD"="scale(GDD)", "Snow"="scale(Snw)"))%>%
   mutate(CI = 1.96*std.error)%>% # confidence interval multiply 1.96 per std error
   mutate(CImin = estimate-CI, 
          CImax= estimate+CI)%>%

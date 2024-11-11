@@ -46,7 +46,7 @@ germtraits.dist.M <- gowdis(sp_x_trait_M[,6:8])
 Wplanttraits.dist.M<-gawdis::gawdis(sp_x_trait_M[,1:5], w.type = "optimized", opti.maxiter = 200, 
                                      groups.weight=T, groups = c(1,2, 3, 3, 3))#
 
-# all traits distance matrix 
+# all traits distance matrix (not used)
 alltraits.dist.M <- gawdis::gawdis(as.data.frame(sp_x_trait_M[,1:8]), w.type = "optimized", opti.maxiter = 200, 
                                     groups.weight=T, groups = c(1,2, 3, 3, 3, 4, 5, 6))
 
@@ -75,6 +75,7 @@ for (i in matrix.list.M) {
   MPD.M(i,plot_x_sp_M )
 }
 
+# More manual but working!!
 MPD.M(dark.dist.M, plot_x_sp_M)%>%
   rbind(MPD.M(WP.dist.M, plot_x_sp_M))%>%
   rbind(MPD.M(Tconstant.dist.M, plot_x_sp_M))%>%
@@ -85,7 +86,6 @@ MPD.M(dark.dist.M, plot_x_sp_M)%>%
   rbind(MPD.M(LDMC.dist.M, plot_x_sp_M))%>%
   rbind(MPD.M(SLA.dist.M, plot_x_sp_M))%>%
   rbind(MPD.M(Wplanttraits.dist.M, plot_x_sp_M))%>%
-  rbind(MPD.M(alltraits.dist.M, plot_x_sp_M))%>%
   gather(data_type, MPD, Abundance:Presence)%>%
   mutate(trait = gsub(".dist.M", "" , trait))%>%
   group_by(trait, data_type)%>%
@@ -386,7 +386,6 @@ MPD.T(dark.dist.T, plot_x_sp_T)%>%
   rbind(MPD.T(LDMC.dist.T, plot_x_sp_T))%>%
   rbind(MPD.T(SLA.dist.T, plot_x_sp_T))%>%
   rbind(MPD.T(Wplanttraits.dist.T, plot_x_sp_T))%>%
-  rbind(MPD.T(alltraits.dist.T, plot_x_sp_T))%>%
   gather(data_type, MPD, Abundance:Presence)%>%
   mutate(trait = gsub(".dist.T", "" , trait))%>%
   group_by(trait, data_type)%>%
@@ -590,46 +589,3 @@ ggsave(filename = "Richness_Tem.png", plot =richness_T , path = "results/prelimi
 
 
 
-
-########## Effect size plots for functional diversity ########### #####
-FD_names <- c("Germ.Mpd" = "Germ.Mpd", "Plant.Mpd" = "Plant.Mpd",
-              "abundance" = "Abundace data", "presence_absence"="Presence/Absence data")
-
-
-x11()
-read.csv("results/lm FD estimates graphs.csv", sep=";") %>% # table with lm model results from script 7
-  convert_as_factor(community, data, Func.div, term) %>%
-  #mutate(trait = fct_relevel(Func.div, ))%>%
-  mutate(term=fct_recode(term, "Elevation"="elevation", 
-                         "FDD" = "FDD", "GDD"="GDD", "Snow"="Snw"))%>%
-  filter(community == "Mediterranean")%>%
-  mutate(CI = 1.96*std.error)%>% # confidence interval multiply 1.96 per std error
-  mutate(CImin = estimate-CI, 
-         CImax= estimate+CI)%>%
-  mutate(color = case_when(CImin>0 & CImax>0 ~ "deepskyblue",
-                           CImin<0 & CImax<0~ "deepskyblue",
-                           TRUE ~"grey"))%>%
-  ggplot(aes(x= term, y =estimate, ymin = CImin, ymax = CImax))+
-  geom_errorbar (aes(color=color),width = 0, linewidth =1.2) + #, color="black" 
-  geom_point(aes(color=color), size = 3) +#
-  scale_color_manual (values = c("deepskyblue"="deepskyblue","deepskyblue"="deepskyblue", "grey"= "grey" ))+
-  facet_grid (data~Func.div,labeller = as_labeller(FD_names),  scales = "free_x") + #ncol = 8, nrow =2,
-  geom_hline(yintercept = 0, linetype = "dashed", linewidth =1, color = "red") +
-  coord_flip() +
-  labs(y = "Parameter estimate", title = "Mediterranean community") + # Temperate   Mediterranean
-  theme_classic (base_size = 12)+#ggthemes::theme_tufte(base_size = 14) +
-  theme(text = element_text(family = "sans"),
-        plot.title = element_text (size = 20),
-        strip.text = element_text( size = 16), #face = "bold",
-        strip.text.y = element_text(size = 14),
-        legend.position = "none",
-        strip.background = element_blank (),
-        panel.background = element_rect(color = "black", fill = NULL),
-        plot.tag.position = c(0.015,1),
-        axis.title.y = element_blank(),
-        axis.text.x = element_text(size = 10, color = "black", angle = 30),
-        axis.text.y = element_text(size = 16, color = "black"),
-        axis.title.x = element_text (size=14))-> FDsig_M; FDsig_M   #FDsig_T  FDsig_M
-
-ggsave(FDsig_M, file = "Mediterranean community FD significances.png", 
-       path = "results/preliminar graphs", scale = 1,dpi = 600) 
