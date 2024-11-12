@@ -426,12 +426,13 @@ for (var in unique(CWM_microclima_T$micro_variable)){
          path = "results/preliminar graphs", scale = 1, width = 360, height = 250, units = "mm", dpi = 600)
 }
 
-# Visualization as de Bello 2013 foe community metrics (problem with FD, different scale) #####
+# Visualization as de Bello 2013 foe community metrics (problem with FD, different scale) supplementary? #####
 trait_names <- c("odds_B_dark" = "Darkness","odds_C_WP" = "Water stress",
                  "odds_D_constant" = "Constant Temp","seed_mass" = "Seed mass",
                  "plant_height" = "Plant height", "leaf_area" = "Leaf area",
                  "LDMC" = "LDMC", "SLA" = "SLA", "elevation"= "Elevation", 
                  "FDD" = "FDD", "GDD"="GDD", "Snw"="Snow")
+## Med community metrics with significances
 read.csv("results/GLMs auto Med.csv", sep= ",")%>%
   filter(!term == "(Intercept)")%>%
   filter(!term == "scale(auto)")%>%
@@ -442,6 +443,7 @@ read.csv("results/GLMs auto Med.csv", sep= ",")%>%
   filter(p.value<0.059)%>%
   mutate(graph= "significant")%>%
   dplyr::select(trait, community_metric, micro_variable, graph)-> sig.com.M
+
 x11()
 CM_M%>%
   rownames_to_column(var = "plot")%>%
@@ -464,10 +466,10 @@ CM_M%>%
                              "seed_mass","plant_height", 
                              "leaf_area", "LDMC", "SLA"))%>%
   ggplot()+
-  #geom_point(aes(y=CM, x= value_micro, color= "black" ),size =1, show.legend = T, alpha = 0.5)+
-  geom_smooth (aes(y=CM, x= value_micro, color = "black"),method = "lm", se=F, inherit.aes=F, linewidth =1.5)+
-  #geom_point(aes(y=CWM, x= value_micro,color= "grey"),  size =1, show.legend = T, alpha = 0.5)+
-  geom_smooth (aes(y=CWM, x= value_micro, color = "grey"),method = "lm", se=F, inherit.aes=F, linewidth =1.5)+
+  geom_point(aes(y=CM, x= value_micro, color= "black" ),size =1, show.legend = T, alpha = 0.5)+
+  geom_smooth (aes(y=CM, x= value_micro, color = "black"),method = "glm", se=F, inherit.aes=F, linewidth =1.5)+
+  geom_point(aes(y=CWM, x= value_micro,color= "grey"),  size =1, show.legend = T, alpha = 0.5)+
+  geom_smooth (aes(y=CWM, x= value_micro, color = "grey"),method = "glm", se=F, inherit.aes=F, linewidth =1.5)+
   facet_grid(factor(trait, levels = c("odds_B_dark","odds_C_WP","odds_D_constant",
                                       "seed_mass","plant_height", 
                                       "leaf_area", "LDMC", "SLA"))~micro_variable, scales = "free", 
@@ -478,7 +480,7 @@ CM_M%>%
   scale_color_manual (name = "Community metrics", values = c("black"="black", "grey"="grey"), 
                       labels = c("CM", "CWM"), guide= guide_legend(theme=theme(legend.title.position = "top")))+
   theme_classic(base_size = 16)+
-  labs(title= "Mediterranean significant community metrics")+
+  labs(title= "Mediterranean significant community metrics responses")+
   theme(strip.text = element_text(size =12),
         strip.background = element_blank(),
         panel.background = element_rect(color = "black", fill = NULL),
@@ -487,5 +489,207 @@ CM_M%>%
         axis.ticks = element_blank(),
         legend.position = "bottom")
 
+## Med FD with significances
+trait_names2 <- c("dark" = "Darkness","WP" = "Water stress",
+                 "Tconstant" = "Constant Temp","seedmass" = "Seed mass",
+                 "plantheight" = "Plant height", "leafarea" = "Leaf area",
+                 "LDMC" = "LDMC", "SLA" = "SLA", "elevation"= "Elevation", 
+                 "FDD" = "FDD", "GDD"="GDD", "Snw"="Snow")
+
+read.csv("results/GLMs auto FD Med.csv", sep= ",")%>%
+  filter(!term == "(Intercept)")%>%
+  filter(!term == "scale(auto)")%>%
+  mutate(term= factor(term))%>%
+  mutate(term= fct_recode(term, "elevation" = "scale(elevation)", "FDD"="scale(FDD)",
+                          "GDD"="scale(GDD)", "Snw"="scale(Snw)"))%>%
+  rename(micro_variable=term)%>%
+  filter(p.value<0.059)%>%
+  mutate(graph= "significant")%>%
+  dplyr::select(trait, data_type, micro_variable, graph)-> sig.FD.M
+
+MPD.M(dark.dist.M, plot_x_sp_M)%>% # check function in script 7. 
+  rbind(MPD.M(WP.dist.M, plot_x_sp_M))%>%
+  rbind(MPD.M(Tconstant.dist.M, plot_x_sp_M))%>%
+  rbind(MPD.M(germtraits.dist.M, plot_x_sp_M))%>%
+  rbind(MPD.M(seedmass.dist.M, plot_x_sp_M))%>%
+  rbind(MPD.M(plantheight.dist.M, plot_x_sp_M))%>%
+  rbind(MPD.M(leafarea.dist.M, plot_x_sp_M))%>%
+  rbind(MPD.M(LDMC.dist.M, plot_x_sp_M))%>%
+  rbind(MPD.M(SLA.dist.M, plot_x_sp_M))%>%
+  rbind(MPD.M(Wplanttraits.dist.M, plot_x_sp_M))%>%
+  gather(data_type, MPD, Abundance:Presence)%>%
+  mutate(trait = gsub(".dist.M", "" , trait))%>%
+  merge(read.csv("data/spatial-survey-header-Med.csv"), by = c("plot", "elevation"))%>%
+  dplyr::select(site, plot, latitude, longitude,
+                trait,MPD, data_type,
+                elevation,FDD, GDD, Snw)%>%
+  gather(micro_variable, value_micro, Snw:elevation)%>%
+  full_join(sig.FD.M)%>%
+  filter(graph=="significant")%>%
+  spread(data_type, MPD)%>%
+  rename(MPD.Abundance = Abundance)%>%
+  rename(MPD.Presence = Presence)%>%
+  filter(!trait == "germtraits")%>%
+  filter(!trait == "Wplanttraits")%>%
+  mutate(trait = factor(trait))%>%
+  mutate(trait = fct_relevel(trait, "dark","WP","Tconstant",
+                             "seedmass","plantheight", 
+                             "leafarea", "LDMC", "SLA"))%>%
+  ggplot()+
+  geom_point(aes(y=MPD.Presence, x= value_micro, color= "black" ),size =1, show.legend = T, alpha = 0.5)+
+  geom_smooth (aes(y=MPD.Presence, x= value_micro, color = "black"),method = "glm", se=F, inherit.aes=F, linewidth =1.5)+
+  geom_point(aes(y=MPD.Abundance, x= value_micro,color= "grey"),  size =1, show.legend = T, alpha = 0.5)+
+  geom_smooth (aes(y=MPD.Abundance, x= value_micro, color = "grey"),method = "glm", se=F, inherit.aes=F, linewidth =1.5)+
+  facet_grid(factor(trait, levels = c("dark","WP","Tconstant",
+                                      "seedmass","plantheight", 
+                                      "leafarea", "LDMC", "SLA"))~micro_variable, scales = "free", 
+             labeller = as_labeller(trait_names2))+
+  #geom_text(data=ann.sig.CM.M, label =ann.sig.CM.M$label, aes(x=x, y=y),size= 6, color = "black")+
+  #geom_text(data=ann.sig.CWM.M, label =ann.sig.CWM.M$label, aes(x=x, y=y),size= 6, color = "grey")+
+  #labs(title="Community Means in Mediterranean system")+
+  scale_color_manual (name = "Functional divergence data type", values = c("black"="black", "grey"="grey"), 
+                      labels = c("Presence/Absence", "Abundance"), guide= guide_legend(theme=theme(legend.title.position = "top")))+
+  theme_classic(base_size = 16)+
+  labs(title= "Mediterranean significant functional divergence responses")+
+  theme(strip.text = element_text(size =12),
+        strip.background = element_blank(),
+        panel.background = element_rect(color = "black", fill = NULL),
+        axis.title = element_blank(),
+        axis.text= element_text(size=10),
+        axis.ticks = element_blank(),
+        legend.position = "bottom")
+
+## all community metrics together
+CM_M%>%
+  rownames_to_column(var = "plot")%>%
+  gather(trait, CM, seed_mass:odds_D_constant)%>%
+  merge(CWM_M%>%
+          rownames_to_column(var = "plot")%>%
+          gather(trait, CWM, seed_mass:odds_D_constant))%>%
+  full_join(plot_x_env_M2) %>%
+  merge(read.csv("data/spatial-survey-header-Med.csv"), by = c("plot", "elevation"))%>%
+  dplyr::select(site, plot, latitude, longitude,
+                trait, CM, CWM, 
+                Snw, FDD, GDD, elevation)%>%
+  gather(community_metric, value, CM:CWM)%>%
+  gather(micro_variable, value_micro, Snw:elevation)%>%
+  full_join(sig.com.M)%>%
+  filter(graph=="significant")%>%
+  spread(community_metric, value)%>%
+  mutate(trait = factor(trait))%>%
+  mutate(trait = fct_relevel(trait, "odds_B_dark","odds_C_WP","odds_D_constant",
+                             "seed_mass","plant_height", 
+                             "leaf_area", "LDMC", "SLA"))%>%
+  mutate(trait = fct_recode(trait,"Darkness"="odds_B_dark","Water stress"="odds_C_WP",
+                            "Constant Temp"="odds_D_constant","Seed mass"= "seed_mass",
+                            "Plant height"="plant_height", "Leaf area"= "leaf_area", 
+                            "LDMC"="LDMC", "SLA"="SLA"))%>%
+  dplyr::select(site, plot, trait, micro_variable, value_micro, CM, CWM)->med.cm.graph
+
+MPD.M(dark.dist.M, plot_x_sp_M)%>% # check function in script 7. 
+  rbind(MPD.M(WP.dist.M, plot_x_sp_M))%>%
+  rbind(MPD.M(Tconstant.dist.M, plot_x_sp_M))%>%
+  rbind(MPD.M(germtraits.dist.M, plot_x_sp_M))%>%
+  rbind(MPD.M(seedmass.dist.M, plot_x_sp_M))%>%
+  rbind(MPD.M(plantheight.dist.M, plot_x_sp_M))%>%
+  rbind(MPD.M(leafarea.dist.M, plot_x_sp_M))%>%
+  rbind(MPD.M(LDMC.dist.M, plot_x_sp_M))%>%
+  rbind(MPD.M(SLA.dist.M, plot_x_sp_M))%>%
+  rbind(MPD.M(Wplanttraits.dist.M, plot_x_sp_M))%>%
+  gather(data_type, MPD, Abundance:Presence)%>%
+  mutate(trait = gsub(".dist.M", "" , trait))%>%
+  merge(read.csv("data/spatial-survey-header-Med.csv"), by = c("plot", "elevation"))%>%
+  dplyr::select(site, plot, latitude, longitude,
+                trait,MPD, data_type,
+                elevation,FDD, GDD, Snw)%>%
+  gather(micro_variable, value_micro, Snw:elevation)%>%
+  full_join(sig.FD.M)%>%
+  filter(graph=="significant")%>%
+  spread(data_type, MPD)%>%
+  rename(MPD.Abundance = Abundance)%>%
+  rename(MPD.Presence = Presence)%>%
+  filter(!trait == "germtraits")%>%
+  filter(!trait == "Wplanttraits")%>%
+  mutate(trait = factor(trait))%>%
+  mutate(trait = fct_relevel(trait, "dark","WP","Tconstant",
+                             "seedmass","plantheight", 
+                             "leafarea", "LDMC", "SLA"))%>%
+  mutate(trait= fct_recode(trait, "Darkness"="dark", "Water stress"="WP",
+                           "Constant Temp"="Tconstant", "Seed mass"="seedmass",
+                           "Plant height"="plantheight","Leaf area"="leafarea",
+                           "LDMC"="LDMC", "SLA"="SLA"))%>%
+  dplyr::select(site, plot, trait, micro_variable, value_micro, 
+                MPD.Abundance, MPD.Presence)->med.fd.graph
+
+med.cm.graph%>%
+  full_join(med.fd.graph)%>%
+  ggplot()+
+  #geom_point(aes(y=CM, x= value_micro, color= "black" ),size =1, show.legend = T, alpha = 0.5)+
+  geom_smooth(aes(y=CM, x= value_micro, color = "black"),method = "glm", se=F, inherit.aes=F, linewidth =1.5)+
+  #geom_point(aes(y=CWM, x= value_micro,color= "grey"),  size =1, show.legend = T, alpha = 0.5)+,  linetype="dashed"
+  geom_smooth(aes(y=CWM, x= value_micro, color = "grey"),method = "glm", se=F, inherit.aes=F, linewidth =1.5)+
+  #geom_point(aes(y=MPD.Presence, x= value_micro, color= "black" ),size =1, show.legend = T, alpha = 0.5)+,  linetype="dashed"
+  geom_smooth(aes(y=MPD.Presence, x= value_micro, color = "blue"),method = "glm", se=F, inherit.aes=F, linewidth =1.5)+
+  #geom_point(aes(y=MPD.Abundance, x= value_micro,color= "grey"),  size =1, show.legend = T, alpha = 0.5)+
+  geom_smooth (aes(y=MPD.Abundance, x= value_micro, color = "red"),method = "glm", se=F, inherit.aes=F, linewidth =1.5)+
+  facet_grid(factor(trait, levels = c("Darkness","Water stress","Constant Temp",
+                                      "Seed mass","Plant height", 
+                                      "Leaf area", "LDMC", "SLA"))~micro_variable, scales = "free")+
+  scale_color_manual (name = "Community Metrics", values = c("black"="black", "grey"="grey","blue"="blue","red"="red" ), 
+                      labels = c("CM", "CWM","MPD.Presence", "MPD.Abundance"), guide= guide_legend(theme=theme(legend.title.position = "top")))+
+  theme_classic(base_size = 16)+
+  labs(title= "Mediterranean significant functional divergence responses")+
+  theme(strip.text = element_text(size =12),
+        strip.background = element_blank(),
+        panel.background = element_rect(color = "black", fill = NULL),
+        axis.title = element_blank(),
+        axis.text= element_text(size=10),
+        axis.ticks = element_blank(),
+        legend.position = "bottom")
+  
 ggsave(plot_CM_M, file = "CM Med trait vs micro.png", 
        path = "results/preliminar graphs", scale = 1,dpi = 600) 
+
+# effect sizes diferent shapes according to CM and CWM, different color according to CI ####
+read.csv("results/GLMs auto Med.csv", sep =",")%>%
+  mutate(data_type = ifelse(community_metric== "CM", "Presence", "Abundance"))%>%
+  mutate(trait = factor(trait))%>%
+  mutate(trait = fct_relevel(trait, "odds_B_dark","odds_C_WP","odds_D_constant",
+                             "seed_mass","plant_height", 
+                             "leaf_area", "LDMC", "SLA"))%>%
+  mutate(community_metric = factor(community_metric))%>%
+  mutate(community_metric = fct_relevel(community_metric, "CM", "CWM"))%>%
+  filter(!term == "(Intercept)")%>%
+  filter(!term == "scale(auto)")%>%
+  mutate(term= factor(term))%>%
+  mutate(term= fct_recode(term, "Elevation" = "scale(elevation)", "FDD"="scale(FDD)",
+                          "GDD"="scale(GDD)", "Snow"="scale(Snw)"))%>%
+  mutate(CI = 1.96*std.error)%>% # confidence interval multiply 1.96 per std error
+  mutate(CImin = estimate-CI, 
+         CImax= estimate+CI)%>%
+  mutate(color = case_when(CImin>0 & CImax>0 ~ "deepskyblue",
+                           CImin<0 & CImax<0~ "deepskyblue",
+                           TRUE ~"grey"))%>%
+  #spread(community_metric, estimate)%>%
+  ggplot(aes(x= community_metric, y =estimate, ymin = CImin, ymax = CImax))+
+  geom_errorbar (aes(color=color, linetype = community_metric),width = 0, linewidth =1.2) + #, color="black" 
+  geom_point(aes(color=color, shape = community_metric), size = 3, show.legend = T) +#
+  scale_color_manual (values = c("deepskyblue"="deepskyblue","deepskyblue"="deepskyblue", "grey"= "grey" ))+
+  facet_grid (term~trait,labeller = as_labeller(effect_names),  scales = "free_x") + #ncol = 8, nrow =2,
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth =1, color = "red") +
+  coord_flip() +
+  labs(y = "Parameter estimate", title = "Mediterranean community") + # Temperate   Mediterranean
+  theme_classic (base_size = 12)+#ggthemes::theme_tufte(base_size = 14) +
+  theme(text = element_text(family = "sans"),
+        plot.title = element_text (size = 20),
+        strip.text = element_text( size = 16), #face = "bold",
+        strip.text.y = element_text(size = 14),
+        legend.position = "bottom",
+        strip.background = element_blank (),
+        panel.background = element_rect(color = "black", fill = NULL),
+        plot.tag.position = c(0.015,1),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 10, color = "black", angle = 30),
+        axis.text.y = element_text(size = 10, color = "black"),
+        #axis.text.y = element_blank (),
+        axis.title.x = element_text (size=14))
