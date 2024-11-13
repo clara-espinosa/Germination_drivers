@@ -40,7 +40,7 @@ plot(glm1.auto)
 ### attemps to speed up the process #####
 # try to combine data sets an run a loop group datasets with same plot subsets and coordinates
 # meaning CM and CWM restricted dataset (separate per each community)
-# FD apart due to 2 extra additional traits  (germ vs plant) as explanatory variable
+# FD apart due to 2 extra  traits  (germ vs plant) as explanatory variable
 ###### CM and CWM MEDITERRANEAN ####
 read.csv("data/spatial-survey-header-Med.csv")%>%
   filter(plot%in%spatial_env_med$plot)%>% 

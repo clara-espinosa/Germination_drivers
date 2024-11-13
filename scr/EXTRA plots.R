@@ -693,3 +693,168 @@ read.csv("results/GLMs auto Med.csv", sep =",")%>%
         axis.text.y = element_text(size = 10, color = "black"),
         #axis.text.y = element_blank (),
         axis.title.x = element_text (size=14))
+## 5.5.4. MPD (weigthed by abundance) vs microclimatic gradients####
+
+# To test te CWM for microclimatic gradients we could use simple linear model or 
+# REML, restricted maximum likelihood model
+lms.fd.env <- function(x) {
+  glm(value ~ scale(elevation) + scale(FDD) + scale(GDD) + scale(Snw), data = x) -> m1
+  broom::tidy(m1)
+}
+FD.T%>%
+  gather (Func.div, value, Germ.Mpd.ab:Wplant.Mpd.pa)%>%
+  group_by(Func.div)%>%
+  do(lms.fd.env(.)) %>%
+  write.csv("results/FD vs micro TEM.csv")
+
+ann.sig.FD.T <- data.frame (read.csv("results/sig_FD_T.csv", sep = ";"))
+
+FD.T%>%
+  mutate(site = as.factor(site))%>%
+  mutate(site = fct_relevel(site,"Los Cazadores", "Hou Sin Tierri","Los Boches","Hoyo Sin Tierra"))%>% 
+  rename(Snow=Snw)%>%
+  gather (Func.div, value, Germ.Mpd.ab:Wplant.Mpd.pa)%>%
+  gather (micro_variable, value_micro, elevation:Snow)%>%
+  ggplot()+
+  geom_point(aes(y=value, x= value_micro, fill = site), color= "black",shape = 21, size =3)+
+  scale_fill_manual( values = c("limegreen","deeppink4","darkorange1", "dodgerblue4"))+
+  geom_smooth (aes(y=value, x= value_micro),method = "lm", se=T, color = "black", inherit.aes=F)+
+  facet_grid(Func.div~micro_variable, scales = "free")+
+  geom_text(data=ann.sig.FD.T, label =ann.sig.FD.T$label, aes(x=x, y=y),size= 6, color = "red")+
+  labs(title="Mpd in Temperate system")+
+  theme_classic(base_size = 16)+
+  theme(strip.text = element_text(size =12),
+        panel.background = element_rect(color = "black", fill = NULL),
+        axis.title = element_blank(),
+        legend.position = "bottom")-> FD_micro_T;FD_micro_T
+
+ggsave(FD_micro_T, file = "FD vs micro Tem.png", 
+       path = "results/preliminar graphs", scale = 1,dpi = 600) 
+
+# To test te CWM for microclimatic gradients we could use simple linear model or 
+# REML, restricted maximum likelihood model 
+# (function written to repeat each lm x microclimatic variable)
+# formula adapted from PICOS github repository scr Fig5-GLMs
+lms.cm <- function(x) {
+  glm(CM ~ scale(elevation) +scale(FDD) + scale(GDD) +  scale(Snw), data = x) -> m1
+  broom::tidy(m1)
+}
+
+CM_M%>%
+  rownames_to_column(var = "plot")%>%
+  merge(plot_x_env_M2, by= "plot")%>%
+  gather(trait, CM, seed_mass:odds_D_constant)%>%
+  group_by (trait)%>%
+  do(lms.cm(.)) %>%
+  write.csv("results/CM vs micro MED.csv")
+
+# visualization double facetting with significances
+CM_M%>%
+  rownames_to_column(var = "plot")%>%
+  gather(trait, CM, seed_mass:odds_D_constant)%>%
+  merge(plot_x_env_M2)%>%
+  merge(read.csv("data/spatial-survey-header-Med.csv"), by = c("plot", "elevation"))%>%
+  mutate(site = as.factor(site))%>%
+  mutate(site = fct_relevel(site,"Rabinalto", "Canada","Solana","Penouta")) %>%
+  mutate(trait = factor(trait))%>%
+  mutate(trait = fct_relevel(trait, "odds_B_dark","odds_C_WP","odds_D_constant",
+                             "seed_mass","plant_height", 
+                             "leaf_area", "LDMC", "SLA"))%>%
+  dplyr::select(site, plot, latitude, longitude, trait, CM, elevation, Snw, FDD, GDD)%>%
+  rename(Snow=Snw)%>%
+  gather(micro_variable, value_micro,  elevation:GDD)-> CM_microclima_M
+
+ann.sig.CM.M <- data.frame (read.csv("results/sig_CM_M.csv", sep = ";"))
+trait_names <- c("odds_B_dark" = "Darkness","odds_C_WP" = "Water stress",
+                 "odds_D_constant" = "Constant Temp","seed_mass" = "Seed mass",
+                 "plant_height" = "Plant height", "leaf_area" = "Leaf area",
+                 "LDMC" = "LDMC", "SLA" = "SLA", "elevation"= "Elevation", 
+                 "FDD" = "FDD", "GDD"="GDD", "Snow"="Snow")
+str(CM_microclima_M)
+x11()
+CM_microclima_M%>%
+  mutate(trait = factor(trait))%>%
+  mutate(trait = fct_relevel(trait, "odds_B_dark","odds_C_WP","odds_D_constant",
+                             "seed_mass","plant_height", 
+                             "leaf_area", "LDMC", "SLA"))%>%
+  ggplot()+
+  geom_point(aes(y=value, x= value_micro, fill = site), color= "black",shape = 21, size =3)+
+  scale_fill_manual( values = c("limegreen","deeppink4","darkorange1", "dodgerblue4"))+
+  geom_smooth (aes(y=value, x= value_micro),method = "lm", se=T, color = "black", inherit.aes=F)+
+  facet_grid(factor(trait, levels = c("odds_B_dark","odds_C_WP","odds_D_constant",
+                                      "seed_mass","plant_height", 
+                                      "leaf_area", "LDMC", "SLA"))~micro_variable, scales = "free", 
+             labeller = as_labeller(trait_names))+
+  geom_text(data=ann.sig.CM.M, label =ann.sig.CM.M$label, aes(x=x, y=y),size= 6, color = "red")+
+  labs(title="Community Means in Mediterranean system")+
+  theme_classic(base_size = 16)+
+  theme(strip.text = element_text(size =12),
+        panel.background = element_rect(color = "black", fill = NULL),
+        axis.title.x = element_blank(),
+        legend.position = "bottom")-> plot_CM_M;plot_CM_M
+ggsave(plot_CM_M, file = "CM Med trait vs micro.png", 
+       path = "results/preliminar graphs", scale = 1,dpi = 600) 
+#width = 320, height = 260, units = "mm", 
+
+CM_T%>%
+  rownames_to_column(var = "plot")%>%
+  gather(trait, value, seed_mass:odds_D_constant)%>%
+  merge(plot_x_env_T2)%>%
+  merge(read.csv("data/spatial-survey-header-Tem.csv"), by = c("plot", "elevation"))%>%
+  mutate(site = as.factor(site))%>%
+  mutate(site = fct_relevel(site,"Los Cazadores", "Hou Sin Tierri","Los Boches","Hoyo Sin Tierra")) %>%
+  mutate(trait = factor(trait))%>%
+  mutate(trait = fct_relevel(trait,"odds_B_dark","odds_C_WP","odds_D_constant",
+                             "seed_mass", "plant_height", 
+                             "leaf_area", "LDMC", "SLA"))%>%
+  dplyr::select(site, plot, trait, value, elevation, Snw, FDD, GDD)%>%
+  rename(Snow=Snw)%>%
+  gather(micro_variable, value_micro,  elevation:GDD)-> CM_microclima_T
+
+# To test te CWM for microclimatic gradients we could use simple linear model or ##### 
+# REML, restricted maximum likelihood model
+# (function written to repeat each lm x microclimatic variable)
+# formula adapted from PICOS github repository scr Fig5-GLMs
+lms.cm <- function(x) {
+  glm(CM ~ scale(elevation)+ scale(FDD) + scale(GDD)+ scale(Snw), data = x) -> m1
+  broom::tidy(m1)
+}
+
+CM_T%>%
+  rownames_to_column(var = "plot")%>%
+  merge(plot_x_env_T2, by= "plot")%>%
+  gather(trait, CM, seed_mass:odds_D_constant)%>%
+  group_by (trait)%>%
+  do(lms.cm(.)) %>%
+  write.csv("results/CM vs micro TEM.csv")
+# double facetting with significances
+ann.sig.CM.T <- data.frame (read.csv("results/sig_CM_T.csv", sep = ";"))
+trait_names <- c("odds_B_dark" = "Darkness","odds_C_WP" = "Water stress",
+                 "odds_D_constant" = "Constant Temp","seed_mass" = "Seed mass",
+                 "plant_height" = "Plant height", "leaf_area" = "Leaf area",
+                 "LDMC" = "LDMC", "SLA" = "SLA", "elevation"= "Elevation", 
+                 "FDD" = "FDD", "GDD"="GDD", "Snow"="Snow")
+
+CM_microclima_T%>%
+  mutate(trait = factor(trait))%>%
+  mutate(trait = fct_relevel(trait, "odds_B_dark","odds_C_WP","odds_D_constant",
+                             "seed_mass","plant_height", 
+                             "leaf_area", "LDMC", "SLA"))%>%
+  ggplot()+
+  geom_point(aes(y=value, x= value_micro, fill = site), color= "black",shape = 21, size =3)+
+  scale_fill_manual( values = c("limegreen","deeppink4","darkorange1", "dodgerblue4"))+
+  geom_smooth (aes(y=value, x= value_micro),method = "lm", se=T, color = "black", inherit.aes=F)+
+  facet_grid(factor(trait, levels = c("odds_B_dark","odds_C_WP","odds_D_constant",
+                                      "seed_mass","plant_height", 
+                                      "leaf_area", "LDMC", "SLA"))~micro_variable, scales = "free", 
+             labeller = as_labeller(trait_names))+
+  geom_text(data=ann.sig.CM.T, label =ann.sig.CM.T$label, aes(x=x, y=y),size= 6, color = "red")+
+  labs(title="Community Means in Temperate system")+
+  theme_classic(base_size = 16)+
+  theme(strip.text = element_text(size =12),
+        panel.background = element_rect(color = "black", fill = NULL),
+        axis.title.x = element_blank(),
+        legend.position = "bottom")-> plot_CM_T;plot_CM_T
+ggsave(plot_CM_T, file = "CM Tem trait vs micro.png", 
+       path = "results/preliminar graphs", scale = 1,dpi = 600) 
+#width = 320, height = 260, units = "mm", 

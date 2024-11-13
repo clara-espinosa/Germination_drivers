@@ -26,18 +26,19 @@ setdiff(species$species,spatial_sp_Med$species)
 # 2- Cover/plot of species with germination traits ####
 sp_med %>%
   merge(spatial_sp_Med, by = "species")%>%
-  group_by(plot, N_sp) %>%
+  group_by(plot) %>%
   #summarise(cover = sum(cover))%>%
   #filter(cover>79)%>%
-  summarise(rel_cover = sum(rel_cover))%>%
+  summarise(rel_cover = sum(rel_cover),
+            N_sp = length(unique(species)))%>%
   filter(rel_cover>79)%>%
   filter(N_sp>2)%>%
   dplyr:: select(plot)->med_plot
 
-# 55 plots with more than 80% coverage with sp traits (drivers) (considering relative cover, up to 100%)
+# 53 plots with more than 80% coverage with sp traits (drivers) (considering relative cover, up to 100%)
 
 # 3- temperature graphs of plots with 80% coverage with trait data ####
-med_plot%>%# 55 plots with >80% coverage with trait and environmental data
+med_plot%>%# 53 plots with >80% coverage with trait and environmental data
   merge(read.csv("data/spatial-survey-temperatures-Med.csv")) %>%
   mutate(Time = as.POSIXct(Time, tz = "UTC", format = "%d/%m/%Y %H:%M" )) %>% 
   merge(read.csv("data/spatial-survey-header-Med.csv"))%>%
@@ -88,12 +89,6 @@ spatial_env_med %>%
 ggsave(filename = "Temperatures plots with traits Med.png", plot =tem_plots_Med , path = "results/Supplementary/", 
        device = "png", dpi = 600)
 
-# 5- disturbance per plot measure remove?? ####
-read.csv("data/spatial-survey-header-Med.csv") %>%
-  dplyr::select(plot, soil, rock, vasculars, nonvasculars)%>%
-  gather(covertyper, percentage, soil:nonvasculars)%>%
-  group_by(plot)%>%
-  summarise(disturbance = diversity(percentage, index= "shannon"))-> disturbance_M
 # DATA MATRICES ####
 # header species data ####
 read.csv("data/species.csv", sep=",") %>%
@@ -248,7 +243,6 @@ read.csv("data/spatial-survey-temperatures-Med.csv") %>%
   merge(read.csv("data/spatial-survey-header-Med.csv")) %>% 
   #dplyr::select(plot, site, aspect, elevation, latitude, longitude, bio1:GDD)%>% 
   dplyr::select(plot, elevation,bio1:GDD)%>% 
-  merge(disturbance_M, by="plot")%>%
   filter(plot%in%spatial_env_med$plot)%>% 
   column_to_rownames(var="plot")-> plot_x_env_M
 
@@ -286,10 +280,11 @@ setdiff(spatial_sp_Tem$species, species$species)
 # 2- Cover/plot of species with germination traits ####
 sp_tem %>%
   merge(spatial_sp_Tem, by = "species")%>%
-  group_by(plot, N_sp) %>%
+  group_by(plot) %>%
   #summarise(cover = sum(cover))%>%
   #filter(cover>79)%>%
-  summarise(rel_cover = sum(rel_cover))%>%
+  summarise(rel_cover = sum(rel_cover),
+            N_sp = length(unique(species)))%>%
   filter(rel_cover>79)%>%
   filter(N_sp>2)%>%
   dplyr:: select(plot)->tem_plot
@@ -300,7 +295,7 @@ sp_tem %>%
 tem_plot%>%
   merge(read.csv("data/spatial-survey-temperatures-Tem.csv")) %>%
   mutate(Time = as.POSIXct(Time, tz = "UTC", format = "%d/%m/%Y %H:%M" )) %>% 
-  merge(read.csv("data/spatial-survey-header-Tem.csv"))-> spatial_env_tem 
+  merge(read.csv("data/spatial-survey-header-Tem.csv", sep = ";"))-> spatial_env_tem 
 
 setdiff(tem_plot$plot, spatial_env_tem$plot)
 unique(tem_plot$plot)
@@ -339,13 +334,6 @@ spatial_env_tem  %>%
 ggsave(filename = "Temperatures plots with traits Tem.png", plot =tem_plots_Tem , path = "results/Supplementary/", 
        device = "png", dpi = 600)
 
-
-# 5- disturbance per plot measure remove?? ####
-read.csv("data/spatial-survey-header-Tem.csv", sep = ";") %>%
-  dplyr::select(plot, soil, rock, plant)%>%
-  gather(covertyper, percentage, soil:plant)%>%
-  group_by(plot)%>%
-  summarise(disturbance = diversity(percentage, index= "shannon"))-> disturbance_T
 # DATA MATRICES ####
 # header species data  #######
 read.csv("data/species.csv", sep=",") %>%
@@ -521,7 +509,6 @@ read.csv("data/spatial-survey-temperatures-Tem.csv") %>%
                    GDD = round(sum(GDD)),2) %>%  # GDD per year
   merge(read.csv("data/spatial-survey-header-Tem.csv", sep= ";")) %>% 
   dplyr::select(plot, elevation,bio1:GDD)%>%
-  merge(disturbance_T, by= "plot")%>%
   filter(plot%in%spatial_env_tem$plot)%>%
   column_to_rownames(var="plot")-> plot_x_env_T
 
