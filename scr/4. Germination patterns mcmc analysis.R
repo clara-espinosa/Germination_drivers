@@ -112,6 +112,26 @@ read.csv("data/raw_data.csv", sep = ",") %>%
   filter(!treatment=="E_cold_stratification")%>%
   merge(viables_sp, by= c("code", "species", "treatment"))-> finalgerm 
 
+# germination averages per treatment/community
+finalgerm%>%
+  filter (!species == "Euphrasia salisburgensis")%>%
+  filter (!species == "Gentiana verna")%>%
+  filter (!species == "Gentianella campestris")%>%
+  filter (!species == "Kobresia myosuroides")%>%
+  filter (!species == "Salix breviserrata")%>%
+  filter (!species == "Sedum album")%>%
+  filter (!species == "Sedum atratum")%>%
+  filter (!species == "Solidago virgaurea") %>%
+  filter (!species == "Teesdalia conferta")%>%
+  filter (!species == "Veronica nummularia")%>%
+  filter (!species == "Avenella flexuosa")%>%
+  filter (!species == "Cerastium ramosissimum")%>%
+  filter (!species == "Phalacrocarpum oppositifolium")%>%
+  mutate(germpro=finalgerm/viable)%>%
+  group_by(treatment) %>%
+  summarise(germpro= mean(germpro))
+  
+
 # MCMC GLMM ####
 finalgerm %>%
   merge(species)%>%
@@ -215,7 +235,7 @@ summary(mc_tem)$Gcovariances[2, 2] %>% round(2)
 summary(mc_tem)$Gcovariances[2, 3] %>% round(2) 
 
 
-#### visualization significant differences MCMC-GLMM ####
+#### visualization significant differences MCMC-GLMM  fig 2 ####
 # treatment x community, only differnce in WP, lower in temperate
 ann_text_m <- data.frame (x=1.6, y= 0.425, label = "*", community = "Mediterranean")
 ann_text_t <- data.frame (x=1.6, y= 0.425, label = "*", community = "Temperate")
