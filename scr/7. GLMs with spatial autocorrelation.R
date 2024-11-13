@@ -4,43 +4,6 @@ library (gawdis); library(glmm); library (lme4); library(spdep) # para crear la 
 library(glmmTMB); library (DHARMa) # paquetes para los GLMs
 library(ggpubr)
  ####################### MEDITERRANEAN ##########################################
-# CM restricted dataset (from script 6)
-read.csv("data/spatial-survey-header-Med.csv")%>%
-  filter(plot%in%spatial_env_med$plot)%>% 
-  dplyr::select(longitude, latitude)%>% 
-  as.matrix ()->longlat_M # matrix with coordenates of Mediterranean plots
-
-CM_M%>%
-  rownames_to_column(var = "plot")%>%
-  merge(plot_x_env_M2, by= "plot")%>%
-  merge(read.csv("data/spatial-survey-header-Med.csv"), by = c("plot", "elevation"))%>%
-  dplyr::select(site, plot, latitude, longitude, 
-                elevation, Snw, FDD, GDD, 
-                seed_mass:odds_D_constant)-> CM_M_glm
-
-# process following Borja's script
-# 1. model including latitude and longitude and the rest of env variables all scaled!!
-glm1 <- glm(plant_height ~ scale(elevation) + scale(FDD) + scale(GDD) +  scale(Snw), data = CM_M_glm)
-# test with glmm (not same results)
-# 2. Create autocovariate from "spdep" package from model results (step 4)
-autocov <- autocov_dist(glm1$residuals, longlat_M , nbs = 5, type= "inverse", style = "B", zero.policy = T, longlat = TRUE) #
-# 3. add autocovariate to dataframe
-CM_M_glm$auto <- autocov # add autocovariate variable to the dataset
-# 3b. remove extreme values (only if error appears)
-summary(CM_M_glm$auto) # para quitar valores extremos (daba error)
-CM_M_glm <- subset(CM_M_glm, auto < Inf) 
-CM_M_glm <- subset(CM_M_glm, auto > -500)
-
-# 4. FINAL GLM- new model including the variable "auto" for accounting spatial autocorrelation
-glm1.auto<- glm(plant_height ~ scale(elevation) + scale(FDD) + scale(GDD) +  scale(Snw) + scale(auto), data = CM_M_glm)
-summary(glm1.auto)
-plot(glm1.auto)
-
-
-### attemps to speed up the process #####
-# try to combine data sets an run a loop group datasets with same plot subsets and coordinates
-# meaning CM and CWM restricted dataset (separate per each community)
-# FD apart due to 2 extra  traits  (germ vs plant) as explanatory variable
 ###### CM and CWM MEDITERRANEAN ####
 read.csv("data/spatial-survey-header-Med.csv")%>%
   filter(plot%in%spatial_env_med$plot)%>% 
@@ -96,7 +59,6 @@ MPD.M(dark.dist.M, plot_x_sp_M)%>% # check function in script 7.
   rbind(MPD.M(LDMC.dist.M, plot_x_sp_M))%>%
   rbind(MPD.M(SLA.dist.M, plot_x_sp_M))%>%
   rbind(MPD.M(Wplanttraits.dist.M, plot_x_sp_M))%>%
-  #rbind(MPD.M(alltraits.dist.M, plot_x_sp_M))%>%
   gather(data_type, MPD, Abundance:Presence)%>%
   mutate(trait = gsub(".dist.M", "" , trait))%>%
   merge(read.csv("data/spatial-survey-header-Med.csv"), by = c("plot", "elevation"))%>%
@@ -180,8 +142,7 @@ effect_names <- c("odds_B_dark" = "Darkness","odds_C_WP" = "Water stress",
                   "LDMC" = "LDMC", "SLA" = "SLA", "Elevation"= "Elevation", 
                   "FDD" = "FDD", "GDD"="GDD", "Snow"="Snow")
 x11()
-
-  read.csv("results/GLMs auto Med.csv", sep =",")%>%
+read.csv("results/GLMs auto Med.csv", sep =",")%>%
     mutate(data_type = ifelse(community_metric== "CM", "Presence", "Abundance"))%>%
     mutate(trait = factor(trait))%>%
     mutate(trait = fct_relevel(trait, "odds_B_dark","odds_C_WP","odds_D_constant",
@@ -295,7 +256,7 @@ effect_names <- c("odds_B_dark" = "Darkness","odds_C_WP" = "Water stress",
                     "LDMC" = "LDMC", "SLA" = "SLA", "Elevation"= "Elevation", 
                     "FDD" = "FDD", "GDD"="GDD", "Snow"="Snow")
 x11()
-read.csv("results/GLMs auto Tem.csv", sep =";")%>%
+read.csv("results/GLMs auto Tem.csv", sep =",")%>%
   mutate(data_type = ifelse(community_metric== "CM", "Presence", "Abundance"))%>%
   mutate(trait = factor(trait))%>%
   mutate(trait = fct_relevel(trait, "odds_B_dark","odds_C_WP","odds_D_constant",

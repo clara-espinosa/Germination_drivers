@@ -858,3 +858,61 @@ CM_microclima_T%>%
 ggsave(plot_CM_T, file = "CM Tem trait vs micro.png", 
        path = "results/preliminar graphs", scale = 1,dpi = 600) 
 #width = 320, height = 260, units = "mm", 
+
+#### Spatial autocovariate model from Borja ####
+# CM restricted dataset (from script 6)
+read.csv("data/spatial-survey-header-Med.csv")%>%
+  filter(plot%in%spatial_env_med$plot)%>% 
+  dplyr::select(longitude, latitude)%>% 
+  as.matrix ()->longlat_M # matrix with coordenates of Mediterranean plots
+
+CM_M%>%
+  rownames_to_column(var = "plot")%>%
+  merge(plot_x_env_M2, by= "plot")%>%
+  merge(read.csv("data/spatial-survey-header-Med.csv"), by = c("plot", "elevation"))%>%
+  dplyr::select(site, plot, latitude, longitude, 
+                elevation, Snw, FDD, GDD, 
+                seed_mass:odds_D_constant)-> CM_M_glm
+
+# process following Borja's script
+# 1. model including latitude and longitude and the rest of env variables all scaled!!
+glm1 <- glm(plant_height ~ scale(elevation) + scale(FDD) + scale(GDD) +  scale(Snw), data = CM_M_glm)
+# test with glmm (not same results)
+# 2. Create autocovariate from "spdep" package from model results (step 4)
+autocov <- autocov_dist(glm1$residuals, longlat_M , nbs = 5, type= "inverse", style = "B", zero.policy = T, longlat = TRUE) #
+# 3. add autocovariate to dataframe
+CM_M_glm$auto <- autocov # add autocovariate variable to the dataset
+# 3b. remove extreme values (only if error appears)
+summary(CM_M_glm$auto) # para quitar valores extremos (daba error)
+CM_M_glm <- subset(CM_M_glm, auto < Inf) 
+CM_M_glm <- subset(CM_M_glm, auto > -500)
+
+# 4. FINAL GLM- new model including the variable "auto" for accounting spatial autocorrelation
+glm1.auto<- glm(plant_height ~ scale(elevation) + scale(FDD) + scale(GDD) +  scale(Snw) + scale(auto), data = CM_M_glm)
+summary(glm1.auto)
+plot(glm1.auto)
+
+## 5.5.3 MPD differences between germination and adult plant traits ####
+strip_names <- c("ab"= "Abundance data", "pa"= "Presence/absence data", 
+                 "Mpd" = "Mean Pairwise Dissimilarity")
+FD.M%>%
+  gather (Func.div, value, Germ.Mpd.ab:Wplant.Mpd.pa)%>%
+  separate_wider_delim(Func.div, delim = ".", names = c("Traits","indices", "data_type"), too_many = "merge")%>%
+  group_by(Traits, indices, data_type)%>%
+  get_summary_stats(value)%>%
+  mutate(Traits= as.factor(Traits))%>%
+  mutate(Traits = fct_recode(Traits, "Germination"="Germ" , "Adult Plant"="Wplant"))%>%
+  ggplot()+
+  geom_errorbar(aes(Traits, mean, ymin = mean-ci, ymax = mean+ci), color = "black",linewidth =1) +
+  geom_point(aes(x= Traits, y= mean, fill = Traits), color = "black", shape= 21, size = 5)+
+  scale_fill_manual(values = c("dodgerblue4","limegreen"))+
+  facet_grid(~data_type, labeller = as_labeller(strip_names))+
+  labs(title = "Mediterranean community FD differences", y= "Mean dissimilarity")+
+  theme_classic(base_size = 16)+
+  theme(strip.text = element_text(size =16),
+        panel.background = element_rect(color = "black", fill = NULL),
+        axis.title.x = element_blank(),
+        legend.position = "bottom")->FD.traits.M;FD.traits.M
+
+ggsave(FD.traits.M, file = "FD traits diff Med.png", 
+       path = "results/preliminar graphs", scale = 1,dpi = 600)
