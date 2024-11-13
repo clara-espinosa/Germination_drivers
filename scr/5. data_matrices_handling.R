@@ -33,7 +33,7 @@ sp_med %>%
             N_sp = length(unique(species)))%>%
   filter(rel_cover>79)%>%
   filter(N_sp>2)%>%
-  dplyr:: select(plot)->med_plot
+  dplyr:: select(plot, N_sp)->med_plot
 
 # 53 plots with more than 80% coverage with sp traits (drivers) (considering relative cover, up to 100%)
 
@@ -287,7 +287,7 @@ sp_tem %>%
             N_sp = length(unique(species)))%>%
   filter(rel_cover>79)%>%
   filter(N_sp>2)%>%
-  dplyr:: select(plot)->tem_plot
+  dplyr:: select(plot, N_sp)->tem_plot
 
 # 47 plot with more than 80% coverage with sp traits (drivers)(considering raw cover, not to 100%)
 
