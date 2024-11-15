@@ -37,7 +37,7 @@ plot_x_env_M2 %>%
     axis.title.x  = element_blank(),
     axis.text.y= element_text(color= "black", size= 12),
     axis.text.x = element_blank())-> table;table
-
+x11()
 plot_x_env_M2 %>%
   mutate(community = "Mediterranean")%>%
   rbind(plot_x_env_T2 %>%
@@ -61,9 +61,9 @@ communities <- image_read(png::readPNG("images/mapa comunidades.png", native= TR
   image_ggplot()
 cross <- image_read(png::readPNG("images/mapa cruces.png", native= TRUE))%>%
   image_ggplot()
-
+ rm(cross)
 # combine graphs
-EU+communities+cross-> maps;maps
+EU+communities+cross 
 ggsave(filename = "Figure 1A.png", plot =maps , path = "results/Figures", 
        device = "png", dpi = 600) 
   

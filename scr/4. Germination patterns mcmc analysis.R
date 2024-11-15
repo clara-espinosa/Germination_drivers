@@ -242,19 +242,19 @@ ann_text_t <- data.frame (x=1.6, y= 0.425, label = "*", community = "Temperate")
 x11()
 finalgerm %>%
   merge(species)%>%
-  filter (!species == "Euphrasia salisburgensis")%>%
-  filter (!species == "Gentiana verna")%>%
-  filter (!species == "Gentianella campestris")%>%
-  filter (!species == "Kobresia myosuroides")%>%
-  filter (!species == "Salix breviserrata")%>%
-  filter (!species == "Sedum album")%>%
-  filter (!species == "Sedum atratum")%>%
-  filter (!species == "Solidago virgaurea") %>%
-  filter(!species == "Teesdalia conferta") %>%
-  filter (!species == "Veronica nummularia")%>%
-  filter (!species == "Avenella flexuosa")%>%
-  filter (!species == "Cerastium ramosissimum")%>%
-  filter (!species == "Phalacrocarpum oppositifolium")%>%
+  filter (!species == "Euphrasia salisburgensis")%>% # species with 0 germination
+  filter (!species == "Gentiana verna")%>%# species with 0 germination
+  filter (!species == "Gentianella campestris")%>%# species with 0 germination
+  filter (!species == "Kobresia myosuroides")%>%# species with 0 germination
+  filter (!species == "Salix breviserrata")%>% # species with less than 25% of viable seeds
+  filter (!species == "Sedum album")%>%# species with 0 germination
+  filter (!species == "Sedum atratum")%>%# species with 0 germination
+  filter (!species == "Solidago virgaurea") %>%# species with 0 germination
+  filter(!species == "Teesdalia conferta") %>% # species with 100% germination in cold stratification pretreatment
+  filter (!species == "Veronica nummularia")%>%# species with 0 germination
+  filter (!species == "Avenella flexuosa")%>%# species with 0 germination
+  filter (!species == "Cerastium ramosissimum")%>%# species with 0 germination
+  filter (!species == "Phalacrocarpum oppositifolium")%>%# species with 0 germination
   na.omit() %>%
   group_by (treatment, community) %>% #, temperature_regime 
   summarise(finalgerm=sum(finalgerm),
