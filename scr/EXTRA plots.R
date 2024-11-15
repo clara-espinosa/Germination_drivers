@@ -1,7 +1,7 @@
 library(tidyverse);library(readxl);library(ggplot2);library(dplyr)
 library(viridis);library(rstatix);library(lubridate);library(vegan)
 library(rstatix);library(geomtextpath);library(psych)
-library (ggrepel);library (ggpubr)
+library (ggrepel);library (ggpubr) ;library(binom)
 
 ######## EXTRA PLOTS playing with VISUALIZATION #####
 # germination curves / rate  x community and x treatment (update with error bars) #### 
@@ -92,7 +92,31 @@ for (var in unique(finalgerm_sp_treatment$species)) {
          path = NULL, scale = 1, width = 360, height = 250, units = "mm", dpi = 600)
 }
 
-
+# separate individual plots for Thymus praecox
+finalgerm_sp_treatment %>%
+  filter(species=="Thymus praecox")%>%
+  merge(read.csv("data/species.csv"), by = c("species", "code"))%>%
+  dplyr::select(community, species, treatment, mean, upper, lower)%>%
+  filter(community == "Temperate")%>%
+  ggplot() +
+  geom_bar(aes(x = treatment, y = mean, ymin = 0, ymax = 1, fill = treatment), stat = "identity", color = "black") +
+  geom_errorbar(aes(treatment, mean, ymin = lower, ymax = upper), width = 0.3, size =1.2) +
+  scale_fill_manual(name = "Treatments",labels = c("Control", "Darkness", "Water stress", "Constant Temperature"), 
+                    values = c("#2A788EFF", "#440154FF", "#FDE725FF","#35B779FF"))+
+  labs(title= "Temperate Thymus praecox", x = "Treatment", y = "Germination proportion") +
+  scale_y_continuous(limits = c(0, 1),  breaks = c(0, 0.25, 0.50, 0.75, 1)) +
+  #facet_wrap(~ accession, nrow = 2) +
+  theme_classic(base_size = 14) +
+  theme(plot.title = element_text (size = 30),
+        #strip.text = element_text (size = 24, face = "italic"),
+        axis.title.y = element_text (size=24), 
+        axis.title.x = element_text (size=24), 
+        axis.text.x= element_text (size=18, vjust = 0.5),
+        legend.position = "none",
+        plot.margin = margin(t=0.5, l =0.5, b = 0.5, r =0.5, unit ="cm"))->treat_plot;treat_plot
+x11()
+  ggsave(treat_plot, file = "Germination Thymus praecox Temperate.png",
+       path = "results/Supplementary/treatment x species", scale = 1, width = 360, height = 250, units = "mm", dpi = 600)
 # germination curves / rate  x species and x treatment IF USED NEEDS TO BE UPDATED #### 
 #loop for many graphs   
 viables_petri%>%
