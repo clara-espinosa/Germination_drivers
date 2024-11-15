@@ -29,27 +29,28 @@ FD.med%>% # from script 6 coomunity metrics calculations
   ggplot()+
   #geom_errorbar(aes(trait, mean, ymin = mean-ci, ymax = mean+ci), color = "black",linewidth =1) +
   geom_boxplot(aes(x= trait, y= MPD, fill = trait), color = "black")+
-  geom_point(aes(x= trait, y= MPD, fill = trait), color = "black", shape= 21, size = 5, alpha = 0.5,position = "jitter")+
+  geom_point(aes(x= trait, y= MPD, fill = trait), color = "black", shape= 21, size = 1, alpha = 0.5,position = "jitter")+
   scale_fill_manual(values = c("cadetblue","cadetblue3","cadetblue1",  
                                "antiquewhite3","antiquewhite1", "cornsilk2","burlywood2", "cornsilk4"))+
   scale_y_continuous(limits = c(0, 1))+
   #coord_flip()+
   facet_grid(~data_type)+
-  labs(title = "Functional divergence (MPD)", subtitle = "Mediterranean", y= "Mean pairwise dissimilarity")+
-  theme_classic(base_size = 16)+
-  theme(strip.text = element_text(size =16),
+  #labs(title = "Functional divergence (MPD)", subtitle = "Mediterranean", y= "Mean pairwise dissimilarity")+
+  theme_classic(base_size = 14)+
+  theme(strip.text = element_blank(),
         panel.background = element_rect(color = "black", fill = NULL),
         axis.text.x = element_text(size= 12, angle = 20, vjust = 0.8),
-        axis.title.x = element_blank(),
+        axis.title = element_blank(),
         legend.position = "none")-> FD.med.sep;FD.med.sep
 
 FD.med%>% # from script 6 coomunity metrics calculations
   filter(trait == "Germination traits"|trait == "Plant traits" )%>%
   filter(data_type=="Abundance")%>%
   ggplot()+
+  labs(title = "Functional divergence (MPD)\nMediterranean", subtitle = "Abundance data", y= "Mean pairwise dissimilarity")+
   #geom_errorbar(aes(trait, mean, ymin = mean-ci, ymax = mean+ci), color = "black",linewidth =1) +
   geom_boxplot(aes(x= trait, y= MPD, fill = trait), color = "black")+
-  #geom_point(aes(x= trait, y= MPD, fill = trait), color = "black", shape= 21, size = 5, alpha = 0.5,position = "jitter")+
+  geom_point(aes(x= trait, y= MPD, fill = trait), color = "black", shape= 21, size = 5, alpha = 0.5,position = "jitter")+
   scale_fill_manual(values = c("cyan4", "bisque3"))+
   scale_y_continuous(limits = c(0.14, 0.8))+
   geom_segment (aes(x= 1.1,xend =1.9,  y = 0.75, yend= 0.75), color = "black", linewidth = 1, show.legend = F)+
@@ -57,11 +58,13 @@ FD.med%>% # from script 6 coomunity metrics calculations
   labs()+
   theme_classic(base_size = 16)+
   theme(strip.text = element_blank(),
-        plot.margin = margin(0,0,0,0, unit = "cm"),
+        plot.subtitle = element_text (hjust=0.5),
+        plot.margin = margin(0,0.15,0,0, unit = "cm"),
         panel.background = element_rect(color = "black", fill = NULL),
-        axis.text.x = element_text(size= 10),  #, angle = 20, vjust = 0.8
-        axis.text.y = element_text(size =10),
-        axis.title= element_blank(),
+        axis.text.x = element_text(size= 12),  #, angle = 20, vjust = 0.8
+        axis.text.y = element_text(size =12),
+        axis.title.y= element_text(size =14),
+        axis.title.x = element_blank(),
         legend.position = "none")-> FD.med.ab;FD.med.ab
 
 FD.med%>% # from script 6 coomunity metrics calculations
@@ -70,27 +73,32 @@ FD.med%>% # from script 6 coomunity metrics calculations
   ggplot()+
   #geom_errorbar(aes(trait, mean, ymin = mean-ci, ymax = mean+ci), color = "black",linewidth =1) +
   geom_boxplot(aes(x= trait, y= MPD, fill = trait), color = "black")+
-  #geom_point(aes(x= trait, y= MPD, fill = trait), color = "black", shape= 21, size = 5, alpha = 0.5,position = "jitter")+
+  geom_point(aes(x= trait, y= MPD, fill = trait), color = "black", shape= 21, size = 5, alpha = 0.5,position = "jitter")+
   scale_fill_manual(values = c("cyan4", "bisque3"))+
   scale_y_continuous(limits = c(0.14, 0.8))+
   geom_segment (aes(x= 1.1,xend =1.9,  y = 0.75, yend= 0.75), color = "black", linewidth = 1, show.legend = F)+
   annotate ("text", x= 1.5, y= 0.78, label = "***", size= 4.5)+
-  labs()+
+  labs(subtitle = "Presence/Absence data")+
   theme_classic(base_size = 16)+
   theme(strip.text = element_blank(),
+        plot.subtitle = element_text (hjust=0.5),
         plot.margin = margin(0,0,0,0, unit = "cm"),
         panel.background = element_rect(color = "black", fill = NULL),
-        axis.text.x = element_text(size= 10),  #, angle = 20, vjust = 0.8
-        axis.text.y = element_text(size =10),
+        axis.text.x = element_text(size= 12),  #, angle = 20, vjust = 0.8
+        axis.text.y = element_blank(),
         axis.title= element_blank(),
+        axis.ticks.y = element_blank(),
         legend.position = "none")-> FD.med.pre;FD.med.pre
 
 # combine plots mediterranean
 library(patchwork)
+
+# version 1
 FD.med.sep + 
   inset_element(FD.med.ab, left = 0.2, bottom = 0.7, right = 0.494, top = 1)+
-  inset_element(FD.med.pre, left = 0.7, bottom = 0.7, right = 1, top = 1)-> graph.FD.med; graph.FD.med
-
+  inset_element(FD.med.pre, left = 0.7, bottom = 0.7, right = 1, top = 1)
+# version 2
+((FD.med.ab+FD.med.pre) /FD.med.sep )+ plot_layout(heights = c(1,0.5))-> graph.FD.med; graph.FD.med
 
 ## 5.5.5. explore correlation with plot richness supplementary?? ####
 # richness x environmental gradients
@@ -183,18 +191,18 @@ FD.tem%>% # from script 6 coomunity metrics calculations
   ggplot()+
   #geom_errorbar(aes(trait, mean, ymin = mean-ci, ymax = mean+ci), color = "black",linewidth =1) +
   geom_boxplot(aes(x= trait, y= MPD, fill = trait), color = "black")+
-  geom_point(aes(x= trait, y= MPD, fill = trait), color = "black", shape= 21, size = 5, alpha = 0.5,position = "jitter")+
+  geom_point(aes(x= trait, y= MPD, fill = trait), color = "black", shape= 21, size = 1, alpha = 0.5,position = "jitter")+
   scale_fill_manual(values = c("cadetblue","cadetblue3","cadetblue1",  
                                "antiquewhite3","antiquewhite1", "cornsilk2","burlywood2", "cornsilk4"))+
   scale_y_continuous(limits = c(0, 1))+
   #coord_flip()+
   facet_grid(~data_type)+
-  labs(subtitle = "Temperate", y= "Mean pairwise dissimilarity")+
-  theme_classic(base_size = 16)+
-  theme(strip.text = element_text(size =16),
+  #labs(subtitle = "Temperate", y= "Mean pairwise dissimilarity")+
+  theme_classic(base_size = 14)+
+  theme(strip.text = element_blank(),
         panel.background = element_rect(color = "black", fill = NULL),
         axis.text.x = element_text(size= 12, angle = 20, vjust = 0.8),
-        axis.title.x= element_blank(),
+        axis.title= element_blank(),
         legend.position = "none")-> FD.tem.sep;FD.tem.sep
 
 FD.tem%>% # from script 6 community metrics calculations
@@ -203,19 +211,21 @@ FD.tem%>% # from script 6 community metrics calculations
   ggplot()+
   #geom_errorbar(aes(trait, mean, ymin = mean-ci, ymax = mean+ci), color = "black",linewidth =1) +
   geom_boxplot(aes(x= trait, y= MPD, fill = trait), color = "black")+
-  #geom_point(aes(x= trait, y= MPD, fill = trait), color = "black", shape= 21, size = 5, alpha = 0.5,position = "jitter")+
+  geom_point(aes(x= trait, y= MPD, fill = trait), color = "black", shape= 21, size = 5, alpha = 0.5,position = "jitter")+
   scale_fill_manual(values = c("cyan4", "bisque3"))+
   scale_y_continuous(limits = c(0.18, 0.52))+
   geom_segment (aes(x= 1.1,xend =1.9,  y = 0.45, yend= 0.45), color = "black", linewidth = 1, show.legend = F)+
   annotate ("text", x= 1.5, y= 0.49, label = "NS", size= 4.5)+
-  labs()+
+  labs(title= "Temperate", subtitle= "Abundance data", y= "Mean pairwise dissimilarity")+
   theme_classic(base_size = 16)+
   theme(strip.text = element_blank(),
-        plot.margin = margin(0,0,0,0, unit = "cm"),
+        plot.subtitle = element_text(hjust=0.5),
+        plot.margin = margin(0,0.15,0,0, unit = "cm"),
         panel.background = element_rect(color = "black", fill = NULL),
-        axis.text.x = element_text(size= 10),  #, angle = 20, vjust = 0.8
-        axis.text.y = element_text(size =10),
-        axis.title= element_blank(),
+        axis.text.x = element_text(size= 12),  #, angle = 20, vjust = 0.8
+        axis.text.y = element_text(size =12),
+        axis.title.y= element_text(size = 14),
+        axis.title.x= element_blank(),
         legend.position = "none")-> FD.tem.ab;FD.tem.ab
 
 FD.tem%>% # from script 6 coomunity metrics calculations
@@ -224,34 +234,38 @@ FD.tem%>% # from script 6 coomunity metrics calculations
   ggplot()+
   #geom_errorbar(aes(trait, mean, ymin = mean-ci, ymax = mean+ci), color = "black",linewidth =1) +
   geom_boxplot(aes(x= trait, y= MPD, fill = trait), color = "black")+
-  #geom_point(aes(x= trait, y= MPD, fill = trait), color = "black", shape= 21, size = 5, alpha = 0.5,position = "jitter")+
+  geom_point(aes(x= trait, y= MPD, fill = trait), color = "black", shape= 21, size = 5, alpha = 0.5,position = "jitter")+
   scale_fill_manual(values = c("cyan4", "bisque3"))+
   scale_y_continuous(limits = c(0.18, 0.52))+
   geom_segment (aes(x= 1.1,xend =1.9,  y = 0.45, yend= 0.45), color = "black", linewidth = 1, show.legend = F)+
   annotate ("text", x= 1.5, y= 0.47, label = "*", size= 4.5)+
-  labs()+
+  labs(subtitle = "Presence/Absence data")+
   theme_classic(base_size = 16)+
   theme(strip.text = element_blank(),
+        plot.subtitle= element_text(hjust =0.5),
         plot.margin = margin(0,0,0,0, unit = "cm"),
         panel.background = element_rect(color = "black", fill = NULL),
-        axis.text.x = element_text(size= 10),  #, angle = 20, vjust = 0.8
-        axis.text.y = element_text(size =10),
+        axis.text.x = element_text(size= 12),  #, angle = 20, vjust = 0.8
+        axis.text.y = element_blank(),
         axis.title= element_blank(),
+        axis.ticks.y = element_blank(),
         legend.position = "none")-> FD.tem.pre;FD.tem.pre
 x11()
 
 # combine plots temperate
 library(patchwork)
+# version 1
 FD.tem.sep + 
   inset_element(FD.tem.ab, left = 0.2, bottom = 0.7, right = 0.494, top = 1)+
-  inset_element(FD.tem.pre, left = 0.7, bottom = 0.7, right = 1, top = 1)-> graph.FD.tem; graph.FD.tem
-
+  inset_element(FD.tem.pre, left = 0.7, bottom = 0.7, right = 1, top = 1)
+# version 2
+((FD.tem.ab+FD.tem.pre)/FD.tem.sep)+ plot_layout(heights = c(1,0.5))-> graph.FD.tem; graph.FD.tem
 ### final assemblage for visualization ####
 # Combine both FD plots
 graph.FD.med / graph.FD.tem  +
-plot_layout(heights = c(1,1), axis = "collect")-> fig4;fig4
+plot_layout(heights = c(.75,0.25,1), axis = "collect")-> fig4;fig4
 
-ggsave(filename = "fig4.png", plot =fig4, path = "results/Figures", 
+ggsave(filename = "fig4 (2).png", plot =fig4, path = "results/Figures", 
        device = "png", dpi = 600)
 
 ## 5.5.5. explore correlation with plot richness  ####
