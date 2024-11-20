@@ -31,7 +31,7 @@ sp_x_trait_M<- as.matrix(sp_x_trait_M)
 plot_x_sp_M_PA<- as.matrix(plot_x_sp_M_PA)
 
 CM_M<-functcomp(sp_x_trait_M, plot_x_sp_M_PA, CWM.type = "all") # CWM.type to consider binary or categorical traits
-
+dim(plot_x_sp_M_PA)
 # first let's check CM normality (all look normal distribution)
 CM_M%>%
   gather(trait, value, seed_mass:odds_D_constant)%>%

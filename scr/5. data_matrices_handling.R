@@ -115,8 +115,30 @@ read.csv("data/spatial-survey-species-Med.csv") %>%
   replace(is.na(.), 0)%>% #-> med_plot
   filter(plot%in%spatial_env_med$plot)%>% 
   column_to_rownames(var="plot")-> plot_x_sp_M # replace Na with 0
+dim(plot_x_sp_M)
 sp_x_plot_M <- t(plot_x_sp_M)
+dim(plot_x_sp_M)
 unique(sp_med$species)
+
+# presence_absence sp x plot matrix (to use in CM) with restrictive dataset
+read.csv("data/spatial-survey-species-Med.csv") %>%
+  group_by(plot)%>%
+  mutate(total_cover= sum(cover),
+         rel_cover = round((cover/total_cover)*100,2), # relative cover according to max vegetation cover
+         N_sp = length(unique(species)))%>%
+  merge(sp_med, by="species")%>%  # get species names shortened
+  dplyr::select(plot, species, rel_cover)%>%
+  group_by(species, plot)%>%
+  mutate(presence= ifelse(rel_cover>0,1,0))%>%
+  dplyr::select(plot, species,presence)%>%
+  spread(species, presence)%>% # species in columns
+  replace(is.na(.), 0)%>% 
+  filter(plot%in%spatial_env_med$plot)%>%
+  column_to_rownames(var="plot")-> plot_x_sp_M_PA
+
+sp_x_plot_M <- t(plot_x_sp_M)
+dim(plot_x_sp_M)
+dim(plot_x_sp_M_PA)
 
 # 2-  species x traits matrix ########
 #### species x traits matrix with germination as log odd ratios 
@@ -217,6 +239,7 @@ germ_odds_M%>% # log odds ratios
   dplyr::select(species, seed_mass,plant_height,leaf_area, LDMC, SLA,
                 odds_B_dark, odds_C_WP, odds_D_constant)%>% # percentage data not necesary in theory
   column_to_rownames(var="species")->sp_x_trait_M
+dim(sp_x_trait_M)
 
 # 3-  plot x Environmental data ########
 read.csv("data/spatial-survey-temperatures-Med.csv") %>%
@@ -245,7 +268,7 @@ read.csv("data/spatial-survey-temperatures-Med.csv") %>%
   dplyr::select(plot, elevation,bio1:GDD)%>% 
   filter(plot%in%spatial_env_med$plot)%>% 
   column_to_rownames(var="plot")-> plot_x_env_M
-
+dim(plot_x_env_M)
 plot_x_env_M%>%
   rownames_to_column(var = "plot")->plot_x_env_M2 
 plot_x_env_M2 %>%

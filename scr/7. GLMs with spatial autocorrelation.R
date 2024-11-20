@@ -249,6 +249,7 @@ library(patchwork)
 graph.cm.M / graph.fd.M + 
   plot_layout(heights = c(1,1), axis = "collect") & theme(legend.position = "right")-> graph.M; graph.M
 
+
 ### Community metrics Temperate ####
 effect_names <- c("odds_B_dark" = "Darkness","odds_C_WP" = "Water stress",
                     "odds_D_constant" = "Constant Temp","seed_mass" = "Seed mass",

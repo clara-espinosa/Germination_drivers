@@ -44,7 +44,7 @@ raw_df %>%
   theme (plot.title = element_text ( size = 32), #hjust = 0.5,
          legend.position = "right")
 
-#final germination percentage calculation (update with error bars) ####
+# final germination percentage calculation (update with error bars) ####
 read.csv("data/raw_data.csv", sep = ",") %>%
   convert_as_factor(species, code, treatment, temp) %>%
   dplyr::select (species, code, treatment, petri, initial, D7, D14, D21, D28, D35, D42) %>%
