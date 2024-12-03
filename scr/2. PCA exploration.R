@@ -317,6 +317,129 @@ ggsave(filename = "Figure 1C.png", plot =germ.trait.pca , path = "results/Figure
 
 ggsave(filename = "Figure 1BC.png", plot =fig1bc , path = "results/Figures", 
        device = "png", dpi = 600)
+#### Species Plant TRAITS PCA ###############
+# Mediterranean
+germ_odds_M%>% # log odds ratios
+  merge(seed_mass_M)%>% # log transformed
+  merge(plant_height_M)%>% # log transformed
+  merge(leaves_traits_M )%>% #only leaf area log transformed
+  dplyr::select(species, seed_mass,
+                plant_height, 
+                leaf_area, LDMC, SLA)%>% #, odds_B_dark, odds_C_WP, odds_D_constant
+  merge(sp_med, by = c("species"))%>%
+  dplyr::select(species, family, seed_mass:SLA) %>%
+  # USEFUL!!Shorten sp names with 4 letters from genus name and 4 letter from species name 
+  na.omit()%>% # lose 1 species
+  mutate(species =make.cepnames(species))->sp_traits_M_PCA
+  
+
+
+sp_traits_M_PCA[, 3:7] %>%
+  FactoMineR::PCA() -> pca_traits_med
+
+pca_traits_med$var$contrib
+pca_traits_med$eig
+sp_traits_M_PCA[, 3:7] %>%cor()
+
+cbind((sp_traits_M_PCA %>%  dplyr::select(species, family)), data.frame(pca_traits_med$ind$coord[, 1:4])) %>%
+  mutate(species = factor(species)) -> pcaInds_traits_med
+
+pca_traits_med$var$coord[, 1:2] %>%
+  data.frame %>%
+  rownames_to_column(var = "Variable")-> pcaVars_traits_med
+
+### Plot PCA
+x11()
+ggplot(pcaInds_traits_med, aes(x = Dim.1, y = Dim.2)) +
+  coord_fixed() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_segment(data = pcaVars_traits_med, aes(x = 0, y = 0, xend = 3*Dim.1, yend = 3*Dim.2), arrow = arrow(length = unit(0.3,"cm"))) +
+  geom_point(aes(fill = family), color = "black", show.legend = T, size = 4, shape = 21) + # family
+  #geom_label(data = pcaVars_picos, aes(x = 3*Dim.1, y = 3*Dim.2, label = Variable),  show.legend = F, size = 4) +
+  geom_label_repel(data = pcaVars_traits_med, aes(x = 3*Dim.1, y = 3*Dim.2, label = Variable),  show.legend = FALSE, size = 5, segment.size= 1,
+                   point.padding = 0.2, nudge_x = .15, nudge_y = .5,segment.curvature = -1e-20, segment.linetype = 1, segment.color = "red", arrow = arrow(length = unit(0.015, "npc")))+
+  geom_text_repel (data = pcaInds_traits_med, aes (x = Dim.1, y = Dim.2, label = species), show.legend = F, size =4) +
+  ggthemes::theme_tufte(base_size=12) + 
+  labs(title= "Mediterranean species traits PCA", tag = "A")+
+  theme(text = element_text(family = "sans"),
+        plot.title = element_text (size= 16),
+        legend.position = "right", 
+        legend.title = element_blank(),
+        legend.text = element_text(size = 12, color = "black"),
+        panel.background = element_rect(color = "black", fill = NULL),
+        axis.title = element_text(size = 12),
+        axis.text = element_text(size = 12, color = "black"),
+        plot.tag.position = c(0.02,1),
+        plot.margin = unit(c(1, 0, 0, 0), "cm")) +
+  scale_x_continuous(name = paste("Axis 1 (", round(pca_traits_med$eig[1, 2], 0),
+                                  "% variance explained)", sep = ""), limits = c(-5, 5)) + 
+  scale_y_continuous(name = paste("Axis 2 (", round(pca_traits_med$eig[2, 2], 0), 
+                                  "% variance explained)", sep = ""), limits = c(-4, 4))-> plant.trait.pca.M;plant.trait.pca.M
+
+# Temperate
+germ_odds_T%>% # log odd ratios
+  merge(seed_mass_T)%>% #log seed mass
+  merge(plant_height_T)%>% # log plantheight
+  merge(leaves_traits_T)%>% # only leaf area log transformed
+  dplyr::select(species, seed_mass,plant_height,
+                leaf_area, LDMC, SLA)%>% #, odds_B_dark, odds_C_WP, odds_D_constant
+  merge(sp_tem, by = c("species"))%>%
+  dplyr::select(species, family, seed_mass:SLA) %>%
+  # USEFUL!!Shorten sp names with 4 letters from genus name and 4 letter from species name 
+  #na.omit()%>% # lose 3 species
+  mutate(species =make.cepnames(species))->sp_traits_T_PCA
+
+sp_traits_T_PCA[, 3:7] %>%
+  FactoMineR::PCA() -> pca_traits_tem
+
+pca_traits_tem$var$contrib
+pca_traits_tem$eig
+sp_traits_T_PCA[, 3:7] %>%cor()
+
+cbind((sp_traits_T_PCA %>%  dplyr::select(species, family)), data.frame(pca_traits_tem$ind$coord[, 1:4])) %>%
+  mutate(species = factor(species)) -> pcaInds_traits_tem
+
+pca_traits_tem$var$coord[, 1:2] %>%
+  data.frame %>%
+  rownames_to_column(var = "Variable")-> pcaVars_traits_tem
+
+### Plot PCA
+x11()
+ggplot(pcaInds_traits_tem, aes(x = Dim.1, y = Dim.2)) +
+  coord_fixed() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_segment(data = pcaVars_traits_tem, aes(x = 0, y = 0, xend = 3*Dim.1, yend = 3*Dim.2), arrow = arrow(length = unit(0.3,"cm"))) +
+  geom_point(aes(fill = family), color = "black", show.legend = T, size = 4, shape = 21) + # family
+  #geom_label(data = pcaVars_picos, aes(x = 3*Dim.1, y = 3*Dim.2, label = Variable),  show.legend = F, size = 4) +
+  geom_label_repel(data = pcaVars_traits_tem, aes(x = 3*Dim.1, y = 3*Dim.2, label = Variable),  show.legend = FALSE, size = 5, segment.size= 1,
+                   point.padding = 0.2, nudge_x = .15, nudge_y = .5,segment.curvature = -1e-20, segment.linetype = 1, segment.color = "red", arrow = arrow(length = unit(0.015, "npc")))+
+  geom_text_repel (data = pcaInds_traits_tem, aes (x = Dim.1, y = Dim.2, label = species), show.legend = F, size =4) +
+  ggthemes::theme_tufte(base_size=12) + 
+  labs(title= "Temperate species traits PCA", tag = "B")+
+  theme(text = element_text(family = "sans"),
+        plot.title = element_text (size= 16),
+        legend.position = "right", 
+        legend.title = element_blank(),
+        legend.text = element_text(size = 12, color = "black"),
+        panel.background = element_rect(color = "black", fill = NULL),
+        axis.title = element_text(size = 12),
+        axis.text = element_text(size = 12, color = "black"),
+        plot.tag.position = c(0.02,1),
+        plot.margin = unit(c(1, 0, 0, 0), "cm")) +
+  scale_x_continuous(name = paste("Axis 1 (", round(pca_traits_tem$eig[1, 2], 0),
+                                  "% variance explained)", sep = ""), limits = c(-5, 5)) + 
+  scale_y_continuous(name = paste("Axis 2 (", round(pca_traits_tem$eig[2, 2], 0), 
+                                  "% variance explained)", sep = ""), limits = c(-4, 4))-> plant.trait.pca.T; plant.trait.pca.T
+
+# combine graph
+ggarrange(plant.trait.pca.M,plant.trait.pca.T,  ncol= 2, common.legend = F)-> plant.trait.pca;plant.trait.pca
+
+ggsave(filename = "Plant traits PCA.png", plot =plant.trait.pca , path = "results/preliminar graphs/traits PCAs/", 
+       device = "png", dpi = 600)
+
+
 #### Species climatic preferences PCA and correlations ####
 ####load species data and select variables 
 
@@ -444,127 +567,5 @@ ggplot(pcaInds_picos, aes(x = Dim.1, y = Dim.2)) +
 ggarrange(Med_sp_clim,Tem_sp_clim,  ncol= 2, common.legend = F)-> sp_clim;sp_clim
 
 ggsave(filename = "Species climatic preferences.png", plot =sp_clim , path = "results/Figures/", 
-       device = "png", dpi = 600)
-
-#### Species Plant TRAITS PCA ###############
-# Mediterranean
-germ_odds_M%>% # log odds ratios
-  merge(seed_mass_M)%>% # log transformed
-  merge(plant_height_M)%>% # log transformed
-  merge(leaves_traits_M )%>% #only leaf area log transformed
-  dplyr::select(species, seed_mass,
-                plant_height, 
-                leaf_area, LDMC, SLA)%>% #, odds_B_dark, odds_C_WP, odds_D_constant
-  merge(sp_med, by = c("species"))%>%
-  dplyr::select(species, family, seed_mass:SLA) %>%
-  # USEFUL!!Shorten sp names with 4 letters from genus name and 4 letter from species name 
-  na.omit()%>% # lose 1 species
-  mutate(species =make.cepnames(species))->sp_traits_M_PCA
-  
-
-
-sp_traits_M_PCA[, 3:7] %>%
-  FactoMineR::PCA() -> pca_traits_med
-
-pca_traits_med$var$contrib
-pca_traits_med$eig
-sp_traits_M_PCA[, 3:7] %>%cor()
-
-cbind((sp_traits_M_PCA %>%  dplyr::select(species, family)), data.frame(pca_traits_med$ind$coord[, 1:4])) %>%
-  mutate(species = factor(species)) -> pcaInds_traits_med
-
-pca_traits_med$var$coord[, 1:2] %>%
-  data.frame %>%
-  rownames_to_column(var = "Variable")-> pcaVars_traits_med
-
-### Plot PCA
-x11()
-ggplot(pcaInds_traits_med, aes(x = Dim.1, y = Dim.2)) +
-  coord_fixed() +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_segment(data = pcaVars_traits_med, aes(x = 0, y = 0, xend = 3*Dim.1, yend = 3*Dim.2), arrow = arrow(length = unit(0.3,"cm"))) +
-  geom_point(aes(fill = family), color = "black", show.legend = T, size = 4, shape = 21) + # family
-  #geom_label(data = pcaVars_picos, aes(x = 3*Dim.1, y = 3*Dim.2, label = Variable),  show.legend = F, size = 4) +
-  geom_label_repel(data = pcaVars_traits_med, aes(x = 3*Dim.1, y = 3*Dim.2, label = Variable),  show.legend = FALSE, size = 5, segment.size= 1,
-                   point.padding = 0.2, nudge_x = .15, nudge_y = .5,segment.curvature = -1e-20, segment.linetype = 1, segment.color = "red", arrow = arrow(length = unit(0.015, "npc")))+
-  geom_text_repel (data = pcaInds_traits_med, aes (x = Dim.1, y = Dim.2, label = species), show.legend = F, size =4) +
-  ggthemes::theme_tufte(base_size=12) + 
-  labs(title= "Mediterranean species traits PCA", tag = "A")+
-  theme(text = element_text(family = "sans"),
-        plot.title = element_text (size= 16),
-        legend.position = "right", 
-        legend.title = element_blank(),
-        legend.text = element_text(size = 12, color = "black"),
-        panel.background = element_rect(color = "black", fill = NULL),
-        axis.title = element_text(size = 12),
-        axis.text = element_text(size = 12, color = "black"),
-        plot.tag.position = c(0.02,1),
-        plot.margin = unit(c(1, 0, 0, 0), "cm")) +
-  scale_x_continuous(name = paste("Axis 1 (", round(pca_traits_med$eig[1, 2], 0),
-                                  "% variance explained)", sep = ""), limits = c(-5, 5)) + 
-  scale_y_continuous(name = paste("Axis 2 (", round(pca_traits_med$eig[2, 2], 0), 
-                                  "% variance explained)", sep = ""), limits = c(-4, 4))-> plant.trait.pca.M;plant.trait.pca.M
-
-# Temperate
-germ_odds_T%>% # log odd ratios
-  merge(seed_mass_T)%>% #log seed mass
-  merge(plant_height_T)%>% # log plantheight
-  merge(leaves_traits_T)%>% # only leaf area log transformed
-  dplyr::select(species, seed_mass,plant_height,
-                leaf_area, LDMC, SLA)%>% #, odds_B_dark, odds_C_WP, odds_D_constant
-  merge(sp_tem, by = c("species"))%>%
-  dplyr::select(species, family, seed_mass:SLA) %>%
-  # USEFUL!!Shorten sp names with 4 letters from genus name and 4 letter from species name 
-  #na.omit()%>% # lose 3 species
-  mutate(species =make.cepnames(species))->sp_traits_T_PCA
-
-sp_traits_T_PCA[, 3:7] %>%
-  FactoMineR::PCA() -> pca_traits_tem
-
-pca_traits_tem$var$contrib
-pca_traits_tem$eig
-sp_traits_T_PCA[, 3:7] %>%cor()
-
-cbind((sp_traits_T_PCA %>%  dplyr::select(species, family)), data.frame(pca_traits_tem$ind$coord[, 1:4])) %>%
-  mutate(species = factor(species)) -> pcaInds_traits_tem
-
-pca_traits_tem$var$coord[, 1:2] %>%
-  data.frame %>%
-  rownames_to_column(var = "Variable")-> pcaVars_traits_tem
-
-### Plot PCA
-x11()
-ggplot(pcaInds_traits_tem, aes(x = Dim.1, y = Dim.2)) +
-  coord_fixed() +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_segment(data = pcaVars_traits_tem, aes(x = 0, y = 0, xend = 3*Dim.1, yend = 3*Dim.2), arrow = arrow(length = unit(0.3,"cm"))) +
-  geom_point(aes(fill = family), color = "black", show.legend = T, size = 4, shape = 21) + # family
-  #geom_label(data = pcaVars_picos, aes(x = 3*Dim.1, y = 3*Dim.2, label = Variable),  show.legend = F, size = 4) +
-  geom_label_repel(data = pcaVars_traits_tem, aes(x = 3*Dim.1, y = 3*Dim.2, label = Variable),  show.legend = FALSE, size = 5, segment.size= 1,
-                   point.padding = 0.2, nudge_x = .15, nudge_y = .5,segment.curvature = -1e-20, segment.linetype = 1, segment.color = "red", arrow = arrow(length = unit(0.015, "npc")))+
-  geom_text_repel (data = pcaInds_traits_tem, aes (x = Dim.1, y = Dim.2, label = species), show.legend = F, size =4) +
-  ggthemes::theme_tufte(base_size=12) + 
-  labs(title= "Temperate species traits PCA", tag = "B")+
-  theme(text = element_text(family = "sans"),
-        plot.title = element_text (size= 16),
-        legend.position = "right", 
-        legend.title = element_blank(),
-        legend.text = element_text(size = 12, color = "black"),
-        panel.background = element_rect(color = "black", fill = NULL),
-        axis.title = element_text(size = 12),
-        axis.text = element_text(size = 12, color = "black"),
-        plot.tag.position = c(0.02,1),
-        plot.margin = unit(c(1, 0, 0, 0), "cm")) +
-  scale_x_continuous(name = paste("Axis 1 (", round(pca_traits_tem$eig[1, 2], 0),
-                                  "% variance explained)", sep = ""), limits = c(-5, 5)) + 
-  scale_y_continuous(name = paste("Axis 2 (", round(pca_traits_tem$eig[2, 2], 0), 
-                                  "% variance explained)", sep = ""), limits = c(-4, 4))-> plant.trait.pca.T; plant.trait.pca.T
-
-# combine graph
-ggarrange(plant.trait.pca.M,plant.trait.pca.T,  ncol= 2, common.legend = F)-> plant.trait.pca;plant.trait.pca
-
-ggsave(filename = "Plant traits PCA.png", plot =plant.trait.pca , path = "results/preliminar graphs/traits PCAs/", 
        device = "png", dpi = 600)
 
