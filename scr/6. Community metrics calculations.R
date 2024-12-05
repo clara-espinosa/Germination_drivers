@@ -80,7 +80,7 @@ germtraits.dist.M <- gowdis(sp_x_trait_M[,6:8])
 # info from https://cran.r-project.org/web/packages/gawdis/vignettes/gawdis.html
 Wplanttraits.dist.M<-gawdis::gawdis(sp_x_trait_M[,1:5], w.type = "optimized", opti.maxiter = 200, 
                                     groups.weight=T, groups = c(1,2, 3, 3, 3))#
-
+str(Wplanttraits.dist.M)
 # 5.5. Calculation of MDP (main pairwise dissimilarity) each trait with melodic function ####
 # Use of melodic function to compute both weighted and unweighted forms of MPD 
 # activate function from melodic.R script in src folder

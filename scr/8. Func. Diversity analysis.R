@@ -22,7 +22,7 @@ FD.M.diff%>%
 # with both data types significant differences!
 ##### partial Mediterranean visualization ####
 x11()
-read.csv("results/GLMs auto FD Med.csv", sep=",") %>% # table with glm model results from script 7
+read.csv("results/GLMs auto FD Med.csv", sep=";") %>% # table with glm model results from script 7
   convert_as_factor(trait, data_type,term) %>%
   filter(!term == "(Intercept)")%>%
   filter(!term == "scale(auto)")%>%
@@ -352,7 +352,7 @@ fd.med.tog.micro/FD.med.tog/ fd.tem.tog.micro/FD.tem.tog +
   plot_layout (heights = c(0.2,0.3,0.2,0.3))-> fig4;fig4
   
 
-ggsave(filename = "fig4 (3).png", plot =fig4, path = "results/Figures", 
+ggsave(filename = "fig4.png", plot =fig4, path = "results/Figures", 
        device = "png", dpi = 600)
 
 ## 5.5.5. explore correlation with plot richness  ####
@@ -413,5 +413,3 @@ ggsave(filename = "Richness_Tem.png", plot =richness_T , path = "results/Supplem
 
 
 
-
-###################### GERMINATION VS PLANT GROUPED MPD ############################################
