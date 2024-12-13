@@ -396,7 +396,7 @@ read.csv("results/GLMs auto Med.csv", sep =",")%>%
   facet_grid (term~trait,labeller = as_labeller(effect_names),  scales = "free",  switch = "y") + #ncol = 8, nrow =2,
   geom_hline(yintercept = 0, linetype = "dashed", linewidth =1, color = "red") +
   coord_flip() +
-  labs(y = "GLMs parameter estimate", title = "Community metrics", subtitle = "Mediterranean") + # Temperate   Mediterranean
+  labs(y = "GLMs parameter estimate", title = "Community traits averages", subtitle = "Mediterranean") + # Temperate   Mediterranean
   theme_classic (base_size = 12)+
   theme(text = element_text(family = "sans"),
         plot.title = element_text (size = 16),
@@ -414,68 +414,7 @@ read.csv("results/GLMs auto Med.csv", sep =",")%>%
         axis.text.y = element_blank (),
         axis.ticks = element_blank(),
         axis.title.x = element_text (size=12))-> graph.cm.M;graph.cm.M
-  
-### FD Presence - abundance MEDITERRANEAN ####
-effect_names <- c("odds_B_dark" = "Darkness","odds_C_WP" = "Water stress",
-                  "odds_D_constant" = "Constant Temp","seed_mass" = "Seed mass",
-                  "plant_height" = "Plant height", "leaf_area" = "Leaf area",
-                  "LDMC" = "LDMC", "SLA" = "SLA", "Elevation"= "Elevation", 
-                  "FDD" = "FDD", "GDD"="GDD", "Snow"="Snow")
-x11()
-read.csv("results/GLMs auto FD Med.csv", sep=";") %>% # table with glm model results from script 7
-  convert_as_factor(trait, data_type,term) %>%
-  filter(!term == "(Intercept)")%>%
-  filter(!term == "scale(auto)")%>%
-  filter(!trait == "germtraits")%>%
-  filter(!trait == "Wplanttraits")%>%
-  mutate(trait= fct_recode(trait, "LDMC"= "LDMC", "SLA"="SLA", "Constant Temp"= "Tconstant",
-                           "Water stress"="WP",  "Darkness"="dark","Leaf area"= "leafarea", 
-                           "Plant height"= "plantheight", "Seed mass"= "seedmass"))%>%
-  mutate (trait = fct_relevel(trait, "Darkness", "Water stress", "Constant Temp",
-                              "Seed mass", "Plant height", "Leaf area", "LDMC", "SLA"))%>%
-  mutate(term= fct_recode(term, "Elevation" = "scale(elevation)", "FDD"="scale(FDD)",
-                          "GDD"="scale(GDD)", "Snow"="scale(Snw)"))%>%
-  mutate(data_type = fct_recode(data_type,"Presence/Absence"= "Presence","Abundance"= "Abundance"))%>%
-  mutate(CI = 1.96*std.error)%>% # confidence interval multiply 1.96 per std error
-  mutate(CImin = estimate-CI, 
-         CImax= estimate+CI)%>%
-  mutate(alpha = ifelse(p.value<0.05, 1, 0.9))%>%
-  ggplot(aes(x= data_type, y =estimate, ymin = CImin, ymax = CImax))+
-  geom_errorbar (aes(color=trait, alpha = alpha),width = 0.15, linewidth =1.2,, show.legend = F) + #, color="black" 
-  geom_point(aes(fill=trait, alpha = alpha, shape= data_type), color = "black",size = 3.5) +#
-  guides(alpha="none")+
-  scale_shape_manual(name= "Mean Pairwise \n Dissimilarity data", values = c(22,24))+ #
-  scale_color_manual(values = c("cadetblue","cadetblue3","cadetblue1",  
-                                "antiquewhite3","antiquewhite1", "cornsilk2","burlywood2", "cornsilk4"), guide="none")+
-  scale_fill_manual(values = c("cadetblue","cadetblue3","cadetblue1",  
-                               "antiquewhite3","antiquewhite1", "cornsilk2","burlywood2", "cornsilk4"), guide="none")+
-  facet_grid (term~trait,  scales = "free",  switch = "y") + #ncol = 8, nrow =2,
-  geom_hline(yintercept = 0, linetype = "dashed", linewidth =1, color = "red") +
-  coord_flip() +
-  labs(y = "GLMs parameter estimate") + # Temperate   Mediterranean
-  theme_classic (base_size = 12)+
-  theme(text = element_text(family = "sans"),
-        plot.title = element_text (size = 16),
-        plot.margin = margin(0,0,0,0,unit = "pt"),
-        strip.text = element_text(size = 11), #face = "bold",
-        legend.title = element_text(size = 12),
-        legend.position = "right",
-        strip.background = element_rect(color = "black", fill = NULL),
-        strip.text.y.left = element_text(angle = 0),
-        #panel.background = element_rect(color = "black", fill = NULL),
-        plot.tag.position = c(0.015,1),
-        axis.title.y = element_blank(),
-        axis.text.x = element_blank (),
-        axis.text.y = element_blank (),
-        axis.ticks = element_blank(),
-        axis.title.x = element_text (size=12))-> graph.fd.M;graph.fd.M
-
-library(patchwork)
-graph.cm.M / graph.fd.M + 
-  plot_layout(heights = c(1,1), axis = "collect") & theme(legend.position = "right")-> graph.M; graph.M
-
-
-### Community metrics Temperate ####
+ ### Community metrics Temperate ####
 effect_names <- c("odds_B_dark" = "Darkness","odds_C_WP" = "Water stress",
                     "odds_D_constant" = "Constant Temp","seed_mass" = "Seed mass",
                     "plant_height" = "Plant height", "leaf_area" = "Leaf area",
@@ -530,10 +469,64 @@ read.csv("results/GLMs auto Tem.csv", sep =",")%>%
         axis.ticks = element_blank(),
         axis.title.x = element_text (size=12))-> graph.cm.T;graph.cm.T
 
-# combine community metrics graphs
-library(patchwork)
-graph.cm.M / graph.cm.T + 
-  plot_layout(heights = c(1,1), guides = "collect", axis = "collect") & theme(legend.position = "right")-> graph.cm; graph.cm
+
+ 
+### FD Presence - abundance MEDITERRANEAN ####
+effect_names <- c("odds_B_dark" = "Darkness","odds_C_WP" = "Water stress",
+                  "odds_D_constant" = "Constant Temp","seed_mass" = "Seed mass",
+                  "plant_height" = "Plant height", "leaf_area" = "Leaf area",
+                  "LDMC" = "LDMC", "SLA" = "SLA", "Elevation"= "Elevation", 
+                  "FDD" = "FDD", "GDD"="GDD", "Snow"="Snow")
+x11()
+read.csv("results/GLMs auto FD Med.csv", sep=";") %>% # table with glm model results from script 7
+  convert_as_factor(trait, data_type,term) %>%
+  filter(!term == "(Intercept)")%>%
+  filter(!term == "scale(auto)")%>%
+  filter(!trait == "germtraits")%>%
+  filter(!trait == "Wplanttraits")%>%
+  mutate(trait= fct_recode(trait, "LDMC"= "LDMC", "SLA"="SLA", "Constant Temp"= "Tconstant",
+                           "Water stress"="WP",  "Darkness"="dark","Leaf area"= "leafarea", 
+                           "Plant height"= "plantheight", "Seed mass"= "seedmass"))%>%
+  mutate (trait = fct_relevel(trait, "Darkness", "Water stress", "Constant Temp",
+                              "Seed mass", "Plant height", "Leaf area", "LDMC", "SLA"))%>%
+  mutate(term= fct_recode(term, "Elevation" = "scale(elevation)", "FDD"="scale(FDD)",
+                          "GDD"="scale(GDD)", "Snow"="scale(Snw)"))%>%
+  mutate(data_type = fct_recode(data_type,"Presence/Absence"= "Presence","Abundance"= "Abundance"))%>%
+  mutate(CI = 1.96*std.error)%>% # confidence interval multiply 1.96 per std error
+  mutate(CImin = estimate-CI, 
+         CImax= estimate+CI)%>%
+  mutate(alpha = ifelse(p.value<0.05, 1, 0.9))%>%
+  ggplot(aes(x= data_type, y =estimate, ymin = CImin, ymax = CImax))+
+  geom_errorbar (aes(color=trait, alpha = alpha),width = 0.15, linewidth =1.2,, show.legend = F) + #, color="black" 
+  geom_point(aes(fill=trait, alpha = alpha, shape= data_type), color = "black",size = 3.5) +#
+  guides(alpha="none")+
+  scale_shape_manual(name= "Data type", values = c(22,24))+ #
+  scale_color_manual(values = c("cadetblue","cadetblue3","cadetblue1",  
+                                "antiquewhite3","antiquewhite1", "cornsilk2","burlywood2", "cornsilk4"), guide="none")+
+  scale_fill_manual(values = c("cadetblue","cadetblue3","cadetblue1",  
+                               "antiquewhite3","antiquewhite1", "cornsilk2","burlywood2", "cornsilk4"), guide="none")+
+  facet_grid (term~trait,  scales = "free",  switch = "y") + #ncol = 8, nrow =2,
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth =1, color = "red") +
+  coord_flip() +
+  labs(y = "GLMs parameter estimate", title = "Mean Pairwise Dissimilarity", subtitle = "Mediterranean") +
+  theme_classic (base_size = 12)+
+  theme(text = element_text(family = "sans"),
+        plot.title = element_text (size = 16),
+        plot.subtitle = element_text (size = 14),
+        plot.margin = margin(0,0,0,0,unit = "pt"),
+        strip.text = element_text(size = 11), #face = "bold",
+        legend.title = element_text(size = 12),
+        legend.position = "right",
+        strip.background = element_rect(color = "black", fill = NULL),
+        strip.text.y.left = element_text(angle = 0),
+        #panel.background = element_rect(color = "black", fill = NULL),
+        plot.tag.position = c(0.015,1),
+        axis.title.y = element_blank(),
+        axis.text.x = element_blank (),
+        axis.text.y = element_blank (),
+        axis.ticks = element_blank(),
+        axis.title.x = element_text (size=12))-> graph.fd.M;graph.fd.M
+
 
 
 ### FD Presence - abundance Temperate ####
@@ -560,7 +553,7 @@ read.csv("results/GLMs auto FD Tem.csv", sep=",") %>% # table with glm model res
   geom_errorbar (aes(color=trait, alpha = alpha),width = 0.15, linewidth =1.2,, show.legend = F) + #, color="black" 
   geom_point(aes(fill=trait, alpha = alpha, shape= data_type), color = "black",size = 3.5) +#
   guides(alpha="none")+
-  scale_shape_manual(name= "Mean Pairwise \n Dissimilarity data", values = c(22,24))+ #
+  scale_shape_manual(name= "Data type", values = c(22,24))+ #
   scale_color_manual(values = c("cadetblue","cadetblue3","cadetblue1",  
                                 "antiquewhite3","antiquewhite1", "cornsilk2","burlywood2", "cornsilk4"), guide="none")+
   scale_fill_manual(values = c("cadetblue","cadetblue3","cadetblue1",  
@@ -568,11 +561,12 @@ read.csv("results/GLMs auto FD Tem.csv", sep=",") %>% # table with glm model res
   facet_grid (term~trait,  scales = "free",  switch = "y") + #ncol = 8, nrow =2,
   geom_hline(yintercept = 0, linetype = "dashed", linewidth =1, color = "red") +
   coord_flip() +
-  labs(y = "GLMs parameter estimate") + # Temperate   Mediterranean
+  labs(y = "GLMs parameter estimate", subtitle = "Temperate") +
   theme_classic (base_size = 12)+
   theme(text = element_text(family = "sans"),
         #panel.background = element_rect(fill= "grey98"), #   "ghostwhite"   colour, size, linetype, color
         plot.title = element_text (size = 16),
+        plot.subtitle = element_text (size = 14),
         plot.margin = margin(0,0,0,0,unit = "pt"),
         strip.text = element_text( size = 11), #face = "bold",
         legend.title = element_text (size=12),
@@ -587,18 +581,31 @@ read.csv("results/GLMs auto FD Tem.csv", sep=",") %>% # table with glm model res
         axis.ticks = element_blank(),
         axis.title.x = element_text (size=12))-> graph.fd.T;graph.fd.T
 
-#combine graphs
+
+#combination of graphs ####
+# combine fd and cm x system
 graph.cm.T / graph.fd.T + 
   plot_layout(heights = c(1,1), axis = "collect") & theme(legend.position = "right") -> graph.T; graph.T
 
+library(patchwork)
+graph.cm.M / graph.fd.M + 
+  plot_layout(heights = c(1,1), axis = "collect") & theme(legend.position = "right")-> graph.M; graph.M
 
-#combine graphs
+
+#combine FD graphs
+library(patchwork)
 graph.fd.M / graph.fd.T + 
   plot_layout(heights = c(1,1), guides = "collect", axis = "collect") & theme(legend.position = "right")-> graph.fd;graph.fd
+
+# combine community metrics graphs
+library(patchwork)
+graph.cm.M / graph.cm.T + 
+  plot_layout(heights = c(1,1), guides = "collect", axis = "collect") & theme(legend.position = "right")-> graph.cm; graph.cm
+
 
 ggarrange(graph.cm,graph.fd, ncol = 1 )
 ggarrange(graph.M,graph.T, ncol = 1 )-> fig3;fig3
 
 
-ggsave(filename = "fig3.png", plot =fig3 , path = "results/Figures", 
+ggsave(filename = "Community averages vs climatic gradients.png", plot =graph.cm, path = "results/Figures", 
        device = "png", dpi = 600)
