@@ -69,6 +69,8 @@ read.csv("results/GLMs auto FD Med.csv", sep=";") %>% # table with glm model res
 FD.med%>% # from script 6 coomunity metrics calculations
   filter(trait == "Germination traits"|trait == "Plant traits" )%>%
   mutate(data_type = fct_recode(data_type,"Presence/Absence data"= "Presence","Abundance data"= "Abundance"))%>%
+  #group_by(trait, data_type)%>%
+  #get_summary_stats(MPD)
   #filter(data_type=="Abundance")%>%
   ggplot()+
   labs(y= "Mean pairwise dissimilarity")+
@@ -278,6 +280,8 @@ str(sig.label)
 FD.tem%>% # from script 6 coomunity metrics calculations
   filter(trait == "Germination traits"|trait == "Plant traits" )%>%
   mutate(data_type = fct_recode(data_type,"Presence/Absence data"= "Presence","Abundance data"= "Abundance"))%>%
+  #group_by(trait, data_type)%>%
+  #get_summary_stats(MPD)
   #filter(data_type=="Abundance")%>%
   ggplot()+
   labs(y= "Mean pairwise dissimilarity")+
