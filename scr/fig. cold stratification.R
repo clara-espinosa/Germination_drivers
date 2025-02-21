@@ -10,22 +10,22 @@ cold_strat %>%
   merge (species)%>%
   filter(!(species%in%nogerm_species$species))%>%
   mutate (binom.confint(finalgerm, viable, methods = "wilson"))%>%
-  dplyr::select (community, family, species, treatment, biogeography, finalgerm, viable, mean, upper, lower)%>%
-  group_by (biogeography, family, species)%>%
+  dplyr::select (community, family, species, treatment, community, finalgerm, viable, mean, upper, lower)%>%
+  group_by (community, family, species)%>%
   summarize(germpro = mean(mean), 
             upper = mean(upper),
             lower = mean (lower)) %>% 
   #mutate(cold= ifelse(germpro>0.1, "yes", "no"))%>% 
   #ggplot(aes(x= new_species, y= germpro,fill = cold)) +
-  ggplot(aes(x= reorder(species, germpro), y= germpro,fill = biogeography)) +
+  ggplot(aes(x= reorder(species, germpro), y= germpro,fill = community)) +
   geom_bar (stat = "identity", color = "black") +
   geom_vline(xintercept = 40.5, linetype = "dashed", color = "red", linewidth = 1) +
-  scale_fill_manual(values = c("Mediterranean"="#FDAE61","Broad range"= "#FFFFBF","Endemic"= "#ABDDA4", "Eurosiberian"= "#2B83BA"))+
+  scale_fill_manual(values = c("Mediterranean"="darkgoldenrod1","Temperate"= "forestgreen"))+
   geom_errorbar( aes(species, germpro, ymin = lower, ymax = upper), width = 0.5, linewidth = 0.5) +
-  annotate("segment", x = 41, y = 0.75, xend = 45, yend = 0.75, arrow = arrow(type = "closed", length = unit(0.35, "cm")))+
-  annotate("label",x=43,y=0.89, label = "Under snow \n germination", size= 3)+
-  annotate("segment", x = 40, y = 0.75, xend = 36, yend = 0.75, arrow = arrow(type = "closed", length = unit(0.35, "cm")))+
-  annotate("label",x=38,y=0.89, label = "Spring \n germination", size= 3)+
+  annotate("segment", x = 41, y = 0.73, xend = 45, yend = 0.73, arrow = arrow(type = "closed", length = unit(0.28, "cm")))+
+  annotate("label",x=43,y=0.9, label = "Under snow \n germination", size= 2.7)+
+  annotate("segment", x = 40, y = 0.73, xend = 36, yend = 0.73, arrow = arrow(type = "closed", length = unit(0.28, "cm")))+
+  annotate("label",x=38,y=0.9, label = "Spring \n germination", size= 2.7)+
   coord_flip() + 
   labs (title = "Germination during cold stratification", subtitle = "A) Individual species", y = "Germination proportion")+
   theme_classic (base_size = 10) +
@@ -34,43 +34,41 @@ cold_strat %>%
          axis.title.y= element_blank(),
          axis.text.x= element_text(),
          axis.text.y = element_text(face= "italic", size = 9))-> fig2a;fig2a
-### B) differences between biogeography ####
+### B) differences between community ####
 x11()
 cold_strat%>%
   group_by (species, code, treatment) %>%
   summarize(finalgerm = sum (finalgerm), viable = sum(viable)) %>%
   merge (species)%>%
   filter(!(species%in%nogerm_species$species))%>%
-  group_by(biogeography)%>%
+  group_by(community)%>%
   summarize(finalgerm = sum (finalgerm), 
             viable = sum(viable))%>%
   mutate (binom.confint(finalgerm, viable, methods = "wilson"))%>%
   merge(mcmc_cold%>%
-          group_by (species,treatment) %>%
+          group_by (community, species) %>%
           summarize(finalgerm = sum (finalgerm), viable = sum(viable)) %>%
-          filter(!(species%in%nogerm_species$species))%>% 
-          merge (species)%>%
-          group_by(biogeography)%>%
-  tally(), by = "biogeography")%>%
+          group_by(community)%>%
+  tally(), by = "community")%>%
   rename(n.seeds = n.x,
          n.species= n.y)%>%
-  convert_as_factor(biogeography)%>%
-  mutate(biogeography= fct_relevel(biogeography, "Mediterranean", "Eurosiberian", "Endemic", "Broad range" ))%>%
+  convert_as_factor(community)%>%
+  mutate(community= fct_relevel(community, "Mediterranean", "Temperate" ))%>%
+  mutate(community= fct_recode(community,"Mediterranean \n Alpine" ="Mediterranean", 
+                               "Temperate \n Alpine"="Temperate" ))%>%
   ggplot()+
-  geom_bar(aes(x= biogeography, y= mean, fill= biogeography), color = "black", stat = "identity") +
-  scale_fill_manual(values = c("Mediterranean"="#FDAE61","Broad range"= "#FFFFBF","Endemic"= "#ABDDA4", "Eurosiberian"= "#2B83BA"))+
-  geom_errorbar(aes(x= biogeography, y=mean, ymin=lower, ymax=upper), color = "black", linewidth=1, width = 0.4)+
-  geom_segment (aes(x= 1,xend =2,  y = 0.3, yend= 0.3), color = "black", linewidth = 1.3, show.legend = F)+
-  annotate ("text", x= 1.5, y= 0.31, label = "*", size= 6)+
-  geom_segment (aes(x= 1,xend =3,  y = 0.33, yend= 0.33), color = "black", linewidth = 1.3, show.legend = F)+
-  annotate ("text", x= 2, y= 0.34, label = "**", size= 6)+
-  geom_text(aes(x= biogeography, y= 0.01, label=paste("n =", n.species)),  size=3)+
-  ylim (0,0.35)+
+  geom_bar(aes(x= community, y= mean, fill= community), color = "black", stat = "identity") +
+  scale_fill_manual(labels= c("Mediterranean \n Alpine","Temperate \n Alpine"), values = c("darkgoldenrod1", "forestgreen"))+
+  geom_errorbar(aes(x= community, y=mean, ymin=lower, ymax=upper), color = "black", linewidth=1, width = 0.4)+
+  geom_segment (aes(x= 1,xend =2,  y = 0.27, yend= 0.27), color = "black", linewidth = 1, show.legend = F)+
+  annotate ("text", x= 1.5, y= 0.28, label = "**", size= 6)+
+  geom_text(aes(x= community, y= 0.01, label=paste("n =", n.species)),  size=3)+
+  ylim (0,0.3)+
   labs (y="Germination proportion", subtitle= "B) Biogeographical distribution")+ #
   theme_classic (base_size = 10) + #theme_minimal for all species for mean treatment
   theme (plot.title = element_text ( size = 12), #hjust = 0.5,
          axis.title.x = element_blank(),
-         axis.text.x = element_text (color="black", angle = 20, vjust = 0.8),
+         axis.text.x = element_text (color="black"), #, angle = 20, vjust = 0.7
          legend.title = element_blank(),
          legend.position = "none")-> fig2b;fig2b
 
@@ -80,7 +78,7 @@ fig2a+ fig2b +
   plot_layout(widths = c(1.5,1))-> fig2;fig2
 
 ggsave(filename = "cold stratification.png", plot =fig2 , path = "results/figures", 
-       device = "png", dpi = 600) #, width = 180, units = "mm"
+       device = "png", dpi = 600, width = 180, height = 150, units = "mm") #
 
 #ggpubr::ggarrange(fig2a, fig2b, ncol =2, nrow= 1,common.legend = FALSE, widths = c(1.5,1),align = "h")
 

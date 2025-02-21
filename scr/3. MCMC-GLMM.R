@@ -40,23 +40,22 @@ priors <- list(R = list(V = 1, nu = 50),
 cold_strat%>%
   merge(read.csv("data/species.csv"), by = c("species", "code"))%>%
   filter(!(species%in%nogerm_species$species))%>%
-  select(community, species, biogeography, treatment, petri, finalgerm, viable)%>%
+  select(community, species,  treatment, petri, finalgerm, viable)%>%
   mutate(species= str_replace(species, "Minuartia sp", "Minuartia arctica"))%>%
   mutate(ID = gsub(" ", "_", species), animal = ID) %>% 
-  convert_as_factor(species, community, petri, biogeography)%>% 
-  mutate(biogeography= fct_relevel(biogeography, "Mediterranean", "Eurosiberian", "Endemic", "Broad range" ))-> mcmc_cold
+  convert_as_factor(species, community, petri)-> mcmc_cold
 
 str(mcmc_cold) 
 unique(mcmc_cold$species)# 50 species
 mcmc_cold%>%
-  group_by(species,biogeography)%>%
+  group_by(species,community)%>%
   summarise(finalgerm= sum(finalgerm),
             viable=sum(viable))%>%
-  group_by(biogeography)%>%
+  group_by(community)%>%
   tally() 
 
 ### TEST
-MCMCglmm::MCMCglmm(cbind(finalgerm, viable - finalgerm) ~ biogeography, # ,*community 
+MCMCglmm::MCMCglmm(cbind(finalgerm, viable - finalgerm) ~ community, # ,*community 
                    random = ~ animal + ID,
                    family = "multinomial2", pedigree = nnls_orig, prior = priors, data = mcmc_cold,
                    nitt = nite, thin = nthi, burnin = nbur, 
@@ -97,7 +96,7 @@ finalgerm %>%
   merge(read.csv("data/species.csv"), by = c("species", "code"))%>%
   filter(!treatment== "E_cold_stratification")%>%
   filter(!treatment== "C_alternate_WP")%>%
-  select(community, species, habitat, biogeography, treatment, opt_temp,petri,finalgerm, viable)%>%
+  select(community, species, habitat, treatment, opt_temp,petri,finalgerm, viable)%>%
   mutate(species= str_replace(species, "Minuartia sp", "Minuartia arctica"))%>%
   mutate(ID = gsub(" ", "_", species), animal = ID) %>% 
   filter(!(species%in%nogerm_species$species))%>% # 7 species with 0 germ across all experiment
@@ -106,8 +105,7 @@ finalgerm %>%
   filter (!species == "Cerastium ramosissimum")%>% # germinated under cold stratification but due to mathematical
   # artifacts with averages seems like some germination under darkness RECHECK!!!
   #filter(community =="Temperate")%>% #Temperate    Mediterranean
-  convert_as_factor(species, community, petri,opt_temp, biogeography)%>% 
-  mutate(biogeography= fct_relevel(biogeography, "Mediterranean", "Eurosiberian", "Endemic", "Broad range" ))%>%
+  convert_as_factor(species, community, petri,opt_temp, community)%>% 
   droplevels()-> mcmc
 
 
@@ -116,10 +114,10 @@ unique(mcmc$species)# 38 species
 unique(mcmc$treatment)
 
 mcmc%>%
-  group_by(species,biogeography)%>%
+  group_by(species,community)%>%
   summarise(finalgerm= sum(finalgerm),
             viable=sum(viable))%>%
-  group_by(biogeography)%>%
+  group_by(community)%>%
   tally() 
 
 #descriptive
@@ -127,6 +125,11 @@ mcmc%>%
   group_by(treatment)%>%
   summarise(finalgerm= sum(finalgerm), viable= (sum(viable)))%>%
   mutate (binom.confint(finalgerm, viable, methods = "wilson"))
+
+priors <- list(R = list(V = 1, nu = 50), 
+               G = list(G1 = list(V = 1, nu = 1, alpha.mu = 0, alpha.V = 500), 
+                        #G2 = list(V = 1, nu = 1, alpha.mu = 0, alpha.V = 500),
+                        G2 = list(V = 1, nu = 1, alpha.mu = 0, alpha.V = 500)))
 
 ### TEST
 MCMCglmm::MCMCglmm(cbind(finalgerm, viable - finalgerm) ~ treatment, #
@@ -163,11 +166,11 @@ summary(mc_treat)$Gcovariances[2, 2] %>% round(2)
 summary(mc_treat)$Gcovariances[2, 3] %>% round(2) 
 
 
-# 2.2 Comparison of biogeography within each germination treatment ####
+# 2.2 Comparison of community within each germination treatment ####
 finalgerm %>%
   merge(read.csv("data/species.csv"), by = c("species", "code"))%>%
-  filter(treatment== "D_constant_light" )%>% # "B_alternate_dark"  # "D_constant_light"  "A_alternate_light"
-  select(community, species, habitat, biogeography, treatment, opt_temp,petri,finalgerm, viable)%>%
+  filter(treatment== "B_alternate_dark" )%>% # "B_alternate_dark"  # "D_constant_light"  "A_alternate_light"
+  select(community, species, habitat, community, treatment, opt_temp,petri,finalgerm, viable)%>%
   mutate(species= str_replace(species, "Minuartia sp", "Minuartia arctica"))%>%
   mutate(ID = gsub(" ", "_", species), animal = ID) %>% 
   filter(!(species%in%nogerm_species$species))%>% # 7 species with 0 germ across all experiment
@@ -175,40 +178,39 @@ finalgerm %>%
   filter (!species == "Solidago virgaurea")%>% # only germinated under cold stratification
   filter (!species == "Cerastium ramosissimum")%>% # germinated under cold stratification but due to mathematical
   # artifacts with averages seems like some germination under darkness RECHECK!!!
-  #filter(community =="Temperate")%>% #Temperate    Mediterranean
-  convert_as_factor(species, community, petri,opt_temp, biogeography)%>% 
-  mutate(biogeography= fct_relevel(biogeography, "Mediterranean", "Eurosiberian", "Endemic", "Broad range" ))%>%
-  droplevels()-> mcmc_constant
+  convert_as_factor(species, community, petri,opt_temp, community)%>% 
+  droplevels()-> mcmc_dark
 
 str(mcmc_control) 
 unique(mcmc_constant$species)# 38 species
+unique(mcmc_dark$species)
 
 mcmc_constant%>%
-  group_by(species,biogeography)%>%
+  group_by(species,community)%>%
   summarise(finalgerm= sum(finalgerm),
             viable=sum(viable))%>%
-  group_by(biogeography)%>%
+  group_by(community)%>%
   tally() 
 
 #descriptive
 mcmc_constant%>%
-  group_by(biogeography)%>%
+  group_by(community)%>%
   summarise(finalgerm= sum(finalgerm), viable= (sum(viable)))%>%
   mutate (binom.confint(finalgerm, viable, methods = "wilson"))
 
 ### TEST
-MCMCglmm::MCMCglmm(cbind(finalgerm, viable - finalgerm) ~ biogeography, #
+MCMCglmm::MCMCglmm(cbind(finalgerm, viable - finalgerm) ~ community, #
                    random = ~ animal + ID , #
-                   family = "multinomial2", pedigree = nnls_orig, prior = priors, data = mcmc_constant,
+                   family = "multinomial2", pedigree = nnls_orig, prior = priors, data = mcmc_dark,
                    nitt = nite, thin = nthi, burnin = nbur, 
-                   verbose = FALSE, saveX = FALSE, saveZ = FALSE, saveXL = FALSE, pr = FALSE, pl = FALSE) -> mc_constant
+                   verbose = FALSE, saveX = FALSE, saveZ = FALSE, saveXL = FALSE, pr = FALSE, pl = FALSE) -> mc_dark
 
 #save(m1, file = "results/mcmc.Rdata")
 
 x11()
-plot(mc_control) # germination in control ~ biogeography
-plot(mc_dark) # germination in control ~ biogeography
-plot(mc_constant) # germination in control ~ biogeography
+plot(mc_control) # germination in control ~ community
+plot(mc_dark) # germination in control ~ community
+plot(mc_constant) # germination in control ~ community
 # load("results/mcmc.Rdata")
 summary(mc_control) 
 summary(mc_dark)
@@ -217,11 +219,11 @@ summary(mc_constant)
 ### Random and phylo
 # Calculate lambda http://www.mpcm-evolution.com/practice/online-practical-material-chapter-11/chapter-11-1-simple-model-mcmcglmm
 
-lambda <- mc_constant$VCV[,"animal"]/(mc_constant$VCV[,"animal"] + mc_constant$VCV[,"units"]) 
+lambda <- mc_dark$VCV[,"animal"]/(mc_dark$VCV[,"animal"] + mc_dark$VCV[,"units"]) 
 
-mean(mc_constant$VCV[,"animal"]/(mc_constant$VCV[,"animal"] + mc_constant$VCV[,"units"])) %>% round(2)
-coda::HPDinterval(mc_constant$VCV[,"animal"]/(mc_constant$VCV[,"animal"] + mc_constant$VCV[,"units"]))[, 1] %>% round(2)
-coda::HPDinterval(mc_constant$VCV[,"animal"]/(mc_constant$VCV[,"animal"] + mc_constant$VCV[,"units"]))[, 2] %>% round(2)
+mean(mc_dark$VCV[,"animal"]/(mc_dark$VCV[,"animal"] + mc_dark$VCV[,"units"])) %>% round(2)
+coda::HPDinterval(mc_dark$VCV[,"animal"]/(mc_dark$VCV[,"animal"] + mc_dark$VCV[,"units"]))[, 1] %>% round(2)
+coda::HPDinterval(mc_dark$VCV[,"animal"]/(mc_dark$VCV[,"animal"] + mc_dark$VCV[,"units"]))[, 2] %>% round(2)
 
 
 # Random effects animal
@@ -239,7 +241,7 @@ summary(mc_treat)$Gcovariances[2, 3] %>% round(2)
 finalgerm %>%
   merge(read.csv("data/species.csv"), by = c("species", "code"))%>%
   filter(treatment== "C_alternate_WP"| treatment == "A_alternate_light")%>%
-  select(community, species, habitat, biogeography, treatment, opt_temp,petri,finalgerm, viable)%>%
+  select(community, species, habitat, community, treatment, opt_temp,petri,finalgerm, viable)%>%
   filter(!(species%in%nogerm_species$species))%>% # 7 species with 0 germ across all experiment
   filter(!(species%in%coldstrat_highgerm$species))%>% # 10 species with more than 50%germ in cold stratification
   filter (!species == "Solidago virgaurea")%>% # only germinated under cold stratification
@@ -252,22 +254,21 @@ finalgerm %>%
 finalgerm %>%
   merge(read.csv("data/species.csv"), by = c("species", "code"))%>%
   filter(treatment== "C_alternate_WP"| treatment == "A_alternate_light")%>%
-  select(community, species, habitat, biogeography, treatment, opt_temp,petri,finalgerm, viable)%>%
+  select(community, species, habitat, community, treatment, opt_temp,petri,finalgerm, viable)%>%
   filter(!(species%in%nogerm_species$species))%>% # 7 species with 0 germ across all experiment
   filter(!(species%in%coldstrat_highgerm$species))%>% # 10 species with more than 50%germ in cold stratification
   filter (!species == "Solidago virgaurea")%>% # only germinated under cold stratification
   filter (!species == "Cerastium ramosissimum")%>% # germinated under cold stratification but due to mathematical artifacts
   filter(!(species%in%nogerm_control_waterstress$species))%>%
-  convert_as_factor(species, community, petri, biogeography)%>% 
+  convert_as_factor(species, community, petri, community)%>% 
   mutate(species= str_replace(species, "Minuartia sp", "Minuartia arctica"))%>%
   mutate(ID = gsub(" ", "_", species), animal = ID) %>% 
-  mutate(biogeography= fct_relevel(biogeography, "Mediterranean", "Eurosiberian", "Endemic", "Broad range" ))%>%
   droplevels()-> mcmc_water
 
 finalgerm %>%
   merge(read.csv("data/species.csv"), by = c("species", "code"))%>%
   filter(treatment== "C_alternate_WP"| treatment == "A_alternate_light")%>%
-  select(community, species, habitat, biogeography, treatment, opt_temp,petri,finalgerm, viable)%>%
+  select(community, species, habitat, community, treatment, opt_temp,petri,finalgerm, viable)%>%
   filter(!(species%in%nogerm_species$species))%>% # 7 species with 0 germ across all experiment
   filter(!(species%in%coldstrat_highgerm$species))%>% # 10 species with more than 50%germ in cold stratification
   filter (!species == "Solidago virgaurea")%>% # only germinated under cold stratification
@@ -275,30 +276,32 @@ finalgerm %>%
   filter(!(species%in%nogerm_control_waterstress$species))%>%
   mutate(germpro = finalgerm/viable)%>% # generate Nan because of 0 viable
   mutate_all(~replace(., is.nan(.), 0))%>%
-  select(community, species, habitat, biogeography, treatment, petri,germpro)%>%
+  select(community, species, habitat, community, treatment, petri,germpro)%>%
   spread(treatment, germpro)%>%
   mutate(germ_reduction=(1-(C_alternate_WP/A_alternate_light))*100)%>%
   mutate_all(~replace(., is.nan(.), 0))%>% # generate Nan because 0 germ pro
-  convert_as_factor(species, community, petri, biogeography)%>% 
+  convert_as_factor(species, community, petri, community)%>% 
   mutate(species= str_replace(species, "Minuartia sp", "Minuartia arctica"))%>%
   mutate(ID = gsub(" ", "_", species), animal = ID) %>% 
-  mutate(biogeography= fct_relevel(biogeography, "Mediterranean", "Eurosiberian", "Endemic", "Broad range" ))%>%
   droplevels()-> mcmc_waterreduction
 
 str(mcmc_water) 
 unique(mcmc_water$species)# 38 species
 
-mcmc_water%>%
-  group_by(species,biogeography)%>%
+str(mcmc_waterreduction) 
+unique(mcmc_waterreduction$species)
+
+mcmc_waterreduction%>%
+  group_by(species,community)%>%
   summarise(germ_reduction= mean(germ_reduction))%>%
-  group_by(biogeography)%>%
+  group_by(community)%>%
   tally() 
 
 #descriptive
 mcmc_water%>%
-  group_by(species, biogeography)%>%
+  group_by(species, community)%>%
   summarise(germ_reduction= mean(germ_reduction))%>%
-  group_by(biogeography)%>%
+  group_by(community)%>%
   get_summary_stats (germ_reduction)
 
 
@@ -310,7 +313,7 @@ MCMCglmm::MCMCglmm(cbind(finalgerm, viable - finalgerm) ~ treatment, #
                    verbose = FALSE, saveX = FALSE, saveZ = FALSE, saveXL = FALSE, pr = FALSE, pl = FALSE) -> mc_water
 
 
-MCMCglmm::MCMCglmm(germ_reduction ~ biogeography, #
+MCMCglmm::MCMCglmm(germ_reduction ~ community, #
                    random = ~ animal + ID , #
                    family = "gaussian", pedigree = nnls_orig, prior = priors, data = mcmc_waterreduction,
                    nitt = nite, thin = nthi, burnin = nbur, 
@@ -319,7 +322,7 @@ MCMCglmm::MCMCglmm(germ_reduction ~ biogeography, #
 
 x11()
 plot(mc_water) # germination ~ treatment
-plot(mc_water_reduction) # germination reduction ~biogeography
+plot(mc_water_reduction) # germination reduction ~community
 # load("results/mcmc.Rdata")
 summary(mc_water) 
 summary(mc_water_reduction) 
