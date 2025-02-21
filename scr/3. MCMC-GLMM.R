@@ -201,9 +201,9 @@ mcmc_constant%>%
 ### TEST
 MCMCglmm::MCMCglmm(cbind(finalgerm, viable - finalgerm) ~ community, #
                    random = ~ animal + ID , #
-                   family = "multinomial2", pedigree = nnls_orig, prior = priors, data = mcmc_dark,
+                   family = "multinomial2", pedigree = nnls_orig, prior = priors, data = mcmc_constant,
                    nitt = nite, thin = nthi, burnin = nbur, 
-                   verbose = FALSE, saveX = FALSE, saveZ = FALSE, saveXL = FALSE, pr = FALSE, pl = FALSE) -> mc_dark
+                   verbose = FALSE, saveX = FALSE, saveZ = FALSE, saveXL = FALSE, pr = FALSE, pl = FALSE) -> mc_constant
 
 #save(m1, file = "results/mcmc.Rdata")
 
@@ -283,6 +283,7 @@ finalgerm %>%
   convert_as_factor(species, community, petri, community)%>% 
   mutate(species= str_replace(species, "Minuartia sp", "Minuartia arctica"))%>%
   mutate(ID = gsub(" ", "_", species), animal = ID) %>% 
+  #mutate(germ_reduction=sqrt(germ_reduction))%>% problem with negative values in those cases were germination in water stress was slightly higher
   droplevels()-> mcmc_waterreduction
 
 str(mcmc_water) 
@@ -294,16 +295,22 @@ unique(mcmc_waterreduction$species)
 mcmc_waterreduction%>%
   group_by(species,community)%>%
   summarise(germ_reduction= mean(germ_reduction))%>%
+  print(n= 34)
   group_by(community)%>%
   tally() 
 
 #descriptive
-mcmc_water%>%
+mcmc_water_reduction%>%
   group_by(species, community)%>%
   summarise(germ_reduction= mean(germ_reduction))%>%
   group_by(community)%>%
   get_summary_stats (germ_reduction)
 
+#descriptive
+mcmc_water%>%
+  group_by(treatment)%>%
+  summarise(finalgerm= sum(finalgerm), viable= (sum(viable)))%>%
+  mutate (binom.confint(finalgerm, viable, methods = "wilson"))
 
 ### TEST
 MCMCglmm::MCMCglmm(cbind(finalgerm, viable - finalgerm) ~ treatment, #

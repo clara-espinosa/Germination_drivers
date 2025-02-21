@@ -9,7 +9,7 @@ library(RColorBrewer);library(ggtext);library(patchwork)
 finalgerm %>%
   merge(read.csv("data/species.csv"), by = c("species", "code"))%>%
   filter(treatment== "C_alternate_WP"| treatment == "A_alternate_light")%>%
-  select(community, species, habitat, biogeography, treatment, opt_temp,petri,finalgerm, viable)%>%
+  select(community, species, habitat, treatment, opt_temp,petri,finalgerm, viable)%>%
   filter(!(species%in%nogerm_species$species))%>% # 7 species with 0 germ across all experiment
   filter(!(species%in%coldstrat_highgerm$species))%>% # 10 species with more than 50%germ in cold stratification
   filter (!species == "Solidago virgaurea")%>% # only germinated under cold stratification
@@ -42,12 +42,12 @@ finalgerm %>%
          axis.ticks.x=element_blank(),
          legend.position = "none")->fig4a;fig4a
 
-### B) differences between biogeography ####
+### B) differences between community ####
 x11()
 finalgerm %>%
   merge(read.csv("data/species.csv"), by = c("species", "code"))%>%
   filter(treatment== "C_alternate_WP"| treatment == "A_alternate_light")%>%
-  select(community, species, habitat, biogeography, treatment, opt_temp,petri,finalgerm, viable)%>%
+  select(community, species, habitat, community, treatment, opt_temp,petri,finalgerm, viable)%>%
   filter(!(species%in%nogerm_species$species))%>% # 7 species with 0 germ across all experiment
   filter(!(species%in%coldstrat_highgerm$species))%>% # 10 species with more than 50%germ in cold stratification
   filter (!species == "Solidago virgaurea")%>% # only germinated under cold stratification
@@ -55,31 +55,31 @@ finalgerm %>%
   filter(!(species%in%nogerm_control_waterstress$species))%>%
   mutate(germpro = finalgerm/viable)%>% # generate Nan because of 0 viable
   mutate_all(~replace(., is.nan(.), 0))%>%
-  select(community, species, habitat, biogeography, treatment, petri,germpro)%>%
+  select(community, species, habitat, community, treatment, petri,germpro)%>%
   spread(treatment, germpro)%>%
   mutate(germ_reduction=(1-(C_alternate_WP/A_alternate_light))*100)%>%
   mutate_all(~replace(., is.nan(.), 0))%>% # generate Nan because 0 germ pro
-  convert_as_factor(species, community, petri, biogeography)%>%
-  mutate(biogeography= fct_relevel(biogeography, "Mediterranean", "Eurosiberian", "Endemic", "Broad range" ))%>%
-  #group_by(species, biogeography)%>%
-  #summarise(germ_reduction= mean(germ_reduction))%>%
-  group_by(biogeography)%>%
+  convert_as_factor(species, community, petri, community)%>%
+  mutate(community= fct_relevel(community, "Mediterranean", "Temperate" ))%>%
+  mutate(community= fct_recode(community,"Mediterranean \n Alpine" ="Mediterranean", 
+                               "Temperate \n Alpine"="Temperate" ))%>%
+  group_by(community)%>%
   get_summary_stats (germ_reduction)%>%
   ggplot()+
-  geom_bar(aes(x= biogeography, y= mean, fill= biogeography), color = "black", stat = "identity") +
-  scale_fill_manual(values = c("Mediterranean"="#FDAE61","Broad range"= "#FFFFBF","Endemic"= "#ABDDA4", "Eurosiberian"= "#2B83BA"))+
-  geom_errorbar(aes(x= biogeography, y=mean, ymin=mean-se, ymax=mean+se), color = "black", linewidth=1, width = 0.4)+
+  geom_bar(aes(x= community, y= mean, fill= community), color = "black", stat = "identity") +
+  scale_fill_manual(labels= c("Mediterranean \n Alpine","Temperate \n Alpine"), values = c("darkgoldenrod1", "forestgreen"))+
+  geom_errorbar(aes(x= community, y=mean, ymin=mean-se, ymax=mean+se), color = "black", linewidth=1, width = 0.4)+
   #geom_segment (aes(x= 1,xend =2,  y = 0.3, yend= 0.3), color = "black", linewidth = 1.3, show.legend = F)+
   #annotate ("text", x= 1.5, y= 0.31, label = "*", size= 6)+
   #geom_segment (aes(x= 1,xend =3,  y = 0.33, yend= 0.33), color = "black", linewidth = 1.3, show.legend = F)+
   #annotate ("text", x= 2, y= 0.34, label = "**", size= 6)+
-  #geom_text(aes(x= biogeography, y= 0.01, label=paste("n =", n.species)),  size=3)+
+  #geom_text(aes(x= community, y= 0.01, label=paste("n =", n.species)),  size=3)+
   #ylim (0,0.35)+
-  labs (title = "Germination reduction under water stress",y="Reduction in germination (%)", subtitle= "B) Between biogeographical regions")+ #
+  labs (y="Decreased germinationn (%)", subtitle= "B) Habitats decreased germination", x= "Habitat")+ #
   theme_classic (base_size = 10) + #theme_minimal for all species for mean treatment
   theme (plot.title = element_text ( size = 12), #hjust = 0.5,
-         axis.title.x = element_blank(),
-         axis.text.x = element_text (color="black", angle = 20, vjust = 0.8),
+         axis.title.x = element_text(),
+         axis.text.x = element_text (color="black"), #, angle = 20, vjust = 0.8
          legend.title = element_blank(),
          legend.position = "none")->fig4b;fig4b
 
@@ -87,7 +87,7 @@ finalgerm %>%
 finalgerm %>%
   merge(read.csv("data/species.csv"), by = c("species", "code"))%>%
   filter(treatment== "C_alternate_WP"| treatment == "A_alternate_light")%>%
-  select(community, species, habitat, biogeography, treatment, opt_temp,petri,finalgerm, viable)%>%
+  select(community, species, habitat, community, treatment, opt_temp,petri,finalgerm, viable)%>%
   filter(!(species%in%nogerm_species$species))%>% # 7 species with 0 germ across all experiment
   filter(!(species%in%coldstrat_highgerm$species))%>% # 10 species with more than 50%germ in cold stratification
   filter (!species == "Solidago virgaurea")%>% # only germinated under cold stratification
@@ -95,29 +95,32 @@ finalgerm %>%
   filter(!(species%in%nogerm_control_waterstress$species))%>%
   mutate(germpro = finalgerm/viable)%>% # generate Nan because of 0 viable
   mutate_all(~replace(., is.nan(.), 0))%>%
-  select(community, species, habitat, biogeography, treatment, petri,germpro)%>%
+  select(community, species, habitat, community, treatment, petri,germpro)%>%
   spread(treatment, germpro)%>%
   mutate(germ_reduction=(1-(C_alternate_WP/A_alternate_light))*100)%>%
   mutate_all(~replace(., is.nan(.), 0))%>% # generate Nan because 0 germ pro
-  convert_as_factor(species, community, petri, biogeography)%>%
-  mutate(biogeography= fct_relevel(biogeography, "Mediterranean", "Eurosiberian", "Endemic", "Broad range" ))%>%
-  #group_by(species, biogeography)%>%
+  convert_as_factor(species, community, petri, community)%>%
+  mutate(community= fct_relevel(community, "Mediterranean", "Temperate" ))%>%
+  mutate(community= fct_recode(community,"Mediterranean \n Alpine" ="Mediterranean", 
+                               "Temperate \n Alpine"="Temperate" ))%>%
+  mutate(species = ifelse(species=="Thymus praecox" & community == "Temperate \n Alpine", "Thymus praecox ", as.character(species)))%>%
+  #group_by(species, community)%>%
   #summarise(germ_reduction= mean(germ_reduction))%>%
-  group_by(species, biogeography)%>%
+  group_by(species, community)%>%
   get_summary_stats (germ_reduction)%>%
-  ggplot(aes(x= reorder(species, mean), y= mean,fill = biogeography)) +
+  ggplot(aes(x= reorder(species, mean), y= mean,fill = community)) +
   geom_bar (stat = "identity", color = "black") +
   geom_vline(xintercept = 40.5, linetype = "dashed", color = "red", linewidth = 1) +
-  scale_fill_manual(values = c("Mediterranean"="#FDAE61","Broad range"= "#FFFFBF","Endemic"= "#ABDDA4", "Eurosiberian"= "#2B83BA"))+
+  scale_fill_manual(labels= c("Mediterranean \n Alpine","Temperate \n Alpine"), values = c("darkgoldenrod1", "forestgreen"))+
   geom_errorbar( aes(species, mean, ymin = mean-se, ymax = mean+se), width = 0.5, linewidth = 0.5) +
   coord_flip() + 
-  labs (subtitle = "C) Across individual species", y = "Reduction in germination (%)")+
+  labs (subtitle = "C) Species decreased germination", y = "Decreased germination (%)")+
   theme_classic (base_size = 10) +
   theme (plot.title = element_text ( size = 12), #hjust = 0.5,
          legend.position = "none",
          axis.title.y= element_blank(),
          axis.text.x= element_text(),
-         axis.text.y = element_text(face= "italic", size = 9))-> fig4c;fig4c
+         axis.text.y = element_text(face= "italic", size = 8))-> fig4c;fig4c
 
 
 
@@ -127,7 +130,7 @@ finalgerm %>%
   plot_layout()-> fig4;fig4
 
 ggsave(filename = "water stress.png", plot =fig4 , path = "results/figures", 
-       device = "png", dpi = 600) #, width = 180, units = "mm"
+       device = "png", dpi = 600, width = 180, height = 150, units = "mm") #, width = 180, units = "mm"
 
 #ggpubr::ggarrange(fig2a, fig2b, ncol =2, nrow= 1,common.legend = FALSE, widths = c(1.5,1),align = "h")
 

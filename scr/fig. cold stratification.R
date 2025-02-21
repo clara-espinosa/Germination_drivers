@@ -64,7 +64,7 @@ cold_strat%>%
   annotate ("text", x= 1.5, y= 0.28, label = "**", size= 6)+
   geom_text(aes(x= community, y= 0.01, label=paste("n =", n.species)),  size=3)+
   ylim (0,0.3)+
-  labs (y="Germination proportion", subtitle= "B) Biogeographical distribution")+ #
+  labs (y="Germination proportion", subtitle= "B) Habitat")+ #
   theme_classic (base_size = 10) + #theme_minimal for all species for mean treatment
   theme (plot.title = element_text ( size = 12), #hjust = 0.5,
          axis.title.x = element_blank(),
