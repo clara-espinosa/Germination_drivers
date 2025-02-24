@@ -281,16 +281,20 @@ finalgerm %>%
   mutate(germ_reduction=(1-(C_alternate_WP/A_alternate_light))*100)%>%
   mutate_all(~replace(., is.nan(.), 0))%>% # generate Nan because 0 germ pro
   convert_as_factor(species, community, petri, community)%>% 
+  #group_by (species, community)%>%
+  #summarise(germ_reduction= mean(germ_reduction))%>%
+  #mutate(germ_reduction=sqrt(germ_reduction))%>% #problem with negative values in those cases were germination in water stress was slightly higher
   mutate(species= str_replace(species, "Minuartia sp", "Minuartia arctica"))%>%
   mutate(ID = gsub(" ", "_", species), animal = ID) %>% 
-  #mutate(germ_reduction=sqrt(germ_reduction))%>% problem with negative values in those cases were germination in water stress was slightly higher
-  droplevels()-> mcmc_waterreduction
+  droplevels()%>% 
+  as.data.frame()-> mcmc_waterreduction
 
 str(mcmc_water) 
 unique(mcmc_water$species)# 38 species
 
 str(mcmc_waterreduction) 
 unique(mcmc_waterreduction$species)
+hist(mcmc_waterreduction$germ_reduction)
 
 mcmc_waterreduction%>%
   group_by(species,community)%>%
@@ -319,6 +323,12 @@ MCMCglmm::MCMCglmm(cbind(finalgerm, viable - finalgerm) ~ treatment, #
                    nitt = nite, thin = nthi, burnin = nbur, 
                    verbose = FALSE, saveX = FALSE, saveZ = FALSE, saveXL = FALSE, pr = FALSE, pl = FALSE) -> mc_water
 
+
+### Gaussian priors
+priors <- list(R = list(V = 1, nu = 0.2),
+               G = list(G1 = list(V = 1, nu = 0.2, alpha.mu = 0, alpha.V = 1e3),
+                        G2 = list(V = 1, nu = 0.2, alpha.mu = 0, alpha.V = 1e3)))
+#G3 = list(V = 1, nu = 0.2, alpha.mu = 0, alpha.V = 1e3)))
 
 MCMCglmm::MCMCglmm(germ_reduction ~ community, #
                    random = ~ animal + ID , #
