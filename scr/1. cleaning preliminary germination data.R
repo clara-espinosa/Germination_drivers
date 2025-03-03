@@ -16,7 +16,7 @@ unique(species$species)
 setdiff(species$species, raw_df$species)
 setdiff(raw_df$species,species$species)
 
-# D0 germination check change to cold_stratification treatment and mean values ####
+# cold_stratification pretreatment geermination and mean values ####
 read.csv("data/raw_data.csv", sep = ",") %>%
   convert_as_factor(species, code, treatment, temp) %>%
   dplyr::select (species, code, petri, initial_pre, cold_strat) %>% ## 
@@ -37,6 +37,7 @@ cold_strat%>%
   filter(germpro>0.5)%>%
   select(species)->coldstrat_highgerm
   
+# DARKNESS treatment special calculations to remove cold stratification germ ####
 # calculate mean cold stratification germination to apply to darkness treatment
 read.csv("data/raw_data.csv", sep = ",") %>%
   convert_as_factor(species, code, treatment, temp) %>%
@@ -47,50 +48,34 @@ read.csv("data/raw_data.csv", sep = ",") %>%
   mutate (treatment = "B_alternate_dark") %>%
   as.data.frame()-> mean_coldstrat_germ
 
-# combine above dataset to have 1 working dataframe (without the cold stratification treatment) ####
+# final germination calculation
 read.csv("data/raw_data.csv", sep = ",") %>%
+  filter(treatment=="B_alternate_dark")%>%
+  convert_as_factor(species, code, treatment, temp)%>%
+  dplyr::select(species, code, treatment, petri, initial_pre, D42, empty, fungus)%>%
+  merge(mean_coldstrat_germ, by = c("species", "code", "petri", "treatment"))%>%
+  group_by(species, code, treatment, petri)%>%
+  summarise(viable=initial_pre-empty-fungus-cold_strat, # remove cold stratification germination
+            finalgerm=D42-cold_strat)%>% # final day germination subtracting germination happened under cold stratification
+  mutate (finalgerm = ifelse(finalgerm < 0, 0, finalgerm),# change negative values from calculated mean to 0 
+          viable = ifelse(viable < 0, 0, viable))-> dark_germ  
+  
+  
+# combine above datasets to have 1 working dataframe (without the cold stratification treatment) ####
+read.csv("data/raw_data.csv", sep = ",") %>%
+  filter(!treatment=="B_alternate_dark")%>%
   convert_as_factor(species, code, treatment, temp) %>%
-  dplyr::select (species, code, treatment,petri, cold_strat) %>%
-  na.omit()%>%
-  rbind(mean_coldstrat_germ)%>% ## ad mean germ under cold stratification per petri dish to fill darkness cold strat values
-  arrange(species, treatment)%>%
-  cbind(raw_df%>%select(initial_pre, D7:fungus)) %>%
   mutate (initial_treat = initial_pre-cold_strat)%>%
   mutate (viable = initial_treat -(empty + fungus)) %>%
-  mutate (viable = ifelse(viable < 0, 0, viable)) %>% # change negative values from caluclated mean to 0 
-  dplyr::select (species, code, treatment, petri, initial_pre, cold_strat, initial_treat, D7:D42,viable)-> germ_df 
-unique(germ_df$species)
-
-# viables x community x treatment/species
-germ_df %>%
-  merge(species)%>%
-  group_by(community)%>%
-  summarise(viable= sum(viable), 
-            cold_strat=sum(cold_strat))%>%
-  mutate(total_viable = viable+cold_strat)
-
-# list of accession with less than 25% of viable seeds only salix (remove from analysis) 
-germ_df %>%
-  group_by (species, code, treatment)%>%
-  mutate (viablePER = (viable/initial_treat)*100) %>% 
-  group_by(species, code) %>%
-  summarise(viable = sum(viable), viablePER = mean(viablePER))%>%
-  filter(viablePER<25) # phalacrocarpum oppositifolium
-
-# final germination percentage calculation discounting cold stratification germ ####
-germ_df%>%
-  convert_as_factor(species, code, treatment) %>%
-  dplyr::select (species, code, treatment, petri, initial_treat, D7, D14, D21, D28, D35, D42, viable) %>%
-  gather ("scores", "germ", D7:D42) %>%
-  mutate (germ = replace_na(germ, 0)) %>%
+  dplyr::select (species, code, treatment, petri, initial_treat, D7:D42,viable)%>%
+  gather ("scores", "germ", D7:D42)%>%    
   group_by (species, code, treatment, petri)%>%
-  dplyr::summarize (finalgerm = sum(germ), 
-                    viable = mean(viable)) %>% 
-  rbind(cold_strat)%>%
-  mutate (finalgerm = ifelse(finalgerm > viable, viable, finalgerm))%>%  # for darkness treatment
+  dplyr::summarize (finalgerm = sum(germ, na.rm=T), 
+                    viable = mean(viable, na.rm=T)) %>% 
+  rbind(cold_strat)%>% # for germination under cold stratification
+  rbind(dark_germ)%>%  # for darkness treatment
+  mutate(treatment = fct_relevel(treatment, "A_alternate_light", "B_alternate_dark", "C_alternate_WP", "D_constant_light","E_cold_stratification" ))%>%
   arrange(species, code, treatment)-> finalgerm 
-
-unique(finalgerm$species)
 
 finalgerm%>%
   #filter(!treatment=="E_cold_stratification")%>%
@@ -99,9 +84,9 @@ finalgerm%>%
   #print (n=58)
   filter(!finalgerm>0)%>%
   select(species)-> nogerm_species
-  
 
-# species with 0 germination across all experiment (remove from analysis)
+
+# 7 species (all temperate) with 0 germination across all experiment (remove from analysis)
 # temperate species 
   filter (!species == "Euphrasia salisburgensis")%>%
   filter (!species == "Gentiana verna")%>%
@@ -111,8 +96,15 @@ finalgerm%>%
   filter (!species == "Sedum album")%>%
   filter (!species == "Sedum atratum")%>%
 
-# Mediterranean species  
+finalgerm%>%
+    filter(!treatment=="E_cold_stratification")%>%
+    group_by(species, code)%>%
+    summarise(finalgerm = sum(finalgerm))%>%
+    #print (n=58)
+    filter(!finalgerm>0)%>%
+    select(species) 
+# 4 species (all mediterranean) only germinated in cold stratification
   filter (!species == "Teesdalia conferta") # all germinated in cold stratification
   filter (!species == "Solidago virgaurea") # only germinated in cold stratification
-  filter (!species == "Phalacrocarpum oppositifolium") # only germinated in cold stratification
-  filter (!species == "Avenella flexuosa") # only germinated in cold stratification
+  filter (!species == "Phalacrocarpum oppositifolium") # only germinated in cold stratification >50%
+  filter (!species == "Avenella flexuosa") # only germinated in cold stratification >50%
