@@ -12,8 +12,7 @@ finalgerm %>%
   select(community, species, habitat, treatment, opt_temp,petri,finalgerm, viable)%>%
   filter(!(species%in%nogerm_species$species))%>% # 7 species with 0 germ across all experiment
   filter(!(species%in%coldstrat_highgerm$species))%>% # 10 species with more than 50%germ in cold stratification
-  filter (!species == "Solidago virgaurea")%>% # only germinated under cold stratification
-  filter (!species == "Cerastium ramosissimum")%>% # germinated under cold stratification but due to mathematical artifacts
+  filter (!species == "Solidago virgaurea") %>% # only germinated under cold stratification
   filter(!(species%in%nogerm_control_waterstress$species))%>%
   group_by (treatment) %>% #, community, habitat   temperature_regime 
   summarise(finalgerm=sum(finalgerm),
@@ -51,8 +50,7 @@ finalgerm %>%
   filter(!(species%in%nogerm_species$species))%>% # 7 species with 0 germ across all experiment
   filter(!(species%in%coldstrat_highgerm$species))%>% # 10 species with more than 50%germ in cold stratification
   filter (!species == "Solidago virgaurea")%>% # only germinated under cold stratification
-  filter (!species == "Cerastium ramosissimum")%>% # germinated under cold stratification but due to mathematical artifacts
-  filter(!(species%in%nogerm_control_waterstress$species))%>%
+  filter(!(species%in%nogerm_control_waterstress$species)) %>%
   mutate(germpro = finalgerm/viable)%>% # generate Nan because of 0 viable
   mutate_all(~replace(., is.nan(.), 0))%>%
   select(community, species, habitat, community, treatment, petri,germpro)%>%
@@ -91,7 +89,6 @@ finalgerm %>%
   filter(!(species%in%nogerm_species$species))%>% # 7 species with 0 germ across all experiment
   filter(!(species%in%coldstrat_highgerm$species))%>% # 10 species with more than 50%germ in cold stratification
   filter (!species == "Solidago virgaurea")%>% # only germinated under cold stratification
-  filter (!species == "Cerastium ramosissimum")%>% # germinated under cold stratification but due to mathematical artifacts
   filter(!(species%in%nogerm_control_waterstress$species))%>%
   mutate(germpro = finalgerm/viable)%>% # generate Nan because of 0 viable
   mutate_all(~replace(., is.nan(.), 0))%>%

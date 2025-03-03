@@ -15,7 +15,6 @@ finalgerm %>%
   filter(!treatment=="E_cold_stratification")%>%
   filter(!treatment== "C_alternate_WP")%>%
   filter (!species == "Solidago virgaurea")%>% # only germinated under cold stratification
-  filter (!species == "Cerastium ramosissimum")%>%# germinated in darkness but due to mathematical artifacts
   dplyr::select(community, habitat, species, treatment,finalgerm, viable)%>%
   group_by (treatment) %>% #, community, habitat   temperature_regime 
   summarise(finalgerm=sum(finalgerm),
@@ -24,15 +23,16 @@ finalgerm %>%
   mutate(treatment = as.factor(treatment))%>%
   mutate(treatment= fct_recode(treatment, "Control"="A_alternate_light", "Darkness"="B_alternate_dark",
                                 "Constant \n temperatures"="D_constant_light"))%>%
+  mutate(treatment = fct_relevel(treatment, "Control", "Darkness", "Constant \n temperatures"))%>%
   ggplot(aes(x= treatment, y= mean))+
   geom_bar(color = "black", stat = "identity", fill= "grey") +# ,position = "dodge", width = 0.9
   geom_errorbar(aes(x= treatment, y=mean, ymin=lower, ymax=upper), color = "black", linewidth=1, width = 0.4)+ #,position= position_dodge(0.9)
   scale_y_continuous(limits = c(0,0.6))+ 
   geom_segment (aes(x= 1,xend =2,  y = 0.47, yend= 0.47), color = "black", linewidth = 1.3, show.legend = F)+
-  annotate ("text", x= 1.5, y= 0.48, label = "·", size= 6)+
+  annotate ("text", x= 1.5, y= 0.48, label = "***", size= 6)+
   geom_segment (aes(x= 1,xend =3,  y = 0.52, yend= 0.52), color = "black", linewidth = 1.3, show.legend = F)+
-  annotate ("text", x= 2, y= 0.53, label = "**", size= 6)+
-  labs (x = "Treatments", y="Germination proportion",  subtitle = "A) Treatment comparison (n = 38)")+
+  annotate ("text", x= 2, y= 0.53, label = "*", size= 6)+
+  labs (x = "Treatments", y="Germination proportion",  subtitle = "A) Treatment comparison (n = 39)")+
   theme_classic (base_size = 10) + #theme_minimal for all species for mean treatment
   theme (plot.title = element_text ( size = 12), #hjust = 0.5,
          panel.background = element_blank(),
@@ -49,11 +49,10 @@ finalgerm %>%
 finalgerm %>%
   merge(read.csv("data/species.csv"), by = c("species", "code"))%>%
   filter(!(species%in%nogerm_species$species))%>%
-  filter(!species%in%coldstrat_highgerm$species)%>%
+  filter(!(species%in%coldstrat_highgerm$species))%>%
   filter(!treatment=="E_cold_stratification")%>%
   filter(!treatment== "C_alternate_WP")%>%
   filter (!species == "Solidago virgaurea")%>% # only germinated under cold stratification
-  filter (!species == "Cerastium ramosissimum")%>%# germinated in darkness but due to mathematical artifacts
   dplyr::select(community, habitat, community, species, treatment,finalgerm, viable)%>%
   group_by (treatment, community) %>% #, community, habitat   temperature_regime 
   summarise(finalgerm=sum(finalgerm),
@@ -68,7 +67,7 @@ finalgerm %>%
   geom_bar(color = "black", stat = "identity",position = "dodge", width = 0.9) +# 
   geom_errorbar(aes(x= treatment, y=mean, ymin=lower, ymax=upper), color = "black", linewidth=1, width = 0.4,position= position_dodge(0.9))+
   scale_fill_manual(name = "Habitat",
-                    labels = c("Mediterranean \n Alpine (n = 15)", "Temperate \n Alpine (n = 24)"),
+                    labels = c("Mediterranean \n Alpine (n = 16)", "Temperate \n Alpine (n = 24)"),
                     values = c("darkgoldenrod1", "forestgreen"),
                     guide = guide_legend (title.position = "top",direction = "vertical")) + 
   scale_y_continuous(limits = c(0,0.6))+

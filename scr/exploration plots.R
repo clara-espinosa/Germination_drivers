@@ -73,68 +73,7 @@ for (var in unique(cumgerm_sp_treatment$species)) {
          path = NULL, scale = 1, width = 360, height = 250, units = "mm", dpi = 600)
 }
 
-# final germination percentage calculation  SUPPLEMENTARY? ####
-finalgerm%>%
-  group_by(species, code, treatment)%>%
-  summarise(finalgerm= sum(finalgerm),
-            viable = sum(viable))%>%
-  mutate (binom.confint(finalgerm, viable, methods = "wilson"))%>%
-  select (species, code, treatment, finalgerm, viable,  mean, upper, lower)%>%
-  as.data.frame()%>%
-  mutate(treatment= as.factor(treatment))%>%
-  mutate(treatment= fct_recode(treatment, "Control"="A_alternate_light" , "Darkness"="B_alternate_dark", 
-                               "Water stress"="C_alternate_WP", "Constant Temperatures"="D_constant_light", 
-                               "Cold stratification" = "E_cold_stratification"))-> finalgerm_sp_treatment # final germ per petri dish 
 
-
-for (var in unique(finalgerm_sp_treatment$species)) {
-  treat_plot = ggplot(finalgerm_sp_treatment[finalgerm_sp_treatment$species==var,]) +
-    geom_bar(aes(x = treatment, y = mean, ymin = 0, ymax = 1, fill = treatment), stat = "identity", color = "black") +
-    geom_errorbar(aes(treatment, mean, ymin = lower, ymax = upper), width = 0.3, size =1.2) +
-    scale_fill_manual(name = "Treatments",labels = c("Control", "Darkness", "Water stress", "Constant Temperature","Cold stratification" ), 
-                      values = c("#2B83BA", "#ABDDA4", "#FFFFBF","#FDAE61", "#D7191C"))+
-    labs(title= var, x = "Treatment", y = "Germination proportion") +
-    geom_text(aes(x= treatment, y= -0.02, label=paste("n=", viable)),  size=4.5)+
-    scale_y_continuous(limits = c(-0.02, 1),  breaks = c(0, 0.25, 0.50, 0.75, 1)) +
-    #facet_wrap(~ accession, nrow = 2) +
-    theme_classic(base_size = 14) +
-    theme(plot.title = element_text (size = 30),
-          #strip.text = element_text (size = 24, face = "italic"),
-          axis.title.y = element_text (size=24), 
-          axis.title.x = element_text (size=24), 
-          axis.text.x= element_text (size=18, vjust = 0.5),
-          legend.position = "none",
-          plot.margin = margin(t=0.5, l =0.5, b = 0.5, r =0.5, unit ="cm"))
-  ggsave(treat_plot, file = paste0("Germination ", var,".png"),
-         path = "results", scale = 1, width = 360, height = 250, units = "mm", dpi = 600)
-}
-
-# separate individual plots for Thymus praecox
-finalgerm_sp_treatment %>%
-  filter(species=="Thymus praecox")%>%
-  merge(read.csv("data/species.csv"), by = c("species", "code"))%>%
-  dplyr::select(community, species, treatment, mean, upper, lower, viable)%>%
-  filter(community == "Mediterranean")%>%
-  ggplot() +
-  geom_bar(aes(x = treatment, y = mean, fill = treatment), stat = "identity", color = "black") +
-  geom_errorbar(aes(treatment, mean, ymin = lower, ymax = upper), width = 0.3, size =1.2) +
-  scale_fill_manual(name = "Treatments",labels = c("Control", "Darkness", "Water stress", "Constant Temperature", "Cold stratification"), 
-                    values = c("#2B83BA", "#ABDDA4", "#FFFFBF","#FDAE61", "#D7191C"))+
-  geom_text(aes(x= treatment, y= -0.02, label=paste("n=", viable)),  size=4.5)+ #position=position_stack(vjust=0.9),
-  labs(title= "Mediterranean Thymus praecox", x = "Treatment", y = "Germination proportion") +
-  scale_y_continuous(limits = c(-0.02, 1),  breaks = c(0, 0.25, 0.50, 0.75, 1)) +
-  #facet_wrap(~ accession, nrow = 2) +
-  theme_classic(base_size = 14) +
-  theme(plot.title = element_text (size = 30),
-        #strip.text = element_text (size = 24, face = "italic"),
-        axis.title.y = element_text (size=24), 
-        axis.title.x = element_text (size=24), 
-        axis.text.x= element_text (size=18, vjust = 0.5),
-        legend.position = "none",
-        plot.margin = margin(t=0.5, l =0.5, b = 0.5, r =0.5, unit ="cm"))->treat_plot;treat_plot
-x11()
-  ggsave(treat_plot, file = "Germination Thymus praecox Mediterranean.png",
-       path = "results/Supplementary", scale = 1, width = 360, height = 250, units = "mm", dpi = 600)
 # germination curves / rate  x species and x treatment IF USED NEEDS TO BE UPDATED #### 
 # cold strat x species ordered by phylogeny ####
   scale_fill_manual(values = c("#F2F9AA"= "Asteraceae", "#F3ec70"="Campanulaceae","#f6e528"="Apiaceae",
