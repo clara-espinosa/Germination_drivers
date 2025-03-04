@@ -137,3 +137,27 @@ for (var in unique(cumgerm_sp_treatment$species)) {
     theme (plot.title = element_text ( size = 14), #hjust = 0.5,
            legend.position = "none")
   
+
+
+# comparison between optimals temperatures
+  finalgerm%>%
+    merge(read.csv("data/species.csv"), by = c("species", "code"))%>%
+    filter(!treatment== "E_cold_stratification")%>%
+    group_by(treatment, opt_temp)%>%
+    summarise(finalgerm=sum(finalgerm),
+              viable=sum(viable))%>%
+    mutate (binom.confint(finalgerm, viable, methods = "wilson"))%>%
+    ggplot(aes(x= treatment, y= mean, fill= opt_temp))+
+    geom_bar(color = "black", stat = "identity",position = "dodge", width = 0.9) +# 
+    geom_errorbar(aes(x= treatment, y=mean, ymin=lower, ymax=upper), color = "black", linewidth=1, width = 0.4,position= position_dodge(0.9))+
+    theme_classic (base_size = 10) + #theme_minimal for all species for mean treatment
+    theme (plot.title = element_text ( size = 12), #hjust = 0.5,
+           panel.background = element_blank(),
+           legend.title = element_text(hjust=0.5),
+           legend.key.size = unit(1,"line"),
+           #legend.key.spacing = unit(5, "pt"),
+           legend.margin = margin(0,0,0,0),
+           axis.text=element_text( color = "black"), #angle = 30, hjust = 0.9,
+           axis.title= element_blank(), 
+           legend.position = "right")
+  

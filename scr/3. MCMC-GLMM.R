@@ -128,18 +128,22 @@ priors <- list(R = list(V = 1, nu = 50),
                         G2 = list(V = 1, nu = 1, alpha.mu = 0, alpha.V = 500)))
 
 ### TEST
-MCMCglmm::MCMCglmm(cbind(finalgerm, viable - finalgerm) ~ treatment, #
+MCMCglmm::MCMCglmm(cbind(finalgerm, viable - finalgerm) ~ treatment+ opt_temp, #
                    random = ~ animal + ID , #
                    family = "multinomial2", pedigree = nnls_orig, prior = priors, data = mcmc,
                    nitt = nite, thin = nthi, burnin = nbur, 
-                   verbose = FALSE, saveX = FALSE, saveZ = FALSE, saveXL = FALSE, pr = FALSE, pl = FALSE) -> mc_treat
+                   verbose = FALSE, saveX = FALSE, saveZ = FALSE, saveXL = FALSE, pr = FALSE, pl = FALSE) -> mc_treat3
 
 #save(m1, file = "results/mcmc.Rdata")
 
 x11()
 plot(mc_treat) # model with all data ~treatment 
+plot(mc_treat2) # wit optimal temperatures as random
+plot(mc_treat3)# wit optimal temperatures as fixed
 # load("results/mcmc.Rdata")
 summary(mc_treat) #data ~treatment
+summary(mc_treat2) # optimal temp not significantly explains variation
+summary(mc_treat3) # optimal temp not affect germination 
 
 ### Random and phylo
 # Calculate lambda http://www.mpcm-evolution.com/practice/online-practical-material-chapter-11/chapter-11-1-simple-model-mcmcglmm
