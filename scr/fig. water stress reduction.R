@@ -59,8 +59,8 @@ finalgerm %>%
   mutate_all(~replace(., is.nan(.), 0))%>% # generate Nan because 0 germ pro
   convert_as_factor(species, community, petri, community)%>%
   mutate(community= fct_relevel(community, "Mediterranean", "Temperate" ))%>%
-  mutate(community= fct_recode(community,"Mediterranean \n Alpine" ="Mediterranean", 
-                               "Temperate \n Alpine"="Temperate" ))%>%
+  mutate(community= fct_recode(community,"Mediterranean \n Alpine n=15" ="Mediterranean", 
+                               "Temperate \n Alpine n=19"="Temperate" ))%>%
   group_by(community)%>%
   get_summary_stats (germ_reduction)%>%
   ggplot()+
