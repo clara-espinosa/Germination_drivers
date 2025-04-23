@@ -78,7 +78,7 @@ fig2a+ fig2b +
   plot_layout(widths = c(1.5,1))-> fig2;fig2
 
 ggsave(filename = "cold stratification.png", plot =fig2 , path = "results/figures", 
-       device = "png", dpi = 600, width = 180, height = 150, units = "mm") #
+       device = "png", dpi = 600, width = 170, height = 150, units = "mm") #
 
 #ggpubr::ggarrange(fig2a, fig2b, ncol =2, nrow= 1,common.legend = FALSE, widths = c(1.5,1),align = "h")
 

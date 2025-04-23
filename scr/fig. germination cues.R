@@ -88,7 +88,7 @@ finalgerm %>%
 
 
 # Combine figure 
-fig3a + fig3b + plot_layout(widths = c(1.2,1.8)) + plot_annotation (title = "Response to germination signals") -> fig3;fig3
+fig3a + fig3b + plot_layout(widths = c(1.2,1.8)) + plot_annotation (title = "Response to germination cues") -> fig3;fig3
 
-ggsave(filename = "germination signals.png", plot =fig3 , path = "results/Figures/", 
-       device = "png", dpi = 600,height = 150, width = 180, units = "mm") #,
+ggsave(filename = "germination cues.png", plot =fig3 , path = "results/Figures/", 
+       device = "png", dpi = 600,height = 150, width = 170, units = "mm") #,

@@ -127,7 +127,7 @@ finalgerm %>%
   plot_layout()-> fig4;fig4
 
 ggsave(filename = "water stress.png", plot =fig4 , path = "results/figures", 
-       device = "png", dpi = 600, width = 180, height = 150, units = "mm") #, width = 180, units = "mm"
+       device = "png", dpi = 600, width = 170, height = 150, units = "mm") #, width = 180, units = "mm"
 
 #ggpubr::ggarrange(fig2a, fig2b, ncol =2, nrow= 1,common.legend = FALSE, widths = c(1.5,1),align = "h")
 
