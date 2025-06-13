@@ -7,7 +7,7 @@ library(RColorBrewer);library(ggtext);library(patchwork)
 # Water stress responses visualization
 ### A) differences between control and wp ####
 finalgerm %>%
-  merge(read.csv("data/species.csv"), by = c("species", "code"))%>%
+  merge(read.csv("data/species.csv", sep=";"), by = c("species", "code"))%>%
   filter(treatment== "C_alternate_WP"| treatment == "A_alternate_light")%>%
   select(community, species, habitat, treatment, opt_temp,petri,finalgerm, viable)%>%
   filter(!(species%in%nogerm_species$species))%>% # 7 species with 0 germ across all experiment
@@ -28,7 +28,7 @@ finalgerm %>%
   annotate ("text", x= 1.5, y= 0.55, label = "***", size= 6)+
   #geom_segment (aes(x= 1,xend =3,  y = 0.52, yend= 0.52), color = "black", linewidth = 1.3, show.legend = F)+
   #annotate ("text", x= 2, y= 0.53, label = "**", size= 6)+
-  labs (x = "Treatments", y="Germination proportion", title= "Germination under water stress", subtitle = "A) Treatment comparison (n = 33)")+
+  labs (x = "Treatments", y="Germination proportion", title= "Germination with water limitation", subtitle = "A) Treatment comparison (n = 33)")+
   theme_classic (base_size = 10) + #theme_minimal for all species for mean treatment
   theme (plot.title = element_text ( size = 12), #hjust = 0.5,
          panel.background = element_blank(),
@@ -44,7 +44,7 @@ finalgerm %>%
 ### B) differences between community ####
 x11()
 finalgerm %>%
-  merge(read.csv("data/species.csv"), by = c("species", "code"))%>%
+  merge(read.csv("data/species.csv", sep= ";"), by = c("species", "code"))%>%
   filter(treatment== "C_alternate_WP"| treatment == "A_alternate_light")%>%
   select(community, species, habitat, community, treatment, opt_temp,petri,finalgerm, viable)%>%
   filter(!(species%in%nogerm_species$species))%>% # 7 species with 0 germ across all experiment
@@ -83,7 +83,8 @@ finalgerm %>%
 
 ### C) Water stress germination ordered by germination #####
 finalgerm %>%
-  merge(read.csv("data/species.csv"), by = c("species", "code"))%>%
+  merge(read.csv("data/species.csv", sep = ";"), by = c("species", "code"))%>%
+  mutate(species = gsub("Helianthemum urrielense", "Helianthemum urrielense*", species))%>%
   filter(treatment== "C_alternate_WP"| treatment == "A_alternate_light")%>%
   select(community, species, habitat, community, treatment, opt_temp,petri,finalgerm, viable)%>%
   filter(!(species%in%nogerm_species$species))%>% # 7 species with 0 germ across all experiment
@@ -126,7 +127,7 @@ finalgerm %>%
 ((fig4a / fig4b) | fig4c)+
   plot_layout()-> fig4;fig4
 
-ggsave(filename = "water stress.png", plot =fig4 , path = "results/figures", 
+ggsave(filename = "water limitation.png", plot =fig4 , path = "results/figures", 
        device = "png", dpi = 600, width = 170, height = 150, units = "mm") #, width = 180, units = "mm"
 
 #ggpubr::ggarrange(fig2a, fig2b, ncol =2, nrow= 1,common.legend = FALSE, widths = c(1.5,1),align = "h")

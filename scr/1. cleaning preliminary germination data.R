@@ -16,7 +16,7 @@ unique(species$species)
 setdiff(species$species, raw_df$species)
 setdiff(raw_df$species,species$species)
 
-# cold_stratification pretreatment geermination and mean values ####
+# cold_stratification pretreatment germination and mean values ####
 read.csv("data/raw_data.csv", sep = ",") %>%
   convert_as_factor(species, code, treatment, temp) %>%
   dplyr::select (species, code, petri, initial_pre, cold_strat) %>% ## 

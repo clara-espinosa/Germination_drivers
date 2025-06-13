@@ -3,11 +3,14 @@ library(viridis);library(rstatix);library(lubridate);library(vegan)
 library(rstatix);library(geomtextpath);library(psych)
 library (ggrepel);library (ggpubr) ;library(binom)
 library(RColorBrewer);library(ggtext);library(patchwork)
+library(scales);library(ggtext)
+
 
 # cold stratification visualization
 ### A) cold stratification ordered by germination #####
 cold_strat %>%
   merge (species)%>%
+  mutate(species = gsub("Helianthemum urrielense", "Helianthemum urrielense*", species))%>%
   filter(!(species%in%nogerm_species$species))%>%
   mutate (binom.confint(finalgerm, viable, methods = "wilson"))%>%
   dplyr::select (community, family, species, treatment, community, finalgerm, viable, mean, upper, lower)%>%
@@ -21,11 +24,13 @@ cold_strat %>%
   geom_bar (stat = "identity", color = "black") +
   geom_vline(xintercept = 40.5, linetype = "dashed", color = "red", linewidth = 1) +
   scale_fill_manual(values = c("Mediterranean"="darkgoldenrod1","Temperate"= "forestgreen"))+
-  geom_errorbar( aes(species, germpro, ymin = lower, ymax = upper), width = 0.5, linewidth = 0.5) +
+  geom_errorbar( aes(species, germpro, ymin = lower, ymax = upper, color= community), width = 0.8, linewidth = 0.8) + #
+  scale_color_manual(values = c("Mediterranean"="darkgoldenrod1","Temperate"= "forestgreen"))+
   annotate("segment", x = 41, y = 0.73, xend = 45, yend = 0.73, arrow = arrow(type = "closed", length = unit(0.28, "cm")))+
   annotate("label",x=43,y=0.9, label = "Under snow \n germination", size= 2.7)+
   annotate("segment", x = 40, y = 0.73, xend = 36, yend = 0.73, arrow = arrow(type = "closed", length = unit(0.28, "cm")))+
   annotate("label",x=38,y=0.9, label = "Spring \n germination", size= 2.7)+
+  scale_x_discrete(labels = label)+
   coord_flip() + 
   labs (title = "Germination during cold stratification", subtitle = "A) Individual species", y = "Germination proportion")+
   theme_classic (base_size = 10) +
@@ -33,7 +38,7 @@ cold_strat %>%
          legend.position = "none",
          axis.title.y= element_blank(),
          axis.text.x= element_text(),
-         axis.text.y = element_text(face= "italic", size = 9))-> fig2a;fig2a
+         axis.text.y = element_markdown(face= "italic", size = 9))-> fig2a;fig2a
 ### B) differences between community ####
 x11()
 cold_strat%>%
@@ -73,7 +78,7 @@ cold_strat%>%
          legend.position = "none")-> fig2b;fig2b
 
 # combine panels ###
-
+library(patchwork)
 fig2a+ fig2b + 
   plot_layout(widths = c(1.5,1))-> fig2;fig2
 

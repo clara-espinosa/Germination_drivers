@@ -1,8 +1,6 @@
-library(tidyverse);library(ggplot2);library(dplyr);library(rstatix)
-library(viridis);library(MCMCglmm); library(binom);library (ggpubr)
-library(glmmTMB); library(DHARMa);library(scales)
+library(tidyverse);library(readxl);library(ggplot2);library(dplyr)
+library(viridis);library(rstatix);library(binom)
 
-# ANALYSIS FROM GERMINATION ECOLOGY PERSPECTIVE ####
 
 ### PHYLO TREE AND MODEL SPECIFICATION FOR MULTINOMIAL####
 ### Read tree
@@ -17,9 +15,9 @@ nnls_orig$node.label <- NULL
 # change nu = 2 and alpha.V = 1000 for germination rate (originally nu = 1 and alpha.v = 500)
 priors <- list(R = list(V = 1, nu = 50), 
                G = list(G1 = list(V = 1, nu = 1, alpha.mu = 0, alpha.V = 500), 
-                        #G3 = list(V = 1, nu = 1, alpha.mu = 0, alpha.V = 500),
-                        G2 = list(V = 1, nu = 1, alpha.mu = 0, alpha.V = 500)))
-  
+                        G2 = list(V = 1, nu = 1, alpha.mu = 0, alpha.V = 500),
+                        G3 = list(V = 1, nu = 1, alpha.mu = 0, alpha.V = 500)))
+
 ### 1. Cold stratification differences ####
 cold_strat%>%
   merge(read.csv("data/species.csv", sep = ";"), by = c("species", "code"))%>%
@@ -40,34 +38,25 @@ mcmc_cold%>%
 
 ### TEST
 MCMCglmm::MCMCglmm(cbind(finalgerm, viable - finalgerm) ~ community, # ,*community 
-                   random = ~ animal + ID,
+                   random = ~ collection_year + animal + ID,
                    family = "multinomial2", pedigree = nnls_orig, prior = priors, data = mcmc_cold,
                    nitt = nite, thin = nthi, burnin = nbur, 
                    verbose = FALSE, saveX = FALSE, saveZ = FALSE, saveXL = FALSE, pr = FALSE, pl = FALSE) -> mc_cold2
 
+#save(m1, file = "results/mcmc.Rdata")
 x11()
-plot(mc_cold) # models with  both communities 
-summary(mc_cold)  
+plot(mc_cold2) # collection_year included as random
+# load("results/mcmc.Rdata")
+summary(mc_cold2) # collection_year included as random
 
 ### Random and phylo
 # Calculate lambda http://www.mpcm-evolution.com/practice/online-practical-material-chapter-11/chapter-11-1-simple-model-mcmcglmm
 
-lambda <- mc_cold$VCV[,"animal"]/(mc_cold$VCV[,"animal"] + mc_cold$VCV[,"units"]) 
+lambda <- mc_cold2$VCV[,"animal"]/(mc_cold2$VCV[,"animal"] + mc_cold2$VCV[,"units"]) 
 
-mean(mc_cold$VCV[,"animal"]/(mc_cold$VCV[,"animal"] + mc_cold$VCV[,"units"])) %>% round(2)
-coda::HPDinterval(mc_cold$VCV[,"animal"]/(mc_cold$VCV[,"animal"] + mc_cold$VCV[,"units"]))[, 1] %>% round(2)
-coda::HPDinterval(mc_cold$VCV[,"animal"]/(mc_cold$VCV[,"animal"] + mc_cold$VCV[,"units"]))[, 2] %>% round(2)
-
-# Random effects animal
-summary(mc_cold)$Gcovariances[1, 1] %>% round(2) 
-summary(mc_cold)$Gcovariances[1, 2] %>% round(2) 
-summary(mc_cold)$Gcovariances[1, 3] %>% round(2)
-
-# Random effects ID
-summary(mc_cold)$Gcovariances[2, 1] %>% round(2)
-summary(mc_cold)$Gcovariances[2, 2] %>% round(2) 
-summary(mc_cold)$Gcovariances[2, 3] %>% round(2) 
-
+mean(mc_cold2$VCV[,"animal"]/(mc_cold2$VCV[,"animal"] + mc_cold2$VCV[,"units"])) %>% round(2)
+coda::HPDinterval(mc_cold2$VCV[,"animal"]/(mc_cold2$VCV[,"animal"] + mc_cold2$VCV[,"units"]))[, 1] %>% round(2)
+coda::HPDinterval(mc_cold2$VCV[,"animal"]/(mc_cold2$VCV[,"animal"] + mc_cold2$VCV[,"units"]))[, 2] %>% round(2)
 
 ### 2. Fine scale germination signals (Control/Light/Alternating) ####
 # 2.1 average responses to germination cues compared to control ####
@@ -85,54 +74,43 @@ finalgerm %>%
   convert_as_factor(species, community, petri,opt_temp, community, collection_year)%>% 
   droplevels()-> mcmc
 
-str(mcmc) 
-unique(mcmc$species)# 39 species
-unique(mcmc$treatment)
-
-mcmc%>%
-  group_by(species,community)%>%
-  summarise(finalgerm= sum(finalgerm),
-            viable=sum(viable))%>%
-  group_by(community)%>%
-  tally() 
-
 #descriptive
 mcmc%>%
   group_by(treatment)%>%
   summarise(finalgerm= sum(finalgerm), viable= (sum(viable)))%>%
   mutate (binom.confint(finalgerm, viable, methods = "wilson"))
 
+priors <- list(R = list(V = 1, nu = 50), 
+               G = list(G1 = list(V = 1, nu = 1, alpha.mu = 0, alpha.V = 500), 
+                        G2 = list(V = 1, nu = 1, alpha.mu = 0, alpha.V = 500),
+                        G2 = list(V = 1, nu = 1, alpha.mu = 0, alpha.V = 500)))
 
 ### TEST
 MCMCglmm::MCMCglmm(cbind(finalgerm, viable - finalgerm) ~ treatment, #
-                   random = ~ animal + ID , #
+                   random = ~ collection_year+animal + ID , #
                    family = "multinomial2", pedigree = nnls_orig, prior = priors, data = mcmc,
                    nitt = nite, thin = nthi, burnin = nbur, 
-                   verbose = FALSE, saveX = FALSE, saveZ = FALSE, saveXL = FALSE, pr = FALSE, pl = FALSE) -> mc_treat
+                   verbose = FALSE, saveX = FALSE, saveZ = FALSE, saveXL = FALSE, pr = FALSE, pl = FALSE) -> mc_treat4
+
+#save(m1, file = "results/mcmc.Rdata")
 
 x11()
-plot(mc_treat) # model with all data ~treatment 
-summary(mc_treat) #data ~treatment
+plot(mc_treat2) # with optimal temperatures as random
+plot(mc_treat3)# with optimal temperatures as fixed
+plot(mc_treat4)# with collection year included as random
+# load("results/mcmc.Rdata")
+summary(mc_treat2) # optimal temp not significantly explains variation
+summary(mc_treat3) # optimal temp not affect germination 
+summary(mc_treat4) # with collection year included as random
 
 ### Random and phylo
 # Calculate lambda http://www.mpcm-evolution.com/practice/online-practical-material-chapter-11/chapter-11-1-simple-model-mcmcglmm
 
-lambda <- mc_treat$VCV[,"animal"]/(mc_treat$VCV[,"animal"] + mc_treat$VCV[,"units"]) 
+lambda <- mc_treat4$VCV[,"animal"]/(mc_treat4$VCV[,"animal"] + mc_treat4$VCV[,"units"]) 
 
-mean(mc_treat$VCV[,"animal"]/(mc_treat$VCV[,"animal"] + mc_treat$VCV[,"units"])) %>% round(2)
-coda::HPDinterval(mc_treat$VCV[,"animal"]/(mc_treat$VCV[,"animal"] + mc_treat$VCV[,"units"]))[, 1] %>% round(2)
-coda::HPDinterval(mc_treat$VCV[,"animal"]/(mc_treat$VCV[,"animal"] + mc_treat$VCV[,"units"]))[, 2] %>% round(2)
-
-
-# Random effects animal
-summary(mc_treat)$Gcovariances[1, 1] %>% round(2) 
-summary(mc_treat)$Gcovariances[1, 2] %>% round(2) 
-summary(mc_treat)$Gcovariances[1, 3] %>% round(2)
-
-# Random effects ID
-summary(mc_treat)$Gcovariances[2, 1] %>% round(2)
-summary(mc_treat)$Gcovariances[2, 2] %>% round(2) 
-summary(mc_treat)$Gcovariances[2, 3] %>% round(2) 
+mean(mc_treat4$VCV[,"animal"]/(mc_treat4$VCV[,"animal"] + mc_treat4$VCV[,"units"])) %>% round(2)
+coda::HPDinterval(mc_treat4$VCV[,"animal"]/(mc_treat4$VCV[,"animal"] + mc_treat4$VCV[,"units"]))[, 1] %>% round(2)
+coda::HPDinterval(mc_treat4$VCV[,"animal"]/(mc_treat4$VCV[,"animal"] + mc_treat4$VCV[,"units"]))[, 2] %>% round(2)
 
 
 # 2.2 Comparison of community within each germination treatment ####
@@ -151,34 +129,24 @@ str(mcmc_control)
 unique(mcmc_constant$species)# 39 species
 unique(mcmc_dark$species)
 
-mcmc_constant%>%
-  group_by(species,community)%>%
-  summarise(finalgerm= sum(finalgerm),
-            viable=sum(viable))%>%
-  group_by(community)%>%
-  tally() 
-
-#descriptive
-mcmc_constant%>%
-  group_by(community)%>%
-  summarise(finalgerm= sum(finalgerm), viable= (sum(viable)))%>%
-  mutate (binom.confint(finalgerm, viable, methods = "wilson"))
 
 ### TEST
 MCMCglmm::MCMCglmm(cbind(finalgerm, viable - finalgerm) ~ community, #
-                   random = ~ animal + ID , #
+                   random = ~ collection_year+animal + ID , #
                    family = "multinomial2", pedigree = nnls_orig, prior = priors, data = mcmc_dark,
                    nitt = nite, thin = nthi, burnin = nbur, 
-                   verbose = FALSE, saveX = FALSE, saveZ = FALSE, saveXL = FALSE, pr = FALSE, pl = FALSE) -> mc_dark
+                   verbose = FALSE, saveX = FALSE, saveZ = FALSE, saveXL = FALSE, pr = FALSE, pl = FALSE) -> mc_dark2
+
+#save(m1, file = "results/mcmc.Rdata")
 
 x11()
-plot(mc_control) # germination in control ~ community
-plot(mc_dark) # germination in dark ~ community
-plot(mc_constant) # germination constant temp ~ community
-
-summary(mc_control) # germination in control ~ community
-summary(mc_dark) # germination in dark ~ community
-summary(mc_constant) # germination constant temp ~ community
+plot(mc_control2) # germination in control ~ community, collection year included as random
+plot(mc_dark2) # germination in dark ~ community, collection year included as random
+plot(mc_constant2) # germination constant temp ~ community, collection year included as random
+# load("results/mcmc.Rdata")
+summary(mc_control2) # germination in control ~ community, collection year included as random
+summary(mc_dark2) # germination in dark ~ community, collection year included as random
+summary(mc_constant2) # germination constant temp ~ community, collection year included as random
 
 ### Random and phylo
 # Calculate lambda http://www.mpcm-evolution.com/practice/online-practical-material-chapter-11/chapter-11-1-simple-model-mcmcglmm
@@ -189,16 +157,6 @@ mean(mc_constant$VCV[,"animal"]/(mc_constant$VCV[,"animal"] + mc_constant$VCV[,"
 coda::HPDinterval(mc_constant$VCV[,"animal"]/(mc_constant$VCV[,"animal"] + mc_constant$VCV[,"units"]))[, 1] %>% round(2)
 coda::HPDinterval(mc_constant$VCV[,"animal"]/(mc_constant$VCV[,"animal"] + mc_constant$VCV[,"units"]))[, 2] %>% round(2)
 
-
-# Random effects animal
-summary(mc_treat)$Gcovariances[1, 1] %>% round(2) 
-summary(mc_treat)$Gcovariances[1, 2] %>% round(2) 
-summary(mc_treat)$Gcovariances[1, 3] %>% round(2)
-
-# Random effects ID
-summary(mc_treat)$Gcovariances[2, 1] %>% round(2)
-summary(mc_treat)$Gcovariances[2, 2] %>% round(2) 
-summary(mc_treat)$Gcovariances[2, 3] %>% round(2) 
 
 ### 3. Water limitation differences ####
 finalgerm %>%
@@ -230,23 +188,17 @@ finalgerm %>%
 str(mcmc_water) 
 unique(mcmc_water$species)# 33 species
 
-#descriptive
-mcmc_water%>%
-  group_by(treatment)%>%
-  summarise(finalgerm= sum(finalgerm), viable= (sum(viable)))%>%
-  mutate (binom.confint(finalgerm, viable, methods = "wilson"))
 
 ### TEST
 MCMCglmm::MCMCglmm(cbind(finalgerm, viable - finalgerm) ~ treatment, #
                    random = ~ collection_year + animal + ID , #
                    family = "multinomial2", pedigree = nnls_orig, prior = priors, data = mcmc_water,
                    nitt = nite, thin = nthi, burnin = nbur, 
-                   verbose = FALSE, saveX = FALSE, saveZ = FALSE, saveXL = FALSE, pr = FALSE, pl = FALSE) -> mc_water
+                   verbose = FALSE, saveX = FALSE, saveZ = FALSE, saveXL = FALSE, pr = FALSE, pl = FALSE) -> mc_water2
 
 x11()
-plot(mc_water) # germination ~ treatment
-summary(mc_water) 
-
+plot(mc_water2) # germination ~ treatment, collection year included as random
+summary(mc_water2) # collection year included as random
 ### Random and phylo
 # Calculate lambda http://www.mpcm-evolution.com/practice/online-practical-material-chapter-11/chapter-11-1-simple-model-mcmcglmm
 
@@ -256,16 +208,6 @@ mean(mc_water$VCV[,"animal"]/(mc_water$VCV[,"animal"] + mc_water$VCV[,"units"]))
 coda::HPDinterval(mc_water$VCV[,"animal"]/(mc_water$VCV[,"animal"] + mc_water$VCV[,"units"]))[, 1] %>% round(2)
 coda::HPDinterval(mc_water$VCV[,"animal"]/(mc_water$VCV[,"animal"] + mc_water$VCV[,"units"]))[, 2] %>% round(2)
 
-
-# Random effects animal
-summary(mc_water)$Gcovariances[1, 1] %>% round(2) 
-summary(mc_water)$Gcovariances[1, 2] %>% round(2) 
-summary(mc_water)$Gcovariances[1, 3] %>% round(2)
-
-# Random effects ID
-summary(mc_water)$Gcovariances[2, 1] %>% round(2)
-summary(mc_water)$Gcovariances[2, 2] %>% round(2) 
-summary(mc_water)$Gcovariances[2, 3] %>% round(2) 
 #3.2 germiantion reduction (%) due to water stress compared to control ####
 # Response to water stress calculated as the percentual reduction compared to control.
 finalgerm %>%
@@ -294,57 +236,30 @@ str(mcmc_waterreduction2) # with exponential family
 unique(mcmc_waterreduction$species)
 hist(mcmc_waterreduction$germ_reduction)
 
-mcmc_waterreduction%>%
-  group_by(species,community)%>%
-  summarise(germ_reduction= mean(germ_reduction))%>%
-  #print(n= 34)
-  group_by(community)%>%
-  tally() 
-
-#descriptive
-mcmc_waterreduction%>%
-  group_by(species, community)%>%
-  summarise(germ_reduction= mean(germ_reduction))%>%
-  group_by(community)%>%
-  get_summary_stats (germ_reduction)
-
-
-
 ### Gaussian priors
 priors <- list(R = list(V = 1, nu = 0.2),
                G = list(G1 = list(V = 1, nu = 0.2, alpha.mu = 0, alpha.V = 1e3),
-                        #G3 = list(V = 1, nu = 0.2, alpha.mu = 0, alpha.V = 1e3),
-                        G2 = list(V = 1, nu = 0.2, alpha.mu = 0, alpha.V = 1e3)))
+                        G2 = list(V = 1, nu = 0.2, alpha.mu = 0, alpha.V = 1e3),
+                        G3 = list(V = 1, nu = 0.2, alpha.mu = 0, alpha.V = 1e3)))
 #)))
 
 MCMCglmm::MCMCglmm(germ_reduction ~ community, #
                    random = ~ collection_year + animal + ID , #
-                   family = "gaussian", pedigree = nnls_orig, prior = priors, data = mcmc_waterreduction,
+                   family = "gaussian", pedigree = nnls_orig, prior = priors, data = mcmc_waterreduction2,
                    nitt = nite, thin = nthi, burnin = nbur, 
-                   verbose = FALSE, saveX = FALSE, saveZ = FALSE, saveXL = FALSE, pr = FALSE, pl = FALSE) -> mc_water_reduction
-x11()
-plot(mc_water_reduction)# germination reduction ~community GAUSSIAN family
-plot(mc_water_reduction2) # germination reduction ~community EXPONENTIAL family
+                   verbose = FALSE, saveX = FALSE, saveZ = FALSE, saveXL = FALSE, pr = FALSE, pl = FALSE) -> mc_water_reduction4
 
-summary(mc_water_reduction) # germination reduction ~community GAUSSIAN family
-summary(mc_water_reduction2)# germination reduction ~community EXPONENTIAL family
+plot(mc_water_reduction3) # collection_year included as random Gaussian family
+plot(mc_water_reduction4)# germination reduction ~community EXPONENTIAL family # collection_year included as random
+
+summary(mc_water_reduction3)# collection_year included as randomGaussian family
+summary(mc_water_reduction4) # germination reduction ~community EXPONENTIAL family # collection_year included as random
 
 ### Random and phylo
 # Calculate lambda http://www.mpcm-evolution.com/practice/online-practical-material-chapter-11/chapter-11-1-simple-model-mcmcglmm
 
 lambda <- mc_water_reduction$VCV[,"animal"]/(mc_water_reduction$VCV[,"animal"] + mc_water_reduction$VCV[,"units"]) 
 
-mean(mc_water_reduction$VCV[,"animal"]/(mc_water_reduction$VCV[,"animal"] + mc_water_reduction$VCV[,"units"])) %>% round(2)
+mean(mc_water_reduction2$VCV[,"animal"]/(mc_water_reduction2$VCV[,"animal"] + mc_water_reduction$VCV[,"units"])) %>% round(2)
 coda::HPDinterval(mc_water_reduction$VCV[,"animal"]/(mc_water_reduction$VCV[,"animal"] + mc_water_reduction$VCV[,"units"]))[, 1] %>% round(2)
 coda::HPDinterval(mc_water_reduction$VCV[,"animal"]/(mc_water_reduction$VCV[,"animal"] + mc_water_reduction$VCV[,"units"]))[, 2] %>% round(2)
-
-
-# Random effects animal
-summary(mc_water_reduction)$Gcovariances[1, 1] %>% round(2) 
-summary(mc_water_reduction)$Gcovariances[1, 2] %>% round(2) 
-summary(mc_water_reduction)$Gcovariances[1, 3] %>% round(2)
-
-# Random effects ID
-summary(mc_water_reduction)$Gcovariances[2, 1] %>% round(2)
-summary(mc_water_reduction)$Gcovariances[2, 2] %>% round(2) 
-summary(mc_water_reduction)$Gcovariances[2, 3] %>% round(2) 
