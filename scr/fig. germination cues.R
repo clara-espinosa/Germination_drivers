@@ -32,7 +32,7 @@ finalgerm %>%
   annotate ("text", x= 1.5, y= 0.48, label = "***", size= 6)+
   geom_segment (aes(x= 1,xend =3,  y = 0.52, yend= 0.52), color = "black", linewidth = 1.3, show.legend = F)+
   annotate ("text", x= 2, y= 0.53, label = "*", size= 6)+
-  labs (x = "Treatments", y="Germination proportion",  subtitle = "A) Treatment comparison (n = 39)")+
+  labs ( x = "Treatments", y="Germination proportion",  subtitle = "A) By Treatment")+
   theme_classic (base_size = 10) + #theme_minimal for all species for mean treatment
   theme (plot.title = element_text ( size = 12), #hjust = 0.5,
          panel.background = element_blank(),
@@ -43,7 +43,7 @@ finalgerm %>%
          axis.title.x= element_blank(), 
          axis.text.x=element_text(color = "black"), #angle = 30, hjust = 0.9, 
          axis.ticks.x=element_blank(),
-         legend.position = "none") ->fig3a;fig3a 
+         legend.position = "none") ->fig4a;fig4a 
 
 # treatment x community
 finalgerm %>%
@@ -71,7 +71,7 @@ finalgerm %>%
                     values = c("darkgoldenrod1", "forestgreen"),
                     guide = guide_legend (title.position = "top",direction = "vertical")) + 
   scale_y_continuous(limits = c(0,0.6))+
-  labs (x = "Treatments", y="Germination proportion", subtitle = "B) Habitat comparison")+
+  labs (x = "Treatments", y="Germination proportion", subtitle = "B) By Habitat")+
   theme_classic (base_size = 10) + #theme_minimal for all species for mean treatment
   theme (plot.title = element_text ( size = 12), #hjust = 0.5,
          panel.background = element_blank(),
@@ -82,13 +82,12 @@ finalgerm %>%
          axis.text.x=element_text( color = "black"), #angle = 30, hjust = 0.9,
          axis.title= element_blank(), 
          axis.text.y = element_blank(),
-         legend.position = "right")->fig3b;fig3b
-
+         legend.position = "right")->fig4b;fig4b
 
 
 
 # Combine figure 
-fig3a + fig3b + plot_layout(widths = c(1.2,1.8)) + plot_annotation (title = "Response to germination cues") -> fig3;fig3
+fig4a + fig4b + plot_layout(widths = c(1.2,1.8)) + plot_annotation (title = "Response to dark and constant temperatures (n = 39)") -> fig4;fig4
 
-ggsave(filename = "germination cues.png", plot =fig3 , path = "results/Figures/", 
+ggsave(filename = "germination cues.png", plot =fig4 , path = "results/Figures/", 
        device = "png", dpi = 600,height = 150, width = 170, units = "mm") #,

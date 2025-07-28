@@ -7,7 +7,7 @@ library(RColorBrewer);library(ggtext);library(patchwork)
 # Water stress responses visualization
 ### A) differences between control and wp ####
 finalgerm %>%
-  merge(read.csv("data/species.csv", sep=";"), by = c("species", "code"))%>%
+  merge(read.csv("data/species.csv"), by = c("species", "code"))%>%
   filter(treatment== "C_alternate_WP"| treatment == "A_alternate_light")%>%
   select(community, species, habitat, treatment, opt_temp,petri,finalgerm, viable)%>%
   filter(!(species%in%nogerm_species$species))%>% # 7 species with 0 germ across all experiment
@@ -28,7 +28,7 @@ finalgerm %>%
   annotate ("text", x= 1.5, y= 0.55, label = "***", size= 6)+
   #geom_segment (aes(x= 1,xend =3,  y = 0.52, yend= 0.52), color = "black", linewidth = 1.3, show.legend = F)+
   #annotate ("text", x= 2, y= 0.53, label = "**", size= 6)+
-  labs (x = "Treatments", y="Germination proportion", title= "Germination with water limitation", subtitle = "A) Treatment comparison (n = 33)")+
+  labs (x = "Treatments", y="Germination proportion",  subtitle = "A) Germination by Treatment")+
   theme_classic (base_size = 10) + #theme_minimal for all species for mean treatment
   theme (plot.title = element_text ( size = 12), #hjust = 0.5,
          panel.background = element_blank(),
@@ -39,12 +39,12 @@ finalgerm %>%
          axis.title.x= element_blank(), 
          axis.text.x=element_text(color = "black"),#angle = 30, hjust = 0.9, 
          axis.ticks.x=element_blank(),
-         legend.position = "none")->fig4a;fig4a
+         legend.position = "none")->fig3a;fig3a
 
 ### B) differences between community ####
 x11()
 finalgerm %>%
-  merge(read.csv("data/species.csv", sep= ";"), by = c("species", "code"))%>%
+  merge(read.csv("data/species.csv"), by = c("species", "code"))%>%
   filter(treatment== "C_alternate_WP"| treatment == "A_alternate_light")%>%
   select(community, species, habitat, community, treatment, opt_temp,petri,finalgerm, viable)%>%
   filter(!(species%in%nogerm_species$species))%>% # 7 species with 0 germ across all experiment
@@ -73,17 +73,17 @@ finalgerm %>%
   #annotate ("text", x= 2, y= 0.34, label = "**", size= 6)+
   #geom_text(aes(x= community, y= 0.01, label=paste("n =", n.species)),  size=3)+
   #ylim (0,0.35)+
-  labs (y="Decreased germinationn (%)", subtitle= "B) Habitats decreased germination", x= "Habitat")+ #
+  labs (y="Decreased germinationn (%)", subtitle= "B) Decreased germination by Habitat", x= "Habitat")+ #
   theme_classic (base_size = 10) + #theme_minimal for all species for mean treatment
   theme (plot.title = element_text ( size = 12), #hjust = 0.5,
          axis.title.x = element_text(),
          axis.text.x = element_text (color="black"), #, angle = 20, vjust = 0.8
          legend.title = element_blank(),
-         legend.position = "none")->fig4b;fig4b
+         legend.position = "none")->fig3b;fig3b
 
 ### C) Water stress germination ordered by germination #####
 finalgerm %>%
-  merge(read.csv("data/species.csv", sep = ";"), by = c("species", "code"))%>%
+  merge(read.csv("data/species.csv"), by = c("species", "code"))%>%
   mutate(species = gsub("Helianthemum urrielense", "Helianthemum urrielense*", species))%>%
   filter(treatment== "C_alternate_WP"| treatment == "A_alternate_light")%>%
   select(community, species, habitat, community, treatment, opt_temp,petri,finalgerm, viable)%>%
@@ -112,22 +112,22 @@ finalgerm %>%
   scale_fill_manual(labels= c("Mediterranean \n Alpine","Temperate \n Alpine"), values = c("darkgoldenrod1", "forestgreen"))+
   geom_errorbar( aes(species, mean, ymin = mean-se, ymax = mean+se), width = 0.5, linewidth = 0.5) +
   coord_flip() + 
-  labs (subtitle = "C) Species decreased germination", y = "Decreased germination (%)")+
+  labs (subtitle = "C) Decreased germination by Species", y = "Decreased germination (%)")+
   theme_classic (base_size = 10) +
   theme (plot.title = element_text ( size = 12), #hjust = 0.5,
          legend.position = "none",
          axis.title.y= element_blank(),
          axis.text.x= element_text(),
-         axis.text.y = element_text(face= "italic", size = 8))-> fig4c;fig4c
+         axis.text.y = element_text(face= "italic", size = 8))-> fig3c;fig3c
 
 
 
 # combine panels ###
 
-((fig4a / fig4b) | fig4c)+
-  plot_layout()-> fig4;fig4
+((fig3a / fig3b) | fig3c)+
+  plot_layout()+ plot_annotation (title= "Germination with water limitation (n = 33)")-> fig3;fig3
 
-ggsave(filename = "water limitation.png", plot =fig4 , path = "results/figures", 
+ggsave(filename = "water limitation.png", plot =fig3 , path = "results/figures", 
        device = "png", dpi = 600, width = 170, height = 150, units = "mm") #, width = 180, units = "mm"
 
 #ggpubr::ggarrange(fig2a, fig2b, ncol =2, nrow= 1,common.legend = FALSE, widths = c(1.5,1),align = "h")

@@ -32,7 +32,7 @@ cold_strat %>%
   annotate("label",x=38,y=0.9, label = "Spring \n germination", size= 2.7)+
   scale_x_discrete(labels = label)+
   coord_flip() + 
-  labs (title = "Germination during cold stratification", subtitle = "A) Individual species", y = "Germination proportion")+
+  labs (subtitle = "A) By Species", y = "Germination proportion")+
   theme_classic (base_size = 10) +
   theme (plot.title = element_text ( size = 12), #hjust = 0.5,
          legend.position = "none",
@@ -69,7 +69,7 @@ cold_strat%>%
   annotate ("text", x= 1.5, y= 0.28, label = "**", size= 6)+
   geom_text(aes(x= community, y= 0.01, label=paste("n =", n.species)),  size=3)+
   ylim (0,0.3)+
-  labs (y="Germination proportion", subtitle= "B) Habitat")+ #
+  labs (y="Germination proportion", subtitle= "B) By Habitat")+ #
   theme_classic (base_size = 10) + #theme_minimal for all species for mean treatment
   theme (plot.title = element_text ( size = 12), #hjust = 0.5,
          axis.title.x = element_blank(),
@@ -80,7 +80,7 @@ cold_strat%>%
 # combine panels ###
 library(patchwork)
 fig2a+ fig2b + 
-  plot_layout(widths = c(1.5,1))-> fig2;fig2
+  plot_layout(widths = c(1.5,1))+ plot_annotation (title = "Germination during cold stratification (n=51)")-> fig2;fig2
 
 ggsave(filename = "cold stratification.png", plot =fig2 , path = "results/figures", 
        device = "png", dpi = 600, width = 170, height = 150, units = "mm") #
