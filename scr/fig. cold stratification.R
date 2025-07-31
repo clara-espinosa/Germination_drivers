@@ -1,10 +1,9 @@
 library(tidyverse);library(readxl);library(ggplot2);library(dplyr)
 library(viridis);library(rstatix);library(lubridate);library(vegan)
 library(rstatix);library(geomtextpath);library(psych)
-library (ggrepel);library (ggpubr) ;library(binom)
+library (ggrepel);library(binom)
 library(RColorBrewer);library(ggtext);library(patchwork)
 library(scales);library(ggtext)
-
 
 # cold stratification visualization
 ### A) cold stratification ordered by germination #####
@@ -80,7 +79,7 @@ cold_strat%>%
 # combine panels ###
 library(patchwork)
 fig2a+ fig2b + 
-  plot_layout(widths = c(1.5,1))+ plot_annotation (title = "Germination during cold stratification (n=51)")-> fig2;fig2
+  plot_layout(widths = c(1.5,1))+ plot_annotation (title = "Germination during cold stratification (n=50)")-> fig2;fig2
 
 ggsave(filename = "cold stratification.png", plot =fig2 , path = "results/figures", 
        device = "png", dpi = 600, width = 170, height = 150, units = "mm") #

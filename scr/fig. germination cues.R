@@ -87,6 +87,7 @@ finalgerm %>%
 
 
 # Combine figure 
+library(patchwork)
 fig4a + fig4b + plot_layout(widths = c(1.2,1.8)) + plot_annotation (title = "Response to dark and constant temperatures (n = 39)") -> fig4;fig4
 
 ggsave(filename = "germination cues.png", plot =fig4 , path = "results/Figures/", 

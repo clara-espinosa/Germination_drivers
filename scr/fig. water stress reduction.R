@@ -123,7 +123,7 @@ finalgerm %>%
 
 
 # combine panels ###
-
+library(patchwork)
 ((fig3a / fig3b) | fig3c)+
   plot_layout()+ plot_annotation (title= "Germination with water limitation (n = 33)")-> fig3;fig3
 
