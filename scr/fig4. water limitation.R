@@ -22,16 +22,13 @@ finalgerm %>%
   mutate(treatment= fct_recode(treatment, "Control"="A_alternate_light", "Water stress"="C_alternate_WP"))%>%
   ggplot(aes(x= treatment, y= mean))+
   geom_bar(color = "black", stat = "identity", fill= "grey") +# ,position = "dodge", width = 0.9
-  geom_errorbar(aes(x= treatment, y=mean, ymin=lower, ymax=upper), color = "black", linewidth=1, width = 0.4)+ #,position= position_dodge(0.9)
+  geom_errorbar(aes(x= treatment, y=mean, ymin=lower, ymax=upper), color = "black", linewidth=0.5, width = 0.4)+ #,position= position_dodge(0.9)
   scale_y_continuous(limits = c(0,0.6))+ 
-  geom_segment (aes(x= 1,xend =2,  y = 0.54, yend= 0.54), color = "black", linewidth = 1.3, show.legend = F)+
-  annotate ("text", x= 1.5, y= 0.55, label = "***", size= 6)+
-  #geom_segment (aes(x= 1,xend =3,  y = 0.52, yend= 0.52), color = "black", linewidth = 1.3, show.legend = F)+
-  #annotate ("text", x= 2, y= 0.53, label = "**", size= 6)+
-  labs (x = "Treatments", y="Germination proportion",  subtitle = "A) Germination by Treatment")+
-  theme_classic (base_size = 10) + #theme_minimal for all species for mean treatment
-  theme (plot.title = element_text ( size = 12), #hjust = 0.5,
-         panel.background = element_blank(),
+  geom_segment (aes(x= 1,xend =2,  y = 0.54, yend= 0.54), color = "black", linewidth = 1, show.legend = F)+
+  annotate ("text", x= 1.5, y= 0.55, label = "***", size= 4)+
+  labs (x = "Treatments", y="Germination proportion",  subtitle = "a) Germination by Treatment")+
+  theme_classic (base_size = 9) + #theme_minimal for all species for mean treatment
+  theme (panel.background = element_blank(),
          legend.title = element_text(hjust=0.5),
          legend.margin = margin(0,0,0,0),
          legend.key.size = unit(1,"line"),
@@ -67,16 +64,9 @@ finalgerm %>%
   geom_bar(aes(x= community, y= mean, fill= community), color = "black", stat = "identity") +
   scale_fill_manual(labels= c("Mediterranean \n Alpine","Temperate \n Alpine"), values = c("darkgoldenrod1", "forestgreen"))+
   geom_errorbar(aes(x= community, y=mean, ymin=mean-se, ymax=mean+se), color = "black", linewidth=1, width = 0.4)+
-  #geom_segment (aes(x= 1,xend =2,  y = 0.3, yend= 0.3), color = "black", linewidth = 1.3, show.legend = F)+
-  #annotate ("text", x= 1.5, y= 0.31, label = "*", size= 6)+
-  #geom_segment (aes(x= 1,xend =3,  y = 0.33, yend= 0.33), color = "black", linewidth = 1.3, show.legend = F)+
-  #annotate ("text", x= 2, y= 0.34, label = "**", size= 6)+
-  #geom_text(aes(x= community, y= 0.01, label=paste("n =", n.species)),  size=3)+
-  #ylim (0,0.35)+
-  labs (y="Decreased germinationn (%)", subtitle= "B) Decreased germination by Habitat", x= "Habitat")+ #
-  theme_classic (base_size = 10) + #theme_minimal for all species for mean treatment
-  theme (plot.title = element_text ( size = 12), #hjust = 0.5,
-         axis.title.x = element_text(),
+  labs (y="Decreased germinationn (%)", subtitle= "b) Decreased germination by Habitat", x= "Habitat")+ #
+  theme_classic (base_size = 9) + #theme_minimal for all species for mean treatment
+  theme (axis.title.x = element_text(),
          axis.text.x = element_text (color="black"), #, angle = 20, vjust = 0.8
          legend.title = element_blank(),
          legend.position = "none")->fig3b;fig3b
@@ -102,33 +92,30 @@ finalgerm %>%
   mutate(community= fct_recode(community,"Mediterranean \n Alpine" ="Mediterranean", 
                                "Temperate \n Alpine"="Temperate" ))%>%
   mutate(species = ifelse(species=="Thymus praecox" & community == "Temperate \n Alpine", "Thymus praecox ", as.character(species)))%>%
-  #group_by(species, community)%>%
-  #summarise(germ_reduction= mean(germ_reduction))%>%
   group_by(species, community)%>%
   get_summary_stats (germ_reduction)%>%
   ggplot(aes(x= reorder(species, mean), y= mean,fill = community)) +
   geom_bar (stat = "identity", color = "black") +
   geom_vline(xintercept = 40.5, linetype = "dashed", color = "red", linewidth = 1) +
   scale_fill_manual(labels= c("Mediterranean \n Alpine","Temperate \n Alpine"), values = c("darkgoldenrod1", "forestgreen"))+
-  geom_errorbar( aes(species, mean, ymin = mean-se, ymax = mean+se), width = 0.5, linewidth = 0.5) +
+  geom_errorbar( aes(species, mean, ymin = mean-se, ymax = mean+se), width = 0.5, linewidth = 1) +
   coord_flip() + 
-  labs (subtitle = "C) Decreased germination by Species", y = "Decreased germination (%)")+
-  theme_classic (base_size = 10) +
-  theme (plot.title = element_text ( size = 12), #hjust = 0.5,
-         legend.position = "none",
+  labs (subtitle = "c) Decreased germination by Species", y = "Decreased germination (%)")+
+  theme_classic (base_size = 9) +
+  theme (legend.position = "none",
          axis.title.y= element_blank(),
          axis.text.x= element_text(),
-         axis.text.y = element_text(face= "italic", size = 8))-> fig3c;fig3c
+         axis.text.y = element_text(face= "italic"))-> fig3c;fig3c
 
 
 
 # combine panels ###
 library(patchwork)
 ((fig3a / fig3b) | fig3c)+
-  plot_layout()+ plot_annotation (title= "Germination with water limitation (n = 33)")-> fig3;fig3
+  plot_layout()-> fig3;fig3
 
-ggsave(filename = "water limitation.png", plot =fig3 , path = "results/figures", 
-       device = "png", dpi = 600, width = 170, height = 150, units = "mm") #, width = 180, units = "mm"
+ggsave(filename = "Fig4.png", plot =fig3 , path = "results/figures", 
+       device = "png", dpi = 600, width = 155, height = 140, units = "mm") #, width = 180, units = "mm"
 
 #ggpubr::ggarrange(fig2a, fig2b, ncol =2, nrow= 1,common.legend = FALSE, widths = c(1.5,1),align = "h")
 
