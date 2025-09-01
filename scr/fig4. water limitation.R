@@ -19,7 +19,7 @@ finalgerm %>%
             viable = sum(viable))%>%
   mutate (binom.confint(finalgerm, viable, methods = "wilson"))%>%
   mutate(treatment = as.factor(treatment))%>%
-  mutate(treatment= fct_recode(treatment, "Control"="A_alternate_light", "Water stress"="C_alternate_WP"))%>%
+  mutate(treatment= fct_recode(treatment, "Control"="A_alternate_light", "Water limitation"="C_alternate_WP"))%>%
   ggplot(aes(x= treatment, y= mean))+
   geom_bar(color = "black", stat = "identity", fill= "grey") +# ,position = "dodge", width = 0.9
   geom_errorbar(aes(x= treatment, y=mean, ymin=lower, ymax=upper), color = "black", linewidth=0.5, width = 0.4)+ #,position= position_dodge(0.9)

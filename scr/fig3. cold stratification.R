@@ -68,7 +68,7 @@ cold_strat%>%
   labs (y="Germination proportion", subtitle= "b) By Habitat")+ #
   theme_classic (base_size = 9) + #theme_minimal for all species for mean treatment
   theme (axis.title.x = element_blank(),
-         axis.text.x = element_text (color="black"), #, angle = 20, vjust = 0.7
+         axis.text.x = element_text (color="black", size =9), #, angle = 20, vjust = 0.7
          legend.title = element_blank(),
          legend.position = "none")-> fig2b;fig2b
 
