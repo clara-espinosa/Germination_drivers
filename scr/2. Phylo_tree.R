@@ -2,9 +2,10 @@ library(tidyverse);library(V.PhyloMaker)
 library(phylosignal);library(phylobase);library(ape);library(tidytree)
 library (tidyverse); library(scales)
 
-### Phylo tree both communities #####
+### Phylogenetic tree including species from both communities #####
 # always check family names with http://www.mobot.org/MOBOT/research/APweb/
 read.csv("data/species.csv", sep =",") %>%
+  # change names only for appropiate phylogenetic random factor in MCMC GLMM
   mutate(species= str_replace(species, "Minuartia sp", "Minuartia arctica"))%>%
   select (species, family) %>%
   unique %>%
@@ -29,4 +30,3 @@ x11()
 plot(tree$scenario.3)
 
 write.tree(tree$scenario.3, file = "results/tree.tree")
-

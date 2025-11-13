@@ -1,59 +1,59 @@
-species,biogeography,code,collection_year,petri_distribution,stratification_start,stratification_end,temperature_regime,opt_temp,family,community,habitat,notes
-Anthyllis vulneraria,Broad range,120722-02,2022,16 x 25,24/10/2022,10/04/2023,15_5//10,cold,Fabaceae,Temperate,Generalist,Scarified
-Conopodium majus,Broad range,250821-04,2021,16 x 25,24/10/2022,10/04/2023,15_5//10,cold,Apiaceae,Mediterranean,Generalist,
-Festuca rubra,Broad range,310821-02,2021,8 x 25,27/10/2022,13/04/2023,22_12//17,warm,Poaceae,Temperate,Generalist,
-Gentianella campestris,Broad range,300921-03,2021,16 x 25,27/10/2022,13/04/2023,15_5//10,cold,Gentianaceae,Temperate,Generalist,
-Helianthemum canum,Broad range,310821-05,2021,16 x 25,26/10/2022,12/04/2023,15_5//10,cold,Cistaceae,Temperate,Generalist,Scarified
-Jasione laevis,Broad range,040822-08,2022,16 x 25,27/10/2022,13/04/2023,15_5//10,cold,Campanulaceae,Mediterranean,Generalist,
-Minuartia sp,Broad range,310821-10,2021,16 x 25,25/10/2022,11/04/2023,15_5//10,cold,Caryophyllaceae,Temperate,Specialist,
-Scilla verna,Broad range,310821-06,2021,8 x 25,27/10/2022,13/04/2023,22_12//17,warm,Asparagaceae,Temperate,Generalist,
-Sedum album,Broad range,300821-14,2021,12 x 25,26/10/2022,12/04/2023,22_12//17,warm,Crassulaceae,Temperate,Generalist,
-Sedum anglicum,Broad range,240821-09,2021,16 x 25,26/10/2022,12/04/2023,22_12//17,warm,Crassulaceae,Mediterranean,Specialist,
-Solidago virgaurea,Broad range,250821-13,2021,16 x 25,26/10/2022,12/04/2023,15_5//10,cold,Asteraceae,Mediterranean,Generalist,
-Thymus praecox,Broad range,120821-06,2021,8 x 25,26/10/2022,12/04/2023,22_12//17,warm,Lamiaceae,Mediterranean,Generalist,
-Thymus praecox,Broad range,130921-10,2021,8 x 25,26/10/2022,12/04/2023,22_12//17,warm,Lamiaceae,Temperate,Generalist,
-Agrostis tileni,Endemic,090822-01,2022,16 x 25,04/11/2022,21/04/2023,15_5//10,cold,Poaceae,Mediterranean,Specialist,
-Armeria cantabrica,Endemic,230822-01,2022,16 x 25,27/10/2022,13/04/2023,22_12//17,warm,Plumbaginaceae,Temperate,Specialist,
-Armeria duriaei,Endemic,040822-02,2022,16 x 25,27/10/2022,13/04/2023,22_12//17,warm,Plumbaginaceae,Mediterranean,Specialist,
-Festuca glacialis,Endemic,230822-04,2022,16 x 25,25/10/2022,11/04/2023,22_12//17,warm,Poaceae,Temperate,Specialist,
-Helianthemum urrielense,Endemic,140921-04,2021,16 x 25,26/10/2022,12/04/2023,22_12//17,warm,Cistaceae,Temperate,Specialist,Scarified
-Jasione cavanillesii,Endemic,230822-02,2022,16 x 25,26/10/2022,12/04/2023,22_12//17,warm,Campanulaceae,Temperate,Specialist,
-Luzula caespitosa,Endemic,040822-04,2022,16 x 25,25/10/2022,11/04/2023,15_5//10,cold,Juncaceae,Mediterranean,Specialist,
-Pedicularis pyrenaica,Endemic,300822-02,2022,12 x 25,04/11/2022,21/04/2023,15_5//10,cold,Orobanchaceae,Temperate,Specialist,
-Saxifraga conifera,Endemic,120722-01,2022,16 x 25,26/10/2022,12/04/2023,22_12//17,warm,Saxifragaceae,Temperate,Specialist,
-Spergula morisonii,Endemic,300522-01,2022,16 x 25,26/10/2022,12/04/2023,22_12//17,warm,Caryophyllaceae,Mediterranean,Generalist,
-Veronica nummularia,Endemic,190822-06,2022,16 x 25 ,25/10/2022,11/04/2023,22_12//17,warm,Plantaginaceae,Temperate,Generalist,
-Androsace villosa,Eurosiberian,310822-01,2022,16 x 25,24/10/2022,10/04/2023,22_12//17,warm,Primulaceae,Temperate,Specialist,
-Avenella flexuosa,Eurosiberian,110822-03,2022,12 x 20,04/11/2022,21/04/2023,22_12//17,warm,Poaceae,Mediterranean,Generalist,
-Carex sempervirens,Eurosiberian,190822-08,2022,16 x 25,27/10/2022,13/04/2023,22_12//17,warm,Cyperaceae,Temperate,Specialist,
-Erigeron alpinus,Eurosiberian,190822-12,2022,12 x 25,04/11/2022,21/04/2023,15_5//10,cold,Asteraceae,Temperate,Specialist,
-Euphrasia salisburgensis,Eurosiberian,011021-01,2021,16 x 25,27/10/2022,13/04/2023,15_5//10,cold,Orobanchaceae,Temperate,Specialist,
-Gentiana verna,Eurosiberian,130921-06,2021,16 x 25,25/10/2022,11/04/2023,15_5//10,cold,Gentianaceae,Temperate,Specialist,
-Gypsophila repens,Eurosiberian,190822-10,2022,16 x 25,25/10/2022,11/04/2023,22_12//17,warm,Caryophyllaceae,Temperate,Generalist,
-Kobresia myosuroides,Eurosiberian,130921-03,2021,16 x 25,25/10/2022,11/04/2023,22_12//17,warm,Cyperaceae,Temperate,Specialist,
-Linaria alpina,Eurosiberian,190822-01,2022,12 x 25,04/11/2022,21/04/2023,22_12//17,warm,Plantaginaceae,Temperate,Specialist,
-Minuartia verna,Eurosiberian,300821-06,2021,12 x 25,25/10/2022,11/04/2023,15_5//10,cold,Caryophyllaceae,Temperate,Specialist,
-Phyteuma hemisphaericum,Eurosiberian,040822-09,2022,16 x 25,25/10/2022,11/04/2023,15_5//10,cold,Campanulaceae,Mediterranean,Specialist,
-Plantago alpina,Eurosiberian,190822-07,2022,16 x 25,26/10/2022,12/04/2023,15_5//10,cold,Plantaginaceae,Temperate,Specialist,
-Salix breviserrata,Eurosiberian,140722-01,2022,16 x 25,25/10/2022,11/04/2023,15_5//10,cold,Salicaceae,Temperate,Specialist,
-Saxifraga oppositifolia,Eurosiberian,190822-05,2022,16 x 25,26/10/2022,12/04/2023,22_12//17,warm,Saxifragaceae,Temperate,Specialist,
-Saxifraga paniculata,Eurosiberian,310821-14,2021,16 x 25,26/10/2022,12/04/2023,22_12//17,warm,Saxifragaceae,Temperate,Generalist,
-Sedum atratum,Eurosiberian,300822-07,2022,12 x 25,26/10/2022,12/04/2023,22_12//17,warm,Crassulaceae,Temperate,Generalist,
-Sempervivum arachnoideum,Eurosiberian,230921-02,2021,16 x 25,26/10/2022,12/04/2023,22_12//17,warm,Crassulaceae,Mediterranean,Generalist,
-Silene acaulis,Eurosiberian,130921-07,2021,16 x 25,27/10/2022,13/04/2023,22_12//17,warm,Caryophyllaceae,Temperate,Specialist,
-Arenaria erinacea,Mediterranean,300821-08,2021,16 x 25,25/10/2022,11/04/2023,22_12//17,warm,Caryophyllaceae,Temperate,Specialist,
-Cerastium ramosissimum,Mediterranean,280721-02,2021,16 x 25,27/10/2022,13/04/2023,22_12//17,warm,Caryophyllaceae,Mediterranean,Generalist,
-Dianthus langeanus,Mediterranean,040822-01,2022,16 x 25 ,26/10/2022,12/04/2023,22_12//17,warm,Caryophyllaceae,Mediterranean,Specialist,
-Festuca summilusitana,Mediterranean,250821-02,2021,16 x 25,25/10/2022,11/04/2023,22_12//17,warm,Poaceae,Mediterranean,Specialist,
-Galium pyrenaicum,Mediterranean,310822-03,2022,16 x 25,04/11/2022,21/04/2023,15_5//10,cold,Rubiaceae,Temperate,Specialist,
-Helictochloa marginata,Mediterranean,040822-10,2022,16 x 25,27/10/2022,13/04/2023,22_12//17,warm,Poaceae,Mediterranean,Generalist,
-Jurinea humilis,Mediterranean,110822-01,2022,8 x 25,24/10/2022,10/04/2023,15_5//10,cold,Asteraceae,Mediterranean,Generalist,
-Koeleria vallesiana,Mediterranean,300821-02,2021,16 x 25,25/10/2022,11/04/2023,22_12//17,warm,Poaceae,Temperate,Specialist,
-Minuartia recurva,Mediterranean,110821-07,2021,16 x 25,27/10/2022,13/04/2023,22_12//17,warm,Caryophyllaceae,Mediterranean,Specialist,
-Neoschischkinia truncatula,Mediterranean,240821-07,2021,16 x 25,27/10/2022,13/04/2023,22_12//17,warm,Poaceae,Mediterranean,Generalist,
-Phalacrocarpum oppositifolium,Mediterranean,040822-05,2022,12x 25,25/10/2022,11/04/2023,22_12//17,warm,Asteraceae,Mediterranean,Generalist,
-Plantago holosteum,Mediterranean,090822-02,2022,16 x 25,27/10/2022,13/04/2023,22_12//17,warm,Plantaginaceae,Mediterranean,Generalist,
-Sedum brevifolium,Mediterranean,250821-08,2021,16 x 25,26/10/2022,12/04/2023,15_5//10,cold,Crassulaceae,Mediterranean,Generalist,low germination in move-along
-Sempervivum vicentei,Mediterranean,300822-08,2022,8 x 25,04/11/2022,21/04/2023,22_12//17,warm,Crassulaceae,Temperate,Generalist,
-Silene ciliata,Mediterranean,040822-07,2022,16 x 25,25/10/2022,11/04/2023,15_5//10,cold,Caryophyllaceae,Mediterranean,Specialist,
-Teesdalia conferta,Mediterranean,090822-04,2022,16 x 25,27/10/2022,13/04/2023,22_12//17,warm,Brassicaceae,Mediterranean,Specialist,
+species,code,collection_year,temperature_regime,opt_temp,family,community
+Anthyllis vulneraria,120722-02,2022,15_5//10,cold,Fabaceae,Temperate
+Conopodium majus,250821-04,2021,15_5//10,cold,Apiaceae,Mediterranean
+Festuca rubra,310821-02,2021,22_12//17,warm,Poaceae,Temperate
+Gentianella campestris,300921-03,2021,15_5//10,cold,Gentianaceae,Temperate
+Helianthemum canum,310821-05,2021,15_5//10,cold,Cistaceae,Temperate
+Jasione laevis,040822-08,2022,15_5//10,cold,Campanulaceae,Mediterranean
+Minuartia sp,310821-10,2021,15_5//10,cold,Caryophyllaceae,Temperate
+Scilla verna,310821-06,2021,22_12//17,warm,Asparagaceae,Temperate
+Sedum album,300821-14,2021,22_12//17,warm,Crassulaceae,Temperate
+Sedum anglicum,240821-09,2021,22_12//17,warm,Crassulaceae,Mediterranean
+Solidago virgaurea,250821-13,2021,15_5//10,cold,Asteraceae,Mediterranean
+Thymus praecox,120821-06,2021,22_12//17,warm,Lamiaceae,Mediterranean
+Thymus praecox,130921-10,2021,22_12//17,warm,Lamiaceae,Temperate
+Agrostis tileni,090822-01,2022,15_5//10,cold,Poaceae,Mediterranean
+Armeria cantabrica,230822-01,2022,22_12//17,warm,Plumbaginaceae,Temperate
+Armeria duriaei,040822-02,2022,22_12//17,warm,Plumbaginaceae,Mediterranean
+Festuca glacialis,230822-04,2022,22_12//17,warm,Poaceae,Temperate
+Helianthemum urrielense,140921-04,2021,22_12//17,warm,Cistaceae,Temperate
+Jasione cavanillesii,230822-02,2022,22_12//17,warm,Campanulaceae,Temperate
+Luzula caespitosa,040822-04,2022,15_5//10,cold,Juncaceae,Mediterranean
+Pedicularis pyrenaica,300822-02,2022,15_5//10,cold,Orobanchaceae,Temperate
+Saxifraga conifera,120722-01,2022,22_12//17,warm,Saxifragaceae,Temperate
+Spergula morisonii,300522-01,2022,22_12//17,warm,Caryophyllaceae,Mediterranean
+Veronica nummularia,190822-06,2022,22_12//17,warm,Plantaginaceae,Temperate
+Androsace villosa,310822-01,2022,22_12//17,warm,Primulaceae,Temperate
+Avenella flexuosa,110822-03,2022,22_12//17,warm,Poaceae,Mediterranean
+Carex sempervirens,190822-08,2022,22_12//17,warm,Cyperaceae,Temperate
+Erigeron alpinus,190822-12,2022,15_5//10,cold,Asteraceae,Temperate
+Euphrasia salisburgensis,011021-01,2021,15_5//10,cold,Orobanchaceae,Temperate
+Gentiana verna,130921-06,2021,15_5//10,cold,Gentianaceae,Temperate
+Gypsophila repens,190822-10,2022,22_12//17,warm,Caryophyllaceae,Temperate
+Kobresia myosuroides,130921-03,2021,22_12//17,warm,Cyperaceae,Temperate
+Linaria alpina,190822-01,2022,22_12//17,warm,Plantaginaceae,Temperate
+Minuartia verna,300821-06,2021,15_5//10,cold,Caryophyllaceae,Temperate
+Phyteuma hemisphaericum,040822-09,2022,15_5//10,cold,Campanulaceae,Mediterranean
+Plantago alpina,190822-07,2022,15_5//10,cold,Plantaginaceae,Temperate
+Salix breviserrata,140722-01,2022,15_5//10,cold,Salicaceae,Temperate
+Saxifraga oppositifolia,190822-05,2022,22_12//17,warm,Saxifragaceae,Temperate
+Saxifraga paniculata,310821-14,2021,22_12//17,warm,Saxifragaceae,Temperate
+Sedum atratum,300822-07,2022,22_12//17,warm,Crassulaceae,Temperate
+Sempervivum arachnoideum,230921-02,2021,22_12//17,warm,Crassulaceae,Mediterranean
+Silene acaulis,130921-07,2021,22_12//17,warm,Caryophyllaceae,Temperate
+Arenaria erinacea,300821-08,2021,22_12//17,warm,Caryophyllaceae,Temperate
+Cerastium ramosissimum,280721-02,2021,22_12//17,warm,Caryophyllaceae,Mediterranean
+Dianthus langeanus,040822-01,2022,22_12//17,warm,Caryophyllaceae,Mediterranean
+Festuca summilusitana,250821-02,2021,22_12//17,warm,Poaceae,Mediterranean
+Galium pyrenaicum,310822-03,2022,15_5//10,cold,Rubiaceae,Temperate
+Helictochloa marginata,040822-10,2022,22_12//17,warm,Poaceae,Mediterranean
+Jurinea humilis,110822-01,2022,15_5//10,cold,Asteraceae,Mediterranean
+Koeleria vallesiana,300821-02,2021,22_12//17,warm,Poaceae,Temperate
+Minuartia recurva,110821-07,2021,22_12//17,warm,Caryophyllaceae,Mediterranean
+Neoschischkinia truncatula,240821-07,2021,22_12//17,warm,Poaceae,Mediterranean
+Phalacrocarpum oppositifolium,040822-05,2022,22_12//17,warm,Asteraceae,Mediterranean
+Plantago holosteum,090822-02,2022,22_12//17,warm,Plantaginaceae,Mediterranean
+Sedum brevifolium,250821-08,2021,15_5//10,cold,Crassulaceae,Mediterranean
+Sempervivum vicentei,300822-08,2022,22_12//17,warm,Crassulaceae,Temperate
+Silene ciliata,040822-07,2022,15_5//10,cold,Caryophyllaceae,Mediterranean
+Teesdalia conferta,090822-04,2022,22_12//17,warm,Brassicaceae,Mediterranean
