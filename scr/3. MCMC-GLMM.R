@@ -96,10 +96,10 @@ summary(mc_water_50) # model results
 ### Random and phylo
 # Calculate lambda http://www.mpcm-evolution.com/practice/online-practical-material-chapter-11/chapter-11-1-simple-model-mcmcglmm
 
-lambda <- mc_water_10$VCV[,"animal"]/(mc_water_10$VCV[,"animal"] + mc_water_10$VCV[,"units"]) 
-mean(mc_water_10$VCV[,"animal"]/(mc_water_10$VCV[,"animal"] + mc_water_10$VCV[,"units"])) %>% round(2)
-coda::HPDinterval(mc_water_10$VCV[,"animal"]/(mc_water_10$VCV[,"animal"] + mc_water_10$VCV[,"units"]))[, 1] %>% round(2)
-coda::HPDinterval(mc_water_10$VCV[,"animal"]/(mc_water_10$VCV[,"animal"] + mc_water_10$VCV[,"units"]))[, 2] %>% round(2)
+lambda <- mc_water_50$VCV[,"animal"]/(mc_water_50$VCV[,"animal"] + mc_water_50$VCV[,"units"]) 
+mean(mc_water_50$VCV[,"animal"]/(mc_water_50$VCV[,"animal"] + mc_water_50$VCV[,"units"])) %>% round(2)
+coda::HPDinterval(mc_water_50$VCV[,"animal"]/(mc_water_50$VCV[,"animal"] + mc_water_50$VCV[,"units"]))[, 1] %>% round(2)
+coda::HPDinterval(mc_water_50$VCV[,"animal"]/(mc_water_50$VCV[,"animal"] + mc_water_50$VCV[,"units"]))[, 2] %>% round(2)
 
 
 # Random effects animal

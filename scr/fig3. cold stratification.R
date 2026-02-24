@@ -24,9 +24,9 @@ cold_strat %>%
   geom_errorbar( aes(species, germpro, ymin = lower, ymax = upper, color= community), width = 0.8, linewidth = 0.8) + #
   scale_color_manual(values = c("Mediterranean"="darkgoldenrod1","Temperate"= "forestgreen"))+
   annotate("segment", x = 41, y = 0.73, xend = 45, yend = 0.73, arrow = arrow(type = "closed", length = unit(0.28, "cm")))+
-  annotate("label",x=43,y=0.9, label = "Under snow \n germination", size= 2.7)+
+  annotate("label",x=43,y=0.9, label = ">50%\n germination", size= 2.7)+
   annotate("segment", x = 40, y = 0.73, xend = 36, yend = 0.73, arrow = arrow(type = "closed", length = unit(0.28, "cm")))+
-  annotate("label",x=38,y=0.9, label = "Spring \n germination", size= 2.7)+
+  annotate("label",x=38,y=0.9, label = "<50%\n germination", size= 2.7)+
   scale_x_discrete(labels = label)+
   coord_flip() + 
   labs (subtitle = "a) By Species", y = "Germination proportion")+

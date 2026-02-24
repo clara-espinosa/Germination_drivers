@@ -113,7 +113,7 @@ finalgerm%>%
     select(species)-> above10_control
 unique(above10_control$species)
 
-# Species with more than 50% germ in control conditions (same scrpit lines as above)
+# Species with more than 50% germ in control conditions (same script lines as above)
   finalgerm%>%
     filter(treatment=="A_alternate_light")%>%
     filter(!(species%in%nogerm_species$species))%>% # 7 species with 0 germ across all experiment
