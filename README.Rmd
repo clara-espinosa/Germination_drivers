@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # The Alpine Germination Syndrome differs between temperate and Mediterranean habitats
 
 This repository stores all the information related to the manuscript [*The Alpine Germination Syndrome differs between temperate and Mediterranean habitats*](ADD DOI after publishing), including the raw datasets, the scripts to perform data cleaning, analysis and figures. 
-[![DOI](https://zenodo.org/badge/449614381.svg)](ADD ZENODO DOI)
+[![DOI](https://zenodo.org/badge/649674418.svg)](https://doi.org/10.5281/zenodo.18833244)
 
 
 ## Contents
