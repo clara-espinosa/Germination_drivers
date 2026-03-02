@@ -1,0 +1,44 @@
+---
+title: "Read me: Repository and article summary.md"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# The Alpine Germination Syndrome differs between temperate and Mediterranean habitats
+
+This repository stores all the information related to the manuscript [*The Alpine Germination Syndrome differs between temperate and Mediterranean habitats*](ADD DOI after publishing), including the raw datasets, the scripts to perform data cleaning, analysis and figures. 
+[![DOI](https://zenodo.org/badge/449614381.svg)](ADD ZENODO DOI)
+
+
+## Contents
+
+This repository is organised following the advice of [Wilson et al. 2017](https://doi.org/10.1371/journal.pcbi.1005510) for recording and storing research projects.
+
+
+The following materials are available in the folders of this repository:
+
+* `data` Data files including the 
+[Raw germination data](https://github.com/clara-espinosa/Germination_drivers/blob/main/data/raw_data.csv) and
+[Species data](https://github.com/clara-espinosa/Germination_drivers/blob/main/data/species.csv) 
+* `doc` Manuscript submitted to Journal of Vegetation Science.
+* `results` Output of the `R` scripts, including figures, tables, phylogeny and supplementary information.
+* `src` Scripts in `R` language used to clean the raw data, perform the analyses of the manuscript and create the figures.
+
+## Abstract
+
+* **Aims** Recently, alpine communities have shown changes in plant composition, potentially influenced by alterations in their reproductive fitness. Understanding the environmental cues that stimulate germination is therefore important for forecasting future impacts. Although general germination patterns have been described in alpine plants, their ecological determinants can be highly species- and context-specific. Here, we ask whether germination responses to environmental cues differ across alpine habitats and related communities in a climatically heterogeneous region.  
+
+* **Location** Cantabrian mountains (northwestern Spain).
+
+* **Methods** We examined four germination cues in 56 species from contrasting Mediterranean and temperate alpine habitats. We subjected the seeds to five months of cold stratification, mimicking snow-like conditions, and recorded their germination. Using the remaining non-germinated seeds, we tested the effects of water limitation, darkness, and constant temperatures on final germination compared to control conditions.  
+
+* **Results**  Seed germination responses to cold stratification differed between habitats, with species from the Mediterranean habitat exhibiting significantly higher germination during stratification than those from the temperate habitat. Species from both habitats responded similarly to the other treatments: lack of water and light hindered germination. 
+
+* **Conclusions** Our results open the door to new germination strategies linked to multiple climatic variations occurring in alpine habitats worldwide. Although germination requirements are species-specific, they are also modulated by macro- and micro-climatic conditions, determining climate-driven shifts in community composition. In warmer conditions with reduced snow cover, species that require short periods of cold stratification and can tolerate limited water availability are likely to be favoured. 
+
+## Citation
+
+Please cite the repository, datasets and article as: Espinosa del Alba, Fernández-Pascual, E., Götzenberger, L. and Jiménez-Alfaro, B. (2026). The Alpine Germination Syndrome differs between temperate and Mediterranean habitats. Journal of Vegetation Science. DOI: ADD when published.
