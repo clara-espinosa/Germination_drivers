@@ -9,9 +9,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # The Alpine Germination Syndrome differs between temperate and Mediterranean habitats
 
-This repository stores all the information related to the manuscript [*The Alpine Germination Syndrome differs between temperate and Mediterranean habitats*](ADD DOI after publishing), including the raw datasets, the scripts to perform data cleaning, analysis and figures. 
-[![DOI](https://zenodo.org/badge/649674418.svg)](https://doi.org/10.5281/zenodo.18833244)
-
+This repository stores all the information related to the manuscript [*The Alpine Germination Syndrome differs between temperate and Mediterranean habitats*](https://doi.org/10.1111/jvs.70134), including the raw datasets, the scripts to perform data cleaning, analysis and figures. [*Also available in Zenodo*](https://doi.org/10.5281/zenodo.18833244)
 
 ## Contents
 
@@ -41,4 +39,4 @@ The following materials are available in the folders of this repository:
 
 ## Citation
 
-Please cite the repository, datasets and article as: Espinosa del Alba, Fernández-Pascual, E., Götzenberger, L. and Jiménez-Alfaro, B. (2026). The Alpine Germination Syndrome differs between temperate and Mediterranean habitats. Journal of Vegetation Science. DOI: ADD when published.
+Please cite the repository, datasets and article as: Espinosa del Alba, C., Fernández-Pascual, E., Götzenberger, L. and Jiménez-Alfaro, B. (2026). The Alpine Germination Syndrome differs between temperate and Mediterranean habitats. Journal of Vegetation Science, 37 (2), e70134. DOI: 10.1111/jvs.70134.
